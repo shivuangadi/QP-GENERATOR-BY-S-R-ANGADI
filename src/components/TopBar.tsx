@@ -39,7 +39,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-base sm:text-lg font-black tracking-wide text-white">
-                M I NILAJI
+                QP GENERATOR BY S R ANGADI
               </span>
               <span className="px-2 py-0.5 text-2xs font-bold rounded-full border border-indigo-400/60 bg-indigo-950/60 text-indigo-200">
                 ಶಾಲಾ ಲಾಗಿನ್

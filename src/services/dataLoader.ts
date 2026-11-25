@@ -1030,7 +1030,7 @@ export function normalizeQuestionBank(raw: Record<string, unknown>): QuestionBan
     medium: String(rawMeta.medium || 'ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)'),
     board: rawMeta.board ? String(rawMeta.board) : 'ಕರ್ನಾಟಕ ರಾಜ್ಯ ಪಠ್ಯಕ್ರಮ (DSERT / KSEEB)',
     academicYear: String(rawMeta.academic_year || rawMeta.academicYear || '2026-27'),
-    author: String(rawMeta.author || 'M I Nilaji'),
+    author: String(rawMeta.author || 'S R Angadi'),
     totalChapters: chapters.length,
   };
 
