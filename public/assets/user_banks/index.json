@@ -1,0 +1,79 @@
+{
+  "files": [
+    {
+      "id": "bank____________Class_7___________________LBA_Question_Bank",
+      "path": "/assets/user_banks/%E0%B3%AD%E0%B2%A8%E0%B3%87_%E0%B2%A4%E0%B2%B0%E0%B2%97%E0%B2%A4%E0%B2%BF_(Class_7)_%E0%B2%AA%E0%B3%8D%E0%B2%B0%E0%B2%A5%E0%B2%AE_%E0%B2%AD%E0%B2%BE%E0%B2%B7%E0%B3%86_%E0%B2%95%E0%B2%A8%E0%B3%8D%E0%B2%A8%E0%B2%A1_LBA_Question_Bank.json",
+      "filename": "೭ನೇ_ತರಗತಿ_(Class_7)_ಪ್ರಥಮ_ಭಾಷೆ_ಕನ್ನಡ_LBA_Question_Bank.json",
+      "grade": "೭ನೇ ತರಗತಿ (Class 7)",
+      "gradeKey": "7",
+      "subject": "ಪ್ರಥಮ ಭಾಷೆ ಕನ್ನಡ",
+      "subjectCode": "KAN",
+      "medium": "ಕನ್ನಡ ಮಾಧ್ಯಮ",
+      "academicYear": "2026-27",
+      "totalChapters": 16,
+      "totalQuestions": 782,
+      "isUserGenerated": true,
+      "createdAt": "2026-11-21T15:47:50.660Z"
+    },
+    {
+      "id": "bank_______Mathematics__bank_1793454135872_443ks",
+      "path": "/assets/user_banks/%E0%B2%97%E0%B2%A3%E0%B2%BF%E0%B2%A4__Mathematics__bank_1793454135872_443ks.json",
+      "filename": "ಗಣಿತ__Mathematics__bank_1793454135872_443ks.json",
+      "grade": "7 ನೇ ತರಗತಿ (Class 7)",
+      "gradeKey": "7",
+      "subject": "ಗಣಿತ (Mathematics)",
+      "subjectCode": "MATH",
+      "medium": "ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)",
+      "academicYear": "2026-2027",
+      "totalChapters": 15,
+      "totalQuestions": 834,
+      "isUserGenerated": true,
+      "createdAt": "2026-11-21T15:47:50.646Z"
+    },
+    {
+      "id": "bank_7th_Standard__7__________English_Second_Language_LBA_Question_Bank",
+      "path": "/assets/user_banks/7th_Standard_(7%E0%B2%A8%E0%B3%87_%E0%B2%A4%E0%B2%B0%E0%B2%97%E0%B2%A4%E0%B2%BF)_English_Second_Language_LBA_Question_Bank.json",
+      "filename": "7th_Standard_(7ನೇ_ತರಗತಿ)_English_Second_Language_LBA_Question_Bank.json",
+      "grade": "7th Standard (7ನೇ ತರಗತಿ)",
+      "gradeKey": "7",
+      "subject": "English Second Language",
+      "subjectCode": "ENG",
+      "medium": "English / State Syllabus",
+      "academicYear": "2026-27",
+      "totalChapters": 8,
+      "totalQuestions": 392,
+      "isUserGenerated": true,
+      "createdAt": "2026-11-21T15:47:50.625Z"
+    },
+    {
+      "id": "maths_class6",
+      "path": "/assets/user_banks/%E0%B2%97%E0%B2%A3%E0%B2%BF%E0%B2%A4__Mathematics__maths_class6.json",
+      "filename": "ಗಣಿತ__Mathematics__maths_class6.json",
+      "grade": "6ನೇ ತರಗತಿ (6th Standard)",
+      "gradeKey": "6",
+      "subject": "ಗಣಿತ (Mathematics)",
+      "subjectCode": "MATH",
+      "medium": "ಕನ್ನಡ ಮಾಧ್ಯಮ (Kannada Medium)",
+      "academicYear": "2026-2027",
+      "totalChapters": 10,
+      "totalQuestions": 292,
+      "isUserGenerated": true,
+      "createdAt": "2026-11-21T14:37:54.403Z"
+    },
+    {
+      "id": "local_ai_gen_bank",
+      "path": "/assets/user_banks/MATHEMATICS_local_ai_gen_bank.json",
+      "filename": "MATHEMATICS_local_ai_gen_bank.json",
+      "grade": "9 ನೇ ತರಗತಿ (Class 9)",
+      "gradeKey": "9",
+      "subject": "MATHEMATICS",
+      "subjectCode": "MATH",
+      "medium": "English Medium",
+      "academicYear": "2026-27",
+      "totalChapters": 12,
+      "totalQuestions": 718,
+      "isUserGenerated": true,
+      "createdAt": "2026-11-21T12:40:12.978Z"
+    }
+  ]
+}

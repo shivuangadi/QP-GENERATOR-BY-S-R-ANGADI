@@ -1,0 +1,67 @@
+{
+  "version": "2.0",
+  "generatedBy": "S R Angadi Question Paper Generator",
+  "description": "Karnataka State Syllabus DSERT LBA Official Question Banks",
+  "files": [
+    {
+      "id": "maths_class6",
+      "path": "/assets/aistudio/maths_class6_question_bank_f388d7c3.json",
+      "grade": "6 ನೇ ತರಗತಿ (Class 6)",
+      "gradeKey": "6",
+      "subject": "ಗಣಿತ (Mathematics)",
+      "subjectCode": "MATH",
+      "medium": "ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)",
+      "academicYear": "2026-27"
+    },
+    {
+      "id": "kannada_class6",
+      "path": "/assets/aistudio/kannada_class6_question_bank_0e721821.json",
+      "grade": "6 ನೇ ತರಗತಿ (Class 6)",
+      "gradeKey": "6",
+      "subject": "ಕನ್ನಡ (Kannada)",
+      "subjectCode": "KAN",
+      "medium": "ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)",
+      "academicYear": "2026-27"
+    },
+    {
+      "id": "english_class6",
+      "path": "/assets/aistudio/english_class6_question_bank_767d543a.json",
+      "grade": "6 ನೇ ತರಗತಿ (Class 6)",
+      "gradeKey": "6",
+      "subject": "English (Second Language)",
+      "subjectCode": "ENG",
+      "medium": "ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)",
+      "academicYear": "2026-27"
+    },
+    {
+      "id": "hindi_class6",
+      "path": "/assets/aistudio/hindi_class6_question_bank_98dd4289.json",
+      "grade": "6 ನೇ ತರಗತಿ (Class 6)",
+      "gradeKey": "6",
+      "subject": "ಹಿಂದಿ (Hindi)",
+      "subjectCode": "HIN",
+      "medium": "ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)",
+      "academicYear": "2026-27"
+    },
+    {
+      "id": "science_class6",
+      "path": "/assets/aistudio/Class6_Science_Kannada_Chapterwise_QA_Bank_230b74ea.json",
+      "grade": "6 ನೇ ತರಗತಿ (Class 6)",
+      "gradeKey": "6",
+      "subject": "ವಿಜ್ಞಾನ (Science)",
+      "subjectCode": "SCI",
+      "medium": "ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)",
+      "academicYear": "2026-27"
+    },
+    {
+      "id": "social_class6",
+      "path": "/assets/aistudio/class-6-social-science-kannada-lba-unicode_1be3aa51.json",
+      "grade": "6 ನೇ ತರಗತಿ (Class 6)",
+      "gradeKey": "6",
+      "subject": "ಸಮಾಜ ವಿಜ್ಞಾನ (Social Science)",
+      "subjectCode": "SOC",
+      "medium": "ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)",
+      "academicYear": "2026-27"
+    }
+  ]
+}

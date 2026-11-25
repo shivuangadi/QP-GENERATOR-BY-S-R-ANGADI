@@ -1,0 +1,3782 @@
+{
+  "metadata": {
+    "title": "Learning Outcome Based Assessment Question and Answer Bank",
+    "kannada_title": "ಕಲಿಕಾಫಲ ಆಧಾರಿತ ಮೌಲ್ಯಾಂಕನ ಪ್ರಶ್ನೆಕೋಠಿ (ಪ್ರಶ್ನೋತ್ತರ ಬ್ಯಾಂಕ್)",
+    "grade": "Class 6 (6th Standard)",
+    "subject": "Second Language English",
+    "academic_year": "2026-27",
+    "department": "Government of Karnataka, Department of School Education and Literacy",
+    "institution": "Department of State Educational Research and Training (DSERT), Bengaluru & DIET Mandya",
+    "version": "1.0.0",
+    "total_chapters": 14,
+    "total_questions": 248,
+    "source_pdf": "6thEnglishLBARevised_1787048536.pdf",
+    "source_pdf_pages": "1 to 92",
+    "verified": true,
+    "no_ai_generated_questions": true
+  },
+  "learning_outcomes": [
+    {
+      "code": "LO-1",
+      "title": "Responds to announcements, instructions, and asks questions in English"
+    },
+    {
+      "code": "LO-2",
+      "title": "Listens attentively to stories, poems, and answers questions accurately"
+    },
+    {
+      "code": "LO-3",
+      "title": "Speaks about personal experiences, family, friends, school, and nature"
+    },
+    {
+      "code": "LO-4",
+      "title": "Uses polite expressions and appropriate social courtesies in dialogue"
+    },
+    {
+      "code": "LO-5",
+      "title": "Participates actively in role plays, dialogues, and language activities"
+    },
+    {
+      "code": "LO-6",
+      "title": "Reads aloud poems and prose passages with proper pronunciation, pause, and intonation"
+    },
+    {
+      "code": "LO-7",
+      "title": "Reads silently with comprehension and extracts main themes and supporting details"
+    },
+    {
+      "code": "LO-8",
+      "title": "Infers meanings of unfamiliar words and phrases from contextual clues"
+    },
+    {
+      "code": "LO-9",
+      "title": "Refers to dictionaries and word lists for definitions, spellings, and usage"
+    },
+    {
+      "code": "LO-10",
+      "title": "Identifies and applies synonyms, antonyms, rhyming words, and collocations"
+    },
+    {
+      "code": "LO-11",
+      "title": "Forms words using prefixes, suffixes, and morphological roots"
+    },
+    {
+      "code": "LO-12",
+      "title": "Identifies and correctly utilizes parts of speech, articles, and prepositions"
+    },
+    {
+      "code": "LO-13",
+      "title": "Applies correct punctuation marks, capitalization, and sentence mechanics"
+    },
+    {
+      "code": "LO-14",
+      "title": "Constructs grammatically sound sentences utilizing appropriate verb tenses"
+    },
+    {
+      "code": "LO-15",
+      "title": "Composes coherent short paragraphs, personal letters, notices, and messages"
+    },
+    {
+      "code": "LO-16",
+      "title": "Develops guided stories from outlines and derives meaningful morals"
+    },
+    {
+      "code": "LO-17",
+      "title": "Expresses critical thoughts, personal emotions, and aesthetic appreciation of literary texts"
+    },
+    {
+      "code": "LO-26",
+      "title": "Quotes memorized stanzas of prescribed classical and contemporary poems accurately"
+    },
+    {
+      "code": "LO-36",
+      "title": "Enriches active vocabulary through contextual antonyms, prefixes, and word games"
+    },
+    {
+      "code": "LO-43",
+      "title": "Demonstrates creative writing skills and structured story-building capability"
+    }
+  ],
+  "chapters": [
+    {
+      "id": "unit-1-prose",
+      "unit_number": 1,
+      "title": "The Lighthouse",
+      "type": "Prose",
+      "pdf_pages": {
+        "questions": "15-18",
+        "answers": "64-65"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 31,
+          "average": 27,
+          "difficult": 13,
+          "total_questions": 71,
+          "weightage_percent": 100
+        },
+        "objectives": {
+          "knowledge": 26,
+          "comprehension": 41,
+          "application": 24,
+          "expression_creativity": 9
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "I. Multiple Choice Questions",
+          "instructions": "Four alternatives are given for each of the following questions/incomplete statements. Only one of them is appropriate or correct. Choose the correct alternative and complete the following. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u1-p-q1",
+              "question_number": 1,
+              "type": "mcq",
+              "question": "A land next to the sea is called _____________",
+              "options": [
+                "A) shore",
+                "B) island",
+                "C) lighthouse",
+                "D) village"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "A) Shore"
+            },
+            {
+              "id": "u1-p-q2",
+              "question_number": 2,
+              "type": "mcq",
+              "question": "‘I was thrilled to get my new bicycle’. Meaning of the word ‘thrilled’ is _____________",
+              "options": [
+                "A) scared",
+                "B) excited",
+                "C) anger",
+                "D) fun"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "B) Excited"
+            },
+            {
+              "id": "u1-p-q3",
+              "question_number": 3,
+              "type": "mcq",
+              "question": "Don’t dry my red shirt in the sun. It will become _________",
+              "options": [
+                "A) fearless",
+                "B) colourless",
+                "C) helpless",
+                "D) hopeless"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-36",
+              "answer": "B) Colourless"
+            },
+            {
+              "id": "u1-p-q4",
+              "question_number": 4,
+              "type": "mcq",
+              "question": "Find the antonym of the word ‘Dangerous’.",
+              "options": [
+                "A) stop",
+                "B) save",
+                "C) safe",
+                "D) short"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-36",
+              "answer": "C) Safe"
+            },
+            {
+              "id": "u1-p-q5",
+              "question_number": 5,
+              "type": "mcq",
+              "question": "‘The excursion was fun and educational’. Find the synonym of the word ‘excursion’.",
+              "options": [
+                "A) picnic",
+                "B) enjoy",
+                "C) excitement",
+                "D) family"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-36",
+              "answer": "A) Picnic"
+            },
+            {
+              "id": "u1-p-q6",
+              "question_number": 6,
+              "type": "mcq",
+              "question": "A person who catches fish for a living.",
+              "options": [
+                "A) fisherman",
+                "B) butcher",
+                "C) hunter",
+                "D) shepherd"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-4",
+              "answer": "B) Fisherman"
+            },
+            {
+              "id": "u1-p-q7",
+              "question_number": 7,
+              "type": "mcq",
+              "question": "A journey by sea is known as __________________",
+              "options": [
+                "A) voyage",
+                "B) trip",
+                "C) travel",
+                "D) visit"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-4",
+              "answer": "A) Voyage"
+            },
+            {
+              "id": "u1-p-q8",
+              "question_number": 8,
+              "type": "mcq",
+              "question": "Find the most suitable describing word for ‘Rose’.",
+              "options": [
+                "A) neat",
+                "B) ugly",
+                "C) tall",
+                "D) red"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-36",
+              "answer": "D) Red"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "II. Do as Directed",
+          "instructions": "Do as directed. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u1-p-q9a",
+              "question_number": "9a",
+              "type": "fill_blank",
+              "question": "Fill in the missing letters to get a meaningful word: One who sails across a sea or a river – S __ __ L __ R.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-37",
+              "answer": "SAILOR"
+            },
+            {
+              "id": "u1-p-q9b",
+              "question_number": "9b",
+              "type": "fill_blank",
+              "question": "Fill in the missing letters to get a meaningful word: An area of a land by the side of the sea – S __ A S __ __ R E.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-37",
+              "answer": "SEASHORE"
+            },
+            {
+              "id": "u1-p-q10",
+              "question_number": 10,
+              "type": "punctuation",
+              "question": "Punctuate the following: rajiv exclaimed how clever of the humans",
+              "difficulty": "Average",
+              "learning_outcome": "LO-37",
+              "answer": "Rajiv exclaimed, “How clever of the humans!”"
+            },
+            {
+              "id": "u1-p-q11",
+              "question_number": 11,
+              "type": "grammar",
+              "question": "Fill in the blank with appropriate tense form of the verb given in brackets: Rajiv asked his father, when ______ (is) the first lighthouse built?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-36",
+              "answer": "was"
+            },
+            {
+              "id": "u1-p-q12",
+              "question_number": 12,
+              "type": "grammar",
+              "question": "Fill in the blank with an appropriate preposition: In olden days, wood fires would be lit ___ high places on the shore.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-36",
+              "answer": "on"
+            },
+            {
+              "id": "u1-p-q13",
+              "question_number": 13,
+              "type": "grammar",
+              "question": "Fill in the blank with the suitable article: Madhav bought _____ ice cream for his son Rajiv.",
+              "difficulty": "Average",
+              "learning_outcome": "LO-36",
+              "answer": "an"
+            },
+            {
+              "id": "u1-p-q14",
+              "question_number": 14,
+              "type": "grammar",
+              "question": "Underline the adjective in the following sentence: Lighthouse is a strong building in the shape of a tower near the seashore.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-36",
+              "answer": "Strong"
+            },
+            {
+              "id": "u1-p-q15",
+              "question_number": 15,
+              "type": "grammar",
+              "question": "Identify the parts of speech of the underlined word: Rahul is driving a car. (driving)",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-36",
+              "answer": "Verb"
+            },
+            {
+              "id": "u1-p-q16",
+              "question_number": 16,
+              "type": "rearrange",
+              "question": "Rearrange the words into a meaningful sentence: was / Rajiv / happy / very",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-38",
+              "answer": "Rajiv was very happy."
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "III. Solve the Riddles",
+          "instructions": "Solve the riddles. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u1-p-q17",
+              "question_number": 17,
+              "type": "riddle",
+              "question": "I am tall and strong, beside the shore\nI guide boats everyday\nI have light but I am not a lamp.\nWho am I?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-3",
+              "answer": "Lighthouse"
+            },
+            {
+              "id": "u1-p-q18",
+              "question_number": 18,
+              "type": "riddle",
+              "question": "I travel on water, not on land\nI steer a ship with careful hands\nWho am I?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-3",
+              "answer": "Boat"
+            },
+            {
+              "id": "u1-p-q19",
+              "question_number": 19,
+              "type": "riddle",
+              "question": "I cover most of the earth\nI am full of water but if you are thirsty\nI cannot help you.\nWho am I?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-3",
+              "answer": "Ocean/Sea"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "IV. Tongue Twisters",
+          "instructions": "Practice these tongue twisters. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u1-p-q20",
+              "question_number": 20,
+              "type": "tongue_twister",
+              "question": "The sleepy sailor sees the sea’s shiny lighthouse light.",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-40",
+              "answer": "Students practice tongue twisters."
+            },
+            {
+              "id": "u1-p-q21",
+              "question_number": 21,
+              "type": "tongue_twister",
+              "question": "She sells seashells by the seashore.",
+              "difficulty": "Average",
+              "learning_outcome": "LO-40",
+              "answer": "Students practice tongue twisters."
+            },
+            {
+              "id": "u1-p-q22",
+              "question_number": 22,
+              "type": "tongue_twister",
+              "question": "Bright lights blink by blue buildings.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-40",
+              "answer": "Students practice tongue twisters."
+            },
+            {
+              "id": "u1-p-q23",
+              "question_number": 23,
+              "type": "tongue_twister",
+              "question": "Light beams leap lightly over little lakes.",
+              "difficulty": "Average",
+              "learning_outcome": "LO-40",
+              "answer": "Students practice tongue twisters."
+            },
+            {
+              "id": "u1-p-q24",
+              "question_number": 24,
+              "type": "tongue_twister",
+              "question": "Seven sailors sailed seven ships through stormy seas.",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-40",
+              "answer": "Students practice tongue twisters."
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "V. Answer in a Word or a Sentence Each",
+          "instructions": "Answer the following questions in a word or a sentence each. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u1-p-q25",
+              "question_number": 25,
+              "type": "one_sentence",
+              "question": "Where did Rajiv and his father go?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-3",
+              "answer": "Rajiv and his father went to see the lighthouse."
+            },
+            {
+              "id": "u1-p-q26",
+              "question_number": 26,
+              "type": "one_sentence",
+              "question": "Have you seen a lighthouse, where?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-3",
+              "answer": "Individual opinion / Student's response."
+            },
+            {
+              "id": "u1-p-q27",
+              "question_number": 27,
+              "type": "one_sentence",
+              "question": "How do modern lighthouses work?",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-3",
+              "answer": "Modern lighthouses work using electricity."
+            },
+            {
+              "id": "u1-p-q28",
+              "question_number": 28,
+              "type": "one_sentence",
+              "question": "What are the uses of lighthouses?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-3",
+              "answer": "The lighthouses help the sailors know where the land is and what place they are near."
+            },
+            {
+              "id": "u1-p-q29",
+              "question_number": 29,
+              "type": "one_sentence",
+              "question": "Why was Rajiv thrilled?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-3",
+              "answer": "Rajiv was thrilled because his father would take him out on a visit to the lighthouse."
+            },
+            {
+              "id": "u1-p-q30",
+              "question_number": 30,
+              "type": "one_sentence",
+              "question": "Where are the lighthouses built?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-3",
+              "answer": "Lighthouses are built sometimes on the seashore and sometimes in the sea."
+            },
+            {
+              "id": "u1-p-q31",
+              "question_number": 31,
+              "type": "one_sentence",
+              "question": "What did the people use in lighthouses before the invention of electricity?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-3",
+              "answer": "Wood fires and large number of candles."
+            }
+          ]
+        },
+        {
+          "section_id": "VI",
+          "title": "VI. Answer in Two or More Sentences",
+          "instructions": "Answer the following questions in two or more sentences. (2 Marks)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "u1-p-q32",
+              "question_number": 32,
+              "type": "short_answer",
+              "question": "How do the lighthouses guide the sailors to safety?",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-12",
+              "answer": "The lighthouses guided the sailors to safety by emitting light from a high tower, providing visual signals and guided them to safe harbors and ports."
+            },
+            {
+              "id": "u1-p-q33",
+              "question_number": 33,
+              "type": "short_answer",
+              "question": "Describe a lighthouse in your own words.",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-13",
+              "answer": "A lighthouse is a tall tower with a bright light at the top that helps guide ships and boats safely. It warns the sailors of dangers and shows them the way to safe harbors and ports."
+            }
+          ]
+        },
+        {
+          "section_id": "VII",
+          "title": "VII. Answer in Four to Five Sentences",
+          "instructions": "Answer the following questions in four to five sentences each. (4 Marks)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "u1-p-q34",
+              "question_number": 34,
+              "type": "long_answer",
+              "question": "What incidents in your life made you thrilled?",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-12",
+              "answer": "Incidents which made their lives thrilled based on students’ response."
+            }
+          ]
+        },
+        {
+          "section_id": "VIII",
+          "title": "VIII. Reading Comprehension",
+          "instructions": "Read the following passage and answer the questions that follow. (1 Mark)\nPassage: Rohan and Aryan were excited to visit the zoo as they walked through the gates. They saw a big lion’s den. Wow! Look at the king of the jungle! Rohan exclaimed. Aryan replied. Let's go and see the monkeys next. As they explored the zoo, they saw many animals, including elephants, giraffes and zebras. They learned about the importance of conservation and how humans can help protect animal’s habitats.",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u1-p-q35",
+              "question_number": 35,
+              "type": "comprehension",
+              "question": "Where did Rohan and Aryan go?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "Rohan and Aryan went to the zoo."
+            },
+            {
+              "id": "u1-p-q36",
+              "question_number": 36,
+              "type": "comprehension",
+              "question": "What animals did they see?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "They saw lion, monkeys, elephants, giraffes and zebras."
+            },
+            {
+              "id": "u1-p-q37",
+              "question_number": 37,
+              "type": "comprehension",
+              "question": "What did they learn?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-1",
+              "answer": "They learnt about the importance of conservation and how humans can help protect animal’s habitat."
+            }
+          ]
+        },
+        {
+          "section_id": "IX",
+          "title": "IX. Picture Study",
+          "instructions": "Study the picture given below. (Average) (4 Marks)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "u1-p-q38",
+              "question_number": 38,
+              "type": "picture_composition",
+              "question": "Write a description or an account of what the picture depicts in a paragraph. (Picture of a park scene with children and grandmother)",
+              "difficulty": "Average",
+              "learning_outcome": "LO-16",
+              "answer": "The picture is of a park where an old lady is sitting with a girl and both of them are reading a book. There is a boy behind the bench who is probably trying to hide. The two children are climbing up the tree. There is a girl who is riding her bike and a boy with a pet is running behind her."
+            }
+          ]
+        },
+        {
+          "section_id": "X",
+          "title": "X. Project Work",
+          "instructions": "Project work.",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "u1-p-q39",
+              "question_number": 39,
+              "type": "project",
+              "question": "Prepare a model of a light house and present it before the class.",
+              "difficulty": "Average",
+              "learning_outcome": "LO-22",
+              "answer": "Project Work."
+            },
+            {
+              "id": "u1-p-q40",
+              "question_number": 40,
+              "type": "project",
+              "question": "Make a list of inventions made with the collective effort of many persons.",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-54",
+              "answer": "Project Work."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-1-poem",
+      "unit_number": 1,
+      "title": "The Rainbow",
+      "type": "Poem",
+      "pdf_pages": {
+        "questions": "19-20",
+        "answers": "65-66"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 16,
+          "average": 10,
+          "difficult": 5,
+          "total_questions": 31,
+          "weightage_percent": 100
+        },
+        "objectives": {
+          "knowledge": 20,
+          "comprehension": 30,
+          "application": 20,
+          "expression_creativity": 30
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "I. Multiple Choice Questions",
+          "instructions": "Four alternatives are given for each of the following questions/incomplete statements. Only one of them is appropriate or correct. Choose the correct alternative and complete the following. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u1-poem-q1",
+              "question_number": 1,
+              "type": "mcq",
+              "question": "How many colours does a rainbow have?",
+              "options": [
+                "A) 3",
+                "B) 5",
+                "C) 7",
+                "D) 10"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-26",
+              "answer": "C) 7"
+            },
+            {
+              "id": "u1-poem-q2",
+              "question_number": 2,
+              "type": "mcq",
+              "question": "How does the speaker feel about the rainbow?",
+              "options": [
+                "A) Sad",
+                "B) Happy",
+                "C) Angry",
+                "D) Scared"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-26",
+              "answer": "B) Happy"
+            },
+            {
+              "id": "u1-poem-q3",
+              "question_number": 3,
+              "type": "mcq",
+              "question": "Where do you usually see a rainbow?",
+              "options": [
+                "A) In the forest",
+                "B) In the sky",
+                "C) In the ocean",
+                "D) On the mountain"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-31",
+              "answer": "B) In the sky"
+            },
+            {
+              "id": "u1-poem-q4",
+              "question_number": 4,
+              "type": "mcq",
+              "question": "Find the word that rhymes with ‘Seas’.",
+              "options": [
+                "A) These",
+                "B) Team",
+                "C) Threw",
+                "D) Though"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-36",
+              "answer": "A) These"
+            },
+            {
+              "id": "u1-poem-q5",
+              "question_number": 5,
+              "type": "mcq",
+              "question": "When can you see the rainbow?",
+              "options": [
+                "A) Only at night",
+                "B) After it rains",
+                "C) During a storm",
+                "D) In the morning"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-26",
+              "answer": "B) After it rains"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "II. Do as Directed",
+          "instructions": "Do as directed. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u1-poem-q6",
+              "question_number": 6,
+              "type": "grammar",
+              "question": "Identify the parts of speech of the underlined words: There are bridges on the rivers. (bridges, rivers)",
+              "difficulty": "Average",
+              "learning_outcome": "LO-36",
+              "answer": "Nouns"
+            },
+            {
+              "id": "u1-poem-q7",
+              "question_number": 7,
+              "type": "grammar",
+              "question": "Fill in the blank with an appropriate preposition: Ships sail ______ the seas.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-36",
+              "answer": "on"
+            },
+            {
+              "id": "u1-poem-q8",
+              "question_number": 8,
+              "type": "sentence_formation",
+              "question": "Frame a sentence using the word “Boat”.",
+              "difficulty": "Average",
+              "learning_outcome": "LO-37",
+              "answer": "The boat sailed across the river."
+            },
+            {
+              "id": "u1-poem-q9",
+              "question_number": 9,
+              "type": "antonym",
+              "question": "Write the antonym of the word ‘Over’.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-36",
+              "answer": "Under"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "III. Rearrange the Words",
+          "instructions": "Rearrange the words to make a meaningful sentence. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u1-poem-q10",
+              "question_number": 10,
+              "type": "rearrange",
+              "question": "sail / the / in / rivers / Boats",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-36",
+              "answer": "Boats sail in the rivers."
+            },
+            {
+              "id": "u1-poem-q11",
+              "question_number": 11,
+              "type": "rearrange",
+              "question": "seas / on / Ships / the / sail",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-36",
+              "answer": "Ships sail on the seas."
+            },
+            {
+              "id": "u1-poem-q12",
+              "question_number": 12,
+              "type": "rearrange",
+              "question": "bridges / the / are / There / rivers / on",
+              "difficulty": "Average",
+              "learning_outcome": "LO-36",
+              "answer": "There are bridges on the rivers."
+            },
+            {
+              "id": "u1-poem-q13",
+              "question_number": 13,
+              "type": "rearrange",
+              "question": "heaven / Rainbow / bridges",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-36",
+              "answer": "Rainbow bridges heaven."
+            },
+            {
+              "id": "u1-poem-q14",
+              "question_number": 14,
+              "type": "rearrange",
+              "question": "earth / a / sky / road / to / builds / rainbow / from",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-36",
+              "answer": "Rainbow builds a road from earth to sky."
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "IV. Answer in a Word or Sentence Each",
+          "instructions": "Answer the following questions in a word or sentence each. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u1-poem-q15",
+              "question_number": 15,
+              "type": "one_sentence",
+              "question": "According to the poet, what sails in the rivers?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-26",
+              "answer": "According to the poet, boats sail in the rivers."
+            },
+            {
+              "id": "u1-poem-q16",
+              "question_number": 16,
+              "type": "one_sentence",
+              "question": "According to the poet, what sails on the seas?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-26",
+              "answer": "According to the poet, ships sail on the seas."
+            },
+            {
+              "id": "u1-poem-q17",
+              "question_number": 17,
+              "type": "one_sentence",
+              "question": "Which does the poet think is prettier - clouds or ships?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-26",
+              "answer": "clouds"
+            },
+            {
+              "id": "u1-poem-q18",
+              "question_number": 18,
+              "type": "one_sentence",
+              "question": "What is built on the rivers as given in the second stanza?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-26",
+              "answer": "Bridges are built on rivers."
+            },
+            {
+              "id": "u1-poem-q19",
+              "question_number": 19,
+              "type": "one_sentence",
+              "question": "What does the rainbow overtop, according to the poet?",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-26",
+              "answer": "According to the poet, the rainbow overtops the trees."
+            },
+            {
+              "id": "u1-poem-q20",
+              "question_number": 20,
+              "type": "one_sentence",
+              "question": "What is much prettier than the bridges on the rivers?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-26",
+              "answer": "The rainbow is much prettier than the bridges on the rivers."
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "V. Answer in 2–3 Sentences Each",
+          "instructions": "Answer the following questions in 2 – 3 sentences each. (2 Marks)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "u1-poem-q21",
+              "question_number": 21,
+              "type": "short_answer",
+              "question": "What does the poet compare the rainbow to?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-26",
+              "answer": "The poet compares the rainbow to a bridge that builds a road from earth to sky."
+            },
+            {
+              "id": "u1-poem-q22",
+              "question_number": 22,
+              "type": "creative",
+              "question": "Draw a picture of a rainbow and describe it in your own words.",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-27",
+              "answer": "Picture of the Rainbow. (Students draw a rainbow with its seven distinct arched bands and write a short description of its beauty)."
+            },
+            {
+              "id": "u1-poem-q23",
+              "question_number": 23,
+              "type": "short_answer",
+              "question": "List out the colours in a rainbow and arrange it in its correct order.",
+              "difficulty": "Average",
+              "learning_outcome": "LO-27",
+              "answer": "Violet, Indigo, Blue, Green, Yellow, Orange, and Red."
+            }
+          ]
+        },
+        {
+          "section_id": "VI",
+          "title": "VI. Answer in 5–6 Sentences",
+          "instructions": "Answer the following question in 5 – 6 sentences. (4 Marks)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "u1-poem-q24",
+              "question_number": 24,
+              "type": "long_answer",
+              "question": "Describe your feelings when you saw a rainbow for the first time.",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-29",
+              "answer": "Student’s response."
+            }
+          ]
+        },
+        {
+          "section_id": "VII",
+          "title": "VII. Quote from Memory",
+          "instructions": "Quote from memory. (Average) (LO-40) (4 Marks)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "u1-poem-q25",
+              "question_number": 25,
+              "type": "quote_memory",
+              "question": "Boats sail..............................\n..............................................\n..............................................\n…………………. than these.",
+              "difficulty": "Average",
+              "learning_outcome": "LO-40",
+              "answer": "Boats sail in the rivers.\nAnd ships sail on the seas;\nBut clouds that sail across the sky,\nAre prettier far than these."
+            }
+          ]
+        },
+        {
+          "section_id": "VIII",
+          "title": "VIII. Reading Comprehension",
+          "instructions": "Read the following passage and answer the questions that follow. (1 Mark)\nPassage: The poem, The Rainbow, written by Christina Rossetti compares a rainbow to a beautiful bridge as connecting the earth and the sky, a more beautiful structure than any man-made bridge. There is also a poem called ‘The Rainbow’ by William Wordsworth which explores similar themes of nature’s beauty and human connection to it.",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u1-poem-q26",
+              "question_number": 26,
+              "type": "comprehension",
+              "question": "What does Christina Rossetti compare a rainbow to?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "The rainbow is compared to a beautiful bridge connected to the earth and sky."
+            },
+            {
+              "id": "u1-poem-q27",
+              "question_number": 27,
+              "type": "comprehension",
+              "question": "What was the theme of the poem ‘The Rainbow’ written by William Wordsworth?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-1",
+              "answer": "The theme of the poem written by William Wordsworth explores similar themes of nature’s beauty and human connection to it."
+            }
+          ]
+        },
+        {
+          "section_id": "IX",
+          "title": "IX. Short Notes & Comparison",
+          "instructions": "Answer the following questions. (4 Marks)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "u1-poem-q28",
+              "question_number": 28,
+              "type": "short_note",
+              "question": "Write a short note on Rainbow.",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-31",
+              "answer": "Rainbow: The rainbow is a beautiful natural wonder that appears in the sky after a rain shower. It is made up of seven colours: Violet, Indigo, Blue, Green, Yellow, Orange and Red. Each colour is beautiful and unique. When we see a rainbow, it makes us happy and fills our heart with joy."
+            },
+            {
+              "id": "u1-poem-q29",
+              "question_number": 29,
+              "type": "comparison",
+              "question": "Compare a real bridge and a rainbow. Write one similarity and one difference between them.",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-55",
+              "answer": "Rivers: Rivers are flowing bodies of water that move across the land. They are the source of water for animals, plants and people. Rivers helps us in many ways, like providing water for drinking, irrigation and fishing. Rivers are also home to many aquatic animals like fish and crocodiles. People enjoy boating, swimming and playing near river side. Rivers are very important for our planet and our daily lives."
+            }
+          ]
+        },
+        {
+          "section_id": "X",
+          "title": "X. Project Work",
+          "instructions": "Project work.",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "u1-poem-q30",
+              "question_number": 30,
+              "type": "project",
+              "question": "Using a plain CD, explain the colors' representation of a rainbow.",
+              "difficulty": "Average",
+              "learning_outcome": "LO-50",
+              "answer": "Project Work."
+            },
+            {
+              "id": "u1-poem-q31",
+              "question_number": 31,
+              "type": "project",
+              "question": "Collect rhymes/songs related to rainbow in English or in your mother tongue.",
+              "difficulty": "Average",
+              "learning_outcome": "LO-55",
+              "answer": "Project Work."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-2-prose",
+      "unit_number": 2,
+      "title": "The Scholar’s Mother Tongue",
+      "type": "Prose",
+      "pdf_pages": {
+        "questions": "21-25",
+        "answers": "67-69"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 32,
+          "average": 29,
+          "difficult": 14,
+          "total_questions": 75,
+          "weightage_percent": 100
+        },
+        "objectives": {
+          "knowledge": 18,
+          "comprehension": 40,
+          "application": 31,
+          "expression_creativity": 11
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "I. Multiple Choice Questions",
+          "instructions": "Four alternatives are given for each of the following questions/incomplete statements. Only one of them is appropriate or correct. Choose the correct alternative and complete the following. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u2-p-q1",
+              "question_number": 1,
+              "type": "mcq",
+              "question": "Choose the antonym of the underlined word: We are in the same class but have __________ opinions about the teacher. (same)",
+              "options": [
+                "A) different",
+                "B) identical",
+                "C) similar",
+                "D) alike"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-18",
+              "answer": "A) different"
+            },
+            {
+              "id": "u2-p-q2",
+              "question_number": 2,
+              "type": "mcq",
+              "question": "Choose the synonym of the underlined word: The scholar was surprised to see the wit of the Birbal. (surprised)",
+              "options": [
+                "A) astonished",
+                "B) worried",
+                "C) dismayed",
+                "D) sneaked"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-18",
+              "answer": "A) astonished"
+            },
+            {
+              "id": "u2-p-q3",
+              "question_number": 3,
+              "type": "mcq",
+              "question": "Scholar, Pandit, Teacher, Butcher. The word that does not belong to the group is _________",
+              "options": [
+                "A) Scholar",
+                "B) Pandit",
+                "C) Teacher",
+                "D) Butcher"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-4",
+              "answer": "D) Butcher"
+            },
+            {
+              "id": "u2-p-q4",
+              "question_number": 4,
+              "type": "mcq",
+              "question": "Everyone was stumped by this puzzle. Synonym of the underlined word is ______ (stumped)",
+              "options": [
+                "A) confused",
+                "B) happy",
+                "C) angry",
+                "D) curious"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-18",
+              "answer": "A) Confused"
+            },
+            {
+              "id": "u2-p-q5",
+              "question_number": 5,
+              "type": "mcq",
+              "question": "Which language is considered as important for learning?",
+              "options": [
+                "A) English",
+                "B) Mother tongue",
+                "C) Foreign language",
+                "D) None"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-4",
+              "answer": "B) Mother tongue"
+            },
+            {
+              "id": "u2-p-q6",
+              "question_number": 6,
+              "type": "mcq",
+              "question": "What does the lesson “The Scholar’s Mother Tongue” emphasize?",
+              "options": [
+                "A) importance of English",
+                "B) importance of mother tongue",
+                "C) importance of multilingualism",
+                "D) none"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-1",
+              "answer": "B) Importance of mother tongue"
+            },
+            {
+              "id": "u2-p-q7",
+              "question_number": 7,
+              "type": "mcq",
+              "question": "Who was the visitor at Akbar’s court one day?",
+              "options": [
+                "A) a pandit",
+                "B) a cook",
+                "C) a beggar",
+                "D) a soldier"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "A) A pandit"
+            },
+            {
+              "id": "u2-p-q8",
+              "question_number": 8,
+              "type": "mcq",
+              "question": "Pandit shouted ‘Yevaradhi’. So, the Pandit’s mother tongue was ______",
+              "options": [
+                "A) Tamil",
+                "B) Kannada",
+                "C) Telugu",
+                "D) English"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "C) Telugu"
+            },
+            {
+              "id": "u2-p-q9",
+              "question_number": 9,
+              "type": "mcq",
+              "question": "What did Birbal tickle the Pandit’s ear with?",
+              "options": [
+                "A) stick",
+                "B) paper",
+                "C) feather",
+                "D) leaf"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "C) Feather"
+            },
+            {
+              "id": "u2-p-q10",
+              "question_number": 10,
+              "type": "mcq",
+              "question": "Fill in the blanks with the opposite of the underlined word: Raghav was quiet in a ________ class. (quiet)",
+              "options": [
+                "A) silent",
+                "B) sleepy",
+                "C) boring",
+                "D) noisy"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-18",
+              "answer": "D) Noisy"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "II. Do as Directed",
+          "instructions": "Do as directed. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u2-p-q11",
+              "question_number": 11,
+              "type": "grammar",
+              "question": "Fill in the blank with the suitable past tense form of the verb: One day, a great scholar __________ (came, coming) to the king’s court.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-18",
+              "answer": "Came."
+            },
+            {
+              "id": "u2-p-q12",
+              "question_number": 12,
+              "type": "grammar",
+              "question": "Fill in the blank with the appropriate preposition: The headquarter ______ a country or a state is called Capital.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-18",
+              "answer": "Of"
+            },
+            {
+              "id": "u2-p-q13",
+              "question_number": 13,
+              "type": "grammar",
+              "question": "Fill in the blank using suitable conjunction: Birbal enters into the Pandit’s bedroom _____ finds him fast asleep.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-18",
+              "answer": "And"
+            },
+            {
+              "id": "u2-p-q14",
+              "question_number": 14,
+              "type": "collocation",
+              "question": "Combine the word in column A with its collocative word in column B: Dining [table, fan, bag, car]",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-52",
+              "answer": "Table (Dining table)"
+            },
+            {
+              "id": "u2-p-q15",
+              "question_number": 15,
+              "type": "grammar",
+              "question": "Write the correct form of the word given in the bracket: She completed her _________ (graduation/graduated) from Mysore University.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-18",
+              "answer": "Graduation"
+            },
+            {
+              "id": "u2-p-q16",
+              "question_number": 16,
+              "type": "grammar",
+              "question": "Fill in the blanks with the suitable article: _____ Taj Mahal is situated on the banks of the river Yamuna.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-18",
+              "answer": "The"
+            },
+            {
+              "id": "u2-p-q17",
+              "question_number": 17,
+              "type": "grammar",
+              "question": "Change the word into a superlative form of adjective: Good – ___________",
+              "difficulty": "Average",
+              "learning_outcome": "LO-18",
+              "answer": "Best."
+            },
+            {
+              "id": "u2-p-q18",
+              "question_number": 18,
+              "type": "sentence_formation",
+              "question": "Use the phrase ‘mother tongue’ in your own sentence.",
+              "difficulty": "Average",
+              "learning_outcome": "LO-36",
+              "answer": "My mother tongue is Hindi."
+            },
+            {
+              "id": "u2-p-q19",
+              "question_number": 19,
+              "type": "grammar",
+              "question": "Identify the parts of speech of the underlined word: Use a pen to write. (write)",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-18",
+              "answer": "Verb."
+            },
+            {
+              "id": "u2-p-q20",
+              "question_number": 20,
+              "type": "punctuation",
+              "question": "Punctuate the following sentence: birbal says the Pandits mother tongue is Telugu.",
+              "difficulty": "Average",
+              "learning_outcome": "LO-18",
+              "answer": "Birbal says, “The Pandit’s mother tongue is Telugu.”"
+            },
+            {
+              "id": "u2-p-q21a",
+              "question_number": "21a",
+              "type": "riddle",
+              "question": "The letter in the English alphabet always asks a question?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-39",
+              "answer": "Letter ‘Y’."
+            },
+            {
+              "id": "u2-p-q21b",
+              "question_number": "21b",
+              "type": "riddle",
+              "question": "A word begins with ‘e’ ends with ‘e’ and has one letter?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-39",
+              "answer": "envelope"
+            },
+            {
+              "id": "u2-p-q22",
+              "question_number": 22,
+              "type": "classification_table",
+              "question": "Read the list of nouns given below and write them in their appropriate column: Lion, Doctor, Village, Book, Crow, Comb, Bengaluru, Rabbit, Dog, Sister, Eagle. Columns: Person, Place, Animal, Bird, Thing",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-52",
+              "answer": "• Person: Doctor, sister\n• Place: Village, Bengaluru\n• Animal: Lion, Rabbit\n• Bird: Crow, eagle\n• Thing: Comb, book"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "III. Word Grid Clues",
+          "instructions": "Extract the answers from the word grid with the help of the given clues. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u2-p-q23",
+              "question_number": 23,
+              "type": "word_clue",
+              "question": "A man who rules a kingdom - __________",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-53",
+              "answer": "King"
+            },
+            {
+              "id": "u2-p-q24",
+              "question_number": 24,
+              "type": "word_clue",
+              "question": "Land ruled by a king - __________",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-53",
+              "answer": "Kingdom"
+            },
+            {
+              "id": "u2-p-q25",
+              "question_number": 25,
+              "type": "word_clue",
+              "question": "A special hat worn by a king - __________",
+              "difficulty": "Average",
+              "learning_outcome": "LO-53",
+              "answer": "Crown"
+            },
+            {
+              "id": "u2-p-q26",
+              "question_number": 26,
+              "type": "word_clue",
+              "question": "A king’s seat - __________",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-53",
+              "answer": "Throne"
+            },
+            {
+              "id": "u2-p-q27",
+              "question_number": 27,
+              "type": "word_clue",
+              "question": "A large house where a king lives - __________",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-53",
+              "answer": "Palace"
+            },
+            {
+              "id": "u2-p-q28",
+              "question_number": 28,
+              "type": "word_clue",
+              "question": "The wife of a king - __________",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-53",
+              "answer": "Queen"
+            },
+            {
+              "id": "u2-p-q29",
+              "question_number": 29,
+              "type": "word_clue",
+              "question": "People who protect the king - __________",
+              "difficulty": "Average",
+              "learning_outcome": "LO-53",
+              "answer": "Guards"
+            },
+            {
+              "id": "u2-p-q30",
+              "question_number": 30,
+              "type": "word_clue",
+              "question": "Related to a king or queen - __________",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-53",
+              "answer": "Royal"
+            },
+            {
+              "id": "u2-p-q31",
+              "question_number": 31,
+              "type": "word_clue",
+              "question": "People from noble families - __________",
+              "difficulty": "Average",
+              "learning_outcome": "LO-53",
+              "answer": "Nobles"
+            },
+            {
+              "id": "u2-p-q32",
+              "question_number": 32,
+              "type": "word_clue",
+              "question": "Decorated stick carried by a king - __________",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-53",
+              "answer": "Sceptre"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "IV. Answer in a Word or a Sentence Each",
+          "instructions": "Answer the following questions in a word or a sentence each. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u2-p-q33",
+              "question_number": 33,
+              "type": "one_sentence",
+              "question": "Who was the visitor at Akbar’s court one day?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "The learned scholar (Pandit)"
+            },
+            {
+              "id": "u2-p-q34",
+              "question_number": 34,
+              "type": "one_sentence",
+              "question": "What is Pandit’s mother tongue?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "The Pandit’s mother tongue was Telugu."
+            },
+            {
+              "id": "u2-p-q35",
+              "question_number": 35,
+              "type": "one_sentence",
+              "question": "Who admitted his defeat at the end?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "The Pandit admitted his defeat at the last."
+            },
+            {
+              "id": "u2-p-q36",
+              "question_number": 36,
+              "type": "one_sentence",
+              "question": "What do you mean by the word ‘Scholar’?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-3",
+              "answer": "Scholar means someone who has studied a subject and knows a lot about it."
+            },
+            {
+              "id": "u2-p-q37",
+              "question_number": 37,
+              "type": "one_sentence",
+              "question": "Which language was uttered by Pandit when his ear was tickled with a feather?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "Telugu language was uttered by Pandit when he was tickled with a feather."
+            },
+            {
+              "id": "u2-p-q38",
+              "question_number": 38,
+              "type": "one_sentence",
+              "question": "When will a person speak truly in his mother tongue?",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-12",
+              "answer": "A person speaks truly in his mother tongue at the time of danger or in a deep sleep."
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "V. Answer in 2-3 Sentences Each",
+          "instructions": "Answer the following questions in 2-3 sentences each. (2 Marks)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "u2-p-q39",
+              "question_number": 39,
+              "type": "short_answer",
+              "question": "What did Pandit challenge the court?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-3",
+              "answer": "The Pandit challenged the court to find out his mother tongue. He also stated that he knew many languages and it is very difficult to find it."
+            },
+            {
+              "id": "u2-p-q40",
+              "question_number": 40,
+              "type": "short_answer",
+              "question": "What did the scholar tell the king and the courtiers?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-3",
+              "answer": "He told the king that he was a master of many languages and could speak many languages fluently."
+            }
+          ]
+        },
+        {
+          "section_id": "VI",
+          "title": "VI. Reference to Context Extracts",
+          "instructions": "Read the following extracts and answer the questions that follow. (3 Marks)",
+          "marks_per_question": 3,
+          "questions": [
+            {
+              "id": "u2-p-q41",
+              "question_number": 41,
+              "type": "reference_context",
+              "question": "\"I have mastery over different languages.\"\na) Who is the speaker?\nb) Who was the king in the court during his visit?\nc) Why did the speaker say so?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-3",
+              "answer": "a) The pandit.\nb) King Akbar.\nc) In order to challenge the court about his mastery over languages."
+            },
+            {
+              "id": "u2-p-q42",
+              "question_number": 42,
+              "type": "reference_context",
+              "question": "'Your majesty, the Pandit’s mother tongue is Telugu.'\na) Who made this statement?\nb) Whom was this said to?\nc) What do you mean by the word ‘majesty’?",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-3",
+              "answer": "a) Birbal.\nb) The king.\nc) Dignity."
+            },
+            {
+              "id": "u2-p-q43",
+              "question_number": 43,
+              "type": "reference_context",
+              "question": "'I can speak many languages fluently.'\na) Who is the speaker?\nb) Who were present in the court?\nc) What was his intention to state this?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-3",
+              "answer": "a) The pandit.\nb) The king and his ministers.\nc) In order to challenge the court about his mastery."
+            }
+          ]
+        },
+        {
+          "section_id": "VII",
+          "title": "VII. Story Development",
+          "instructions": "Develop a story using the clues given below. (Difficult) (LO-43) (4 Marks)\nClues: Three friends .........two geese, a tortoise........lived ......a pond.......due to drought....pond dried......decide to migrate.........food, water.......geese fly.......tortoise can’t......devise a plan.......carry tortoise.....hold stick with their beaks....tortoise not to speak.....hold the middle of the stick......children clap....tortoise angry.....bursts out....fell.",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "u2-p-q44",
+              "question_number": 44,
+              "type": "story_writing",
+              "question": "Develop a story of two geese and a tortoise using the given clues and write the moral.",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-43",
+              "answer": "Two geese and a tortoise were friends. The geese wanted to migrate to a new place and asked the tortoise to join them. They devised a plan for the tortoise to hold onto a stick while the geese flew, carrying the stick. However, the tortoise was told not to speak. On the way, the tortoise couldn't resist responding to children's taunts, opened his mouth, and fell to his death. The story teaches the importance of self-control and following advice.\nMoral: Self-control and listening to good advice saves life / Look before you leap."
+            }
+          ]
+        },
+        {
+          "section_id": "VIII",
+          "title": "VIII. Dialogue Completion",
+          "instructions": "Complete the following conversation. (Difficult) (LO-14) (4 Marks)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "u2-p-q45",
+              "question_number": 45,
+              "type": "dialogue_completion",
+              "question": "Patient: Good morning, doctor.\nDoctor: ______________________________\nPatient: ______________________________\nDoctor: Let me check your temperature. Yes, you have slight fever. When did the cough start?\nPatient: ______________________________\nDoctor: ______________________________\nPatient: Should I go to school today?\nDoctor: ______________________________\nPatient: ______________________________\nDoctor: You are welcome. Get well soon!",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-14",
+              "answer": "Patient: Good morning, doctor.\nDoctor: Very good morning. What seems to be the problem?\nPatient: I have fever and bad cough.\nDoctor: Let me check your temperature. Yes, you have slight fever. When did the cough start?\nPatient: It started yesterday night. My throat also hurts.\nDoctor: Don’t worry, it is just a common cold. I will give you some medicine. Take one tablet in the morning and one at night.\nPatient: Should I go to school today?\nDoctor: No, you need to rest at home for two days. Drink plenty of warm water.\nPatient: Okay, Doctor. Thank you very much!\nDoctor: You are welcome. Get well soon!"
+            }
+          ]
+        },
+        {
+          "section_id": "IX",
+          "title": "IX. Project Work",
+          "instructions": "Project work. (Difficult) (LO-13)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "u2-p-q46",
+              "question_number": 46,
+              "type": "project",
+              "question": "If you are Birbal in the story, how would you find out the scholar’s mother tongue? Explain in your own words.",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-13",
+              "answer": "Project Work. (Students formulate creative strategies like observing reactions during sudden surprise, deep sleep, emotional excitement or fear to uncover natural mother tongue reflexes)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-2-poem",
+      "unit_number": 2,
+      "title": "Sympathy",
+      "type": "Poem",
+      "pdf_pages": {
+        "questions": "25-27",
+        "answers": "69-70"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 10,
+          "average": 15,
+          "difficult": 6,
+          "total_questions": 31,
+          "weightage_percent": 100
+        },
+        "objectives": {
+          "knowledge": 20,
+          "comprehension": 30,
+          "application": 25,
+          "expression_creativity": 25
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "I. Multiple Choice Questions",
+          "instructions": "Four alternatives are given for each of the following questions/incomplete statements. Only one of them is appropriate or correct. Choose the correct alternative and complete the following. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u2-poem-q1",
+              "question_number": 1,
+              "type": "mcq",
+              "question": "The poem ‘Sympathy’ is written by ______.",
+              "options": [
+                "A) Maria Devis",
+                "B) Henry Joseph",
+                "C) Charles Mackay",
+                "D) Thomas Hardy"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "C) Charles Mackay."
+            },
+            {
+              "id": "u2-poem-q2",
+              "question_number": 2,
+              "type": "mcq",
+              "question": "What does the poet want to do for the poor people?",
+              "options": [
+                "A) ignore them",
+                "B) help them",
+                "C) sympathize them",
+                "D) avoid them"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-2",
+              "answer": "C) Sympathize them."
+            },
+            {
+              "id": "u2-poem-q3",
+              "question_number": 3,
+              "type": "mcq",
+              "question": "The rich man typically lives ________",
+              "options": [
+                "A) in poverty",
+                "B) in luxury",
+                "C) in simplicity",
+                "D) in hardship"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-4",
+              "answer": "B) In luxury."
+            },
+            {
+              "id": "u2-poem-q4",
+              "question_number": 4,
+              "type": "mcq",
+              "question": "In poor man’s life________ is highlighted.",
+              "options": [
+                "A) his wealth",
+                "B) his struggle",
+                "C) his happiness",
+                "D) his luxury"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-5",
+              "answer": "B) His struggles."
+            },
+            {
+              "id": "u2-poem-q5",
+              "question_number": 5,
+              "type": "mcq",
+              "question": "The synonym of the word ‘Sympathy’ is _________",
+              "options": [
+                "A) Pity",
+                "B) Anger",
+                "C) Hatred",
+                "D) Cruelty"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-37",
+              "answer": "A) Pity."
+            },
+            {
+              "id": "u2-poem-q6",
+              "question_number": 6,
+              "type": "mcq",
+              "question": "The rhyming word for the word ‘Way’ is _______",
+              "options": [
+                "A) Day",
+                "B) Weigh",
+                "C) Whale",
+                "D) Hare"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-37",
+              "answer": "A) Day."
+            },
+            {
+              "id": "u2-poem-q7",
+              "question_number": 7,
+              "type": "mcq",
+              "question": "The antonym of the word ‘Kind’ is __________",
+              "options": [
+                "A) Happy",
+                "B) Cruel",
+                "C) Empathy",
+                "D) Compassion"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-18",
+              "answer": "B) Cruel."
+            },
+            {
+              "id": "u2-poem-q8",
+              "question_number": 8,
+              "type": "mcq",
+              "question": "The correctly spelt word among the following is __________",
+              "options": [
+                "A) Greif",
+                "B) Grief",
+                "C) Greef",
+                "D) Grif"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-37",
+              "answer": "B) Grief."
+            },
+            {
+              "id": "u2-poem-q9",
+              "question_number": 9,
+              "type": "mcq",
+              "question": "What does the poet urge the readers to do?",
+              "options": [
+                "A) To be indifferent to others",
+                "B) To sympathize with others",
+                "C) To ignore other’s problems",
+                "D) To criticize them"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-31",
+              "answer": "B) To sympathize with others."
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "II. Odd Word Out",
+          "instructions": "Find the odd word out in each set. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u2-poem-q10",
+              "question_number": 10,
+              "type": "odd_word",
+              "question": "sorrow, grief, sadness, joy, worry",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-18",
+              "answer": "joy"
+            },
+            {
+              "id": "u2-poem-q11",
+              "question_number": 11,
+              "type": "odd_word",
+              "question": "hot, cold, warm, boiling, lukewarm",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-18",
+              "answer": "cold"
+            },
+            {
+              "id": "u2-poem-q12",
+              "question_number": 12,
+              "type": "odd_word",
+              "question": "rich, poor, wealthy, well off, well-to-do",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-18",
+              "answer": "poor"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "III. Rhyming Pairs",
+          "instructions": "Make the pairs of rhyming words from the words given in the box (Easy) (LO-37) (2 Marks)\n[cold, heard, way, gold, pain, word, bread, day, again, sound, head, bound]",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "u2-poem-q13",
+              "question_number": 13,
+              "type": "rhyming_words",
+              "question": "Match rhyming pairs from the box: cold, heard, way, gold, pain, word, bread, day, again, sound, head, bound",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-37",
+              "answer": "cold-gold, heard-word, way-day, pain-again, bread-head, sound-bound"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "IV. Answer in a Word or a Sentence Each",
+          "instructions": "Answer the following questions in a word or a sentence each. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u2-poem-q14",
+              "question_number": 14,
+              "type": "one_sentence",
+              "question": "‘His looks were cold’, who does ‘his’ refer to?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-27",
+              "answer": "‘His’ referred to the proud man / (Key answers: ‘His’ referred to the poet's benefactor)."
+            },
+            {
+              "id": "u2-poem-q15",
+              "question_number": 15,
+              "type": "one_sentence",
+              "question": "What does the speaker value more than gold?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-28",
+              "answer": "The speaker values heavenly sympathy than gold."
+            },
+            {
+              "id": "u2-poem-q16",
+              "question_number": 16,
+              "type": "one_sentence",
+              "question": "What values are highlighted in the poor man’s action?",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-28",
+              "answer": "Kindness, compassion and selflessness."
+            },
+            {
+              "id": "u2-poem-q17",
+              "question_number": 17,
+              "type": "one_sentence",
+              "question": "What did the proud man’s behavior show?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-27",
+              "answer": "He was more interested in giving money than showing sympathy."
+            },
+            {
+              "id": "u2-poem-q18",
+              "question_number": 18,
+              "type": "one_sentence",
+              "question": "How does the poet repay the proud man’s kindness?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-27",
+              "answer": "The poet repays the person’s kindness with thanks and blessings."
+            },
+            {
+              "id": "u2-poem-q19",
+              "question_number": 19,
+              "type": "one_sentence",
+              "question": "How does the poet feel about the person’s sympathy?",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-27",
+              "answer": "The poet feels grateful and values the person’s sympathy deeply."
+            },
+            {
+              "id": "u2-poem-q20",
+              "question_number": 20,
+              "type": "one_sentence",
+              "question": "What, according to the poet, is greater than gold?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-27",
+              "answer": "According to the poet, heavenly sympathy is greater than gold."
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "V. Answer in 3-4 Sentences Each",
+          "instructions": "Answer the following questions in 3-4 sentences each. (2 Marks)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "u2-poem-q21",
+              "question_number": 21,
+              "type": "short_answer",
+              "question": "Describe the poet’s feelings towards the person who showed sympathy.",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-28",
+              "answer": "The poet feels deeply grateful and appreciative towards the person who showed sympathy. The poet values kindness and understanding more than material wealth."
+            },
+            {
+              "id": "u2-poem-q22",
+              "question_number": 22,
+              "type": "short_answer",
+              "question": "How does the poem highlight the importance of sympathy and kindness?",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-28",
+              "answer": "The poem highlights the importance of sympathy and kindness by contrasting it with material wealth. The poet emphasizes that sympathy is more valuable than gold showing that kindness and understanding are essential human qualities."
+            }
+          ]
+        },
+        {
+          "section_id": "VI",
+          "title": "VI. Answer in 5-6 Sentences Each",
+          "instructions": "Answer the following questions in 5-6 sentences each. (4 Marks)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "u2-poem-q23",
+              "question_number": 23,
+              "type": "long_answer",
+              "question": "Summarize the poem in your own words.",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-29",
+              "answer": "The theme of sympathy is central to the poem. The poet conveys its importance by emphasizing that sympathy is more valuable than material wealth. The poet feels grateful and appreciative towards the person who showed sympathy highlighting the positive impact of kindness."
+            },
+            {
+              "id": "u2-poem-q24",
+              "question_number": 24,
+              "type": "long_answer",
+              "question": "Describe a situation when someone was kind to you.",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-29",
+              "answer": "The poet values sympathy and kindness over material wealth. The poet’s attitude suggests that true wealth lies in human connections and understanding. The message conveyed that kindness and sympathy are essential for human well-being."
+            }
+          ]
+        },
+        {
+          "section_id": "VII",
+          "title": "VII. Reference to Context Extracts",
+          "instructions": "Read the following extracts and answer the questions that follow. (3 Marks)",
+          "marks_per_question": 3,
+          "questions": [
+            {
+              "id": "u2-poem-q25",
+              "question_number": 25,
+              "type": "reference_context",
+              "question": "“His looks were cold; he gave me gold”.\na) Who is the speaker?\nb) Whose looks were cold?\nc) Write a word that rhymes with ‘Gold’?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-3",
+              "answer": "a. Poet.\nb. The proud man’s looks were cold.\nc. Gold - Cold."
+            },
+            {
+              "id": "u2-poem-q26",
+              "question_number": 26,
+              "type": "reference_context",
+              "question": "‘He watched me night and day’.\na) Who is the speaker?\nb) Who was watching the speaker?\nc) From which poem these lines are extracted?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-3",
+              "answer": "a. The poet.\nb. The poor man.\nc. Sympathy."
+            }
+          ]
+        },
+        {
+          "section_id": "VIII",
+          "title": "VIII. Story Development",
+          "instructions": "Develop a story using the clues given below. (Difficult) (LO-43) (2 Marks)\nClues: A hungry dog________ searching food _______fond of a bone_______ happy______ crossing a bridge _______saw own reflection _______another dog_____ bark_______ bone fell ____ water____ dog______ foolish_____ home_____ disappointed_____.",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "u2-poem-q27",
+              "question_number": 27,
+              "type": "story_writing",
+              "question": "Develop the story of the greedy dog using the clues and state the moral.",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-43",
+              "answer": "Once upon a time, there was a hungry dog who loved to eat bones. One day, he found the juicy bone and held it in his mouth and was so happy that he had food. While crossing along a bridge, he looked down at the water and saw his own reflection with a bone holding in his mouth. He got so greedy that he wanted the other dog’s bone too. He barked at the other dog to try to get the bone, but when the mouth opened his own bone fell into the water. He lost his bone because he was too greedy.\nMoral: BE HAPPY WITH WHAT YOU HAVE AND DON’T BE GREEDY."
+            }
+          ]
+        },
+        {
+          "section_id": "IX",
+          "title": "IX. Quote from Memory",
+          "instructions": "Quote from memory. (Easy) (LO-26) (4 Marks)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "u2-poem-q28",
+              "question_number": 28,
+              "type": "quote_memory",
+              "question": "I lay in........................\n....................................\n....................................\n................ kindly word.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-26",
+              "answer": "I lay in sorrow, deep depressed\nMy grief a proud man heard\nHis looks were cold, he gave me gold.\nBut not a kindly word"
+            }
+          ]
+        },
+        {
+          "section_id": "X",
+          "title": "X. Detailed Analysis",
+          "instructions": "Answer the following question in about 8-10 sentences. (Difficult) (LO-17) (6 Marks)",
+          "marks_per_question": 6,
+          "questions": [
+            {
+              "id": "u2-poem-q29",
+              "question_number": 29,
+              "type": "essay",
+              "question": "Analyze the poem ‘Sympathy’ by Charles Mackay focusing on the themes of kindness, gratitude and the value of human connections. How does the poet convey the importance of sympathy in human relationships?",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-17",
+              "answer": "The poem \"Sympathy\" by Charles Mackay beautifully captures the essence of kindness, gratitude, and the value of human connections. The poet expresses deep appreciation for someone who showed sympathy and kindness, valuing it more than material wealth.\n\nThe poem highlights the theme of kindness by emphasizing the positive impact it has on individuals. The poet feels grateful and thankful for the person's sympathy, showing that kindness can bring people closer together. The line \"Oh, gold is great, but greater far is heavenly sympathy\" underscores the importance of sympathy over material wealth.\n\nIn conclusion, \"Sympathy\" is a powerful poem that celebrates the value of kindness and human connections. The poet's heartfelt appreciation for sympathy serves as a reminder of the importance of empathy and compassion in our relationships."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-3-prose",
+      "unit_number": 3,
+      "title": "How Do Bees Make Honey?",
+      "type": "Prose",
+      "pdf_pages": {
+        "questions": "30-33",
+        "answers": "73-74"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 30,
+          "average": 25,
+          "difficult": 14,
+          "total_questions": 69,
+          "weightage_percent": 100
+        },
+        "objectives": {
+          "knowledge": 25,
+          "comprehension": 40,
+          "application": 25,
+          "expression_creativity": 10
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "I. Multiple Choice Questions",
+          "instructions": "Four alternatives are given for each of the following questions/incomplete statements. Only one of them is appropriate or correct. Choose the correct alternative and complete the following. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u3-p-q1",
+              "question_number": 1,
+              "type": "mcq",
+              "question": "Honeybees collect a sweet liquid from flowers called _____________",
+              "options": [
+                "A) water",
+                "B) nectar",
+                "C) wax",
+                "D) pollen"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "B) Nectar"
+            },
+            {
+              "id": "u3-p-q2",
+              "question_number": 2,
+              "type": "mcq",
+              "question": "The sole mother and egg-layer in a beehive is the _____________",
+              "options": [
+                "A) drone bee",
+                "B) worker bee",
+                "C) queen bee",
+                "D) soldier bee"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "C) Queen bee"
+            },
+            {
+              "id": "u3-p-q3",
+              "question_number": 3,
+              "type": "mcq",
+              "question": "The male bees in a bee colony are known as _____________",
+              "options": [
+                "A) drones",
+                "B) queens",
+                "C) workers",
+                "D) nurses"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "A) Drones"
+            },
+            {
+              "id": "u3-p-q4",
+              "question_number": 4,
+              "type": "mcq",
+              "question": "The buzzing sound of bees is produced by the rapid movement of their _____________",
+              "options": [
+                "A) legs",
+                "B) wings",
+                "C) antennae",
+                "D) mouth"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "B) Wings"
+            },
+            {
+              "id": "u3-p-q5",
+              "question_number": 5,
+              "type": "mcq",
+              "question": "Bees communicate information about food sources by performing a _____________",
+              "options": [
+                "A) song",
+                "B) dance",
+                "C) jump",
+                "D) circle"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "B) Dance"
+            },
+            {
+              "id": "u3-p-q6",
+              "question_number": 6,
+              "type": "mcq",
+              "question": "Choose the correct antonym for the word ‘Sweet’:",
+              "options": [
+                "A) Sour",
+                "B) Bitter",
+                "C) Salty",
+                "D) Cold"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-10",
+              "answer": "B) Bitter"
+            },
+            {
+              "id": "u3-p-q7",
+              "question_number": 7,
+              "type": "mcq",
+              "question": "The dwelling place of honeybees is called a _____________",
+              "options": [
+                "A) den",
+                "B) hive",
+                "C) nest",
+                "D) burrow"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "B) Hive"
+            },
+            {
+              "id": "u3-p-q8",
+              "question_number": 8,
+              "type": "mcq",
+              "question": "Identify the correct spelling of the word:",
+              "options": [
+                "A) Houney",
+                "B) Huney",
+                "C) Honey",
+                "D) Hony"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-9",
+              "answer": "C) Honey"
+            },
+            {
+              "id": "u3-p-q9",
+              "question_number": 9,
+              "type": "mcq",
+              "question": "Worker bees store collected honey in small hexagonal wax chambers called _____________",
+              "options": [
+                "A) tunnels",
+                "B) cells",
+                "C) boxes",
+                "D) pots"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "B) Cells"
+            },
+            {
+              "id": "u3-p-q10",
+              "question_number": 10,
+              "type": "mcq",
+              "question": "Which of the following bees do all the hard work like cleaning and feeding?",
+              "options": [
+                "A) Worker bees",
+                "B) Drones",
+                "C) Queen bee",
+                "D) King bee"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "A) Worker bees"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "II. Vocabulary and Grammar (Do as Directed)",
+          "instructions": "Follow the instructions given for each question. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u3-p-q11",
+              "question_number": 11,
+              "type": "fill_blank",
+              "question": "Fill in the blank with the suitable preposition:\nBees collect nectar _________ blossoms.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-12",
+              "answer": "from"
+            },
+            {
+              "id": "u3-p-q12",
+              "question_number": 12,
+              "type": "fill_blank",
+              "question": "Fill in the blank with the correct preposition:\nThe nurse bees take care _________ the larvae.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-12",
+              "answer": "of"
+            },
+            {
+              "id": "u3-p-q13",
+              "question_number": 13,
+              "type": "grammar",
+              "question": "Add a suitable prefix to the word ‘patient’ to make its opposite.",
+              "difficulty": "Average",
+              "learning_outcome": "LO-11",
+              "answer": "impatient (Prefix: im-)"
+            },
+            {
+              "id": "u3-p-q14",
+              "question_number": 14,
+              "type": "grammar",
+              "question": "Form an adjective by adding '-ful' to the noun: 'beauty'.",
+              "difficulty": "Average",
+              "learning_outcome": "LO-11",
+              "answer": "beautiful"
+            },
+            {
+              "id": "u3-p-q15",
+              "question_number": 15,
+              "type": "grammar",
+              "question": "Give the plural form of the word 'bee'.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-12",
+              "answer": "bees"
+            },
+            {
+              "id": "u3-p-q16",
+              "question_number": 16,
+              "type": "grammar",
+              "question": "Frame a 'Wh-' question to get the underlined word as answer:\n'Bees live in a beehive.'",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-14",
+              "answer": "Where do bees live?"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "III. One Sentence Answer Questions",
+          "instructions": "Answer the following questions in a sentence each. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u3-p-q17",
+              "question_number": 17,
+              "type": "short_answer",
+              "question": "What is honey?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "Honey is a thick, sweet liquid made by honeybees from the sugary nectar of flowers."
+            },
+            {
+              "id": "u3-p-q18",
+              "question_number": 18,
+              "type": "short_answer",
+              "question": "Who lays eggs in the beehive?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "The queen bee lays eggs in the beehive."
+            },
+            {
+              "id": "u3-p-q19",
+              "question_number": 19,
+              "type": "short_answer",
+              "question": "Name the three types of bees present in a honeybee colony.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-7",
+              "answer": "The three types of bees in a colony are the queen bee, male drones, and female worker bees."
+            },
+            {
+              "id": "u3-p-q20",
+              "question_number": 20,
+              "type": "short_answer",
+              "question": "What is the primary role of male drone bees?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "The main role of drones is to mate with the young queen bee."
+            },
+            {
+              "id": "u3-p-q21",
+              "question_number": 21,
+              "type": "short_answer",
+              "question": "Why do bees perform the waggle dance?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "Bees perform the waggle dance to communicate the distance and direction of nectar-rich flowers to other worker bees."
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "IV. Two to Three Sentences Answer Questions",
+          "instructions": "Answer the following questions in 2-3 sentences each. (2 Marks)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "u3-p-q22",
+              "question_number": 22,
+              "type": "paragraph",
+              "question": "How do worker bees convert flower nectar into thick honey?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "Worker bees collect nectar in their honey sacs where natural enzymes break down complex sugars. Inside the hive, they deposit the nectar into cells and fan their wings rapidly to evaporate the excess moisture until thick honey is formed."
+            },
+            {
+              "id": "u3-p-q23",
+              "question_number": 23,
+              "type": "paragraph",
+              "question": "State any two important uses of honey in daily life.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-7",
+              "answer": "Honey is widely used as a healthy natural food sweetener and energy booster. It is also used in Ayurvedic medicine to soothe sore throats, heal wounds, and aid digestion."
+            },
+            {
+              "id": "u3-p-q24",
+              "question_number": 24,
+              "type": "paragraph",
+              "question": "Describe the responsibilities of worker bees in a hive.",
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "Worker bees perform all household duties: cleaning honeycomb cells, nursing young larvae, tending to the queen, defending the entrance against intruders, and flying out to gather nectar and pollen."
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "V. Paragraph Writing / Creative Expression",
+          "instructions": "Write a short paragraph in about 5-6 sentences. (Difficult) (LO-15) (4 Marks)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "u3-p-q25",
+              "question_number": 25,
+              "type": "paragraph",
+              "question": "Write a short paragraph on 'The Importance of Honeybees in Nature'.",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-15",
+              "answer": "Honeybees are among the most essential pollinators on Earth. While flying from blossom to blossom to gather food, they carry pollen grains that allow fruits, vegetables, flowers, and trees to reproduce. Without bees, many of the crops humans and animals depend upon for food would vanish. Furthermore, they supply humans with nutritious honey and beeswax. Protecting honeybee populations is vital for maintaining ecological balance and global food security."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-3-poem",
+      "unit_number": 3,
+      "title": "Kind Kindness",
+      "type": "Poem",
+      "pdf_pages": {
+        "questions": "34-36",
+        "answers": "75-76"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 18,
+          "average": 15,
+          "difficult": 9,
+          "total_questions": 42,
+          "weightage_percent": 100
+        },
+        "objectives": {
+          "knowledge": 16,
+          "comprehension": 22,
+          "application": 15,
+          "expression_creativity": 8
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "I. Multiple Choice Questions",
+          "instructions": "Choose the correct alternative for each question. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u3-poem-q1",
+              "question_number": 1,
+              "type": "mcq",
+              "question": "The poet inspires us to treat ____________ with warmth and gentleness.",
+              "options": [
+                "A) only rich people",
+                "B) all living beings",
+                "C) only our family",
+                "D) only superiors"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-2",
+              "answer": "B) All living beings"
+            },
+            {
+              "id": "u3-poem-q2",
+              "question_number": 2,
+              "type": "mcq",
+              "question": "Which of the following words rhymes with 'kind'?",
+              "options": [
+                "A) blind",
+                "B) land",
+                "C) hand",
+                "D) cold"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-10",
+              "answer": "A) Blind"
+            },
+            {
+              "id": "u3-poem-q3",
+              "question_number": 3,
+              "type": "mcq",
+              "question": "A simple act of kindness costs nothing, but brings great _____________",
+              "options": [
+                "A) sorrow",
+                "B) wealth",
+                "C) happiness",
+                "D) pride"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-2",
+              "answer": "C) Happiness"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "II. One Sentence Answer Questions",
+          "instructions": "Answer the following questions in a sentence each. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u3-poem-q4",
+              "question_number": 4,
+              "type": "short_answer",
+              "question": "What effect does a gentle, kind word have on an unhappy person?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-2",
+              "answer": "A gentle, kind word brings comfort, relieves sorrow, and brings a smile to an unhappy heart."
+            },
+            {
+              "id": "u3-poem-q5",
+              "question_number": 5,
+              "type": "short_answer",
+              "question": "Why should we never hesitate to show kindness to animals and birds?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-17",
+              "answer": "We should show kindness to animals and birds because they are helpless living creatures who feel pain and respond with love."
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "III. Quote from Memory",
+          "instructions": "Quote from memory the prescribed lines of the poem. (Easy) (LO-26) (4 Marks)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "u3-poem-q6",
+              "question_number": 6,
+              "type": "quote_memory",
+              "question": "Quote the stanza on kindness from memory (4 lines).",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-26",
+              "answer": "A little word in kindness spoken,\nA motion or a tear,\nHas often healed the heart that's broken,\nAnd made a friend sincere."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-4-prose",
+      "unit_number": 4,
+      "title": "A Chat with a Grasshopper",
+      "type": "Prose",
+      "pdf_pages": {
+        "questions": "37-40",
+        "answers": "77-78"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 28,
+          "average": 26,
+          "difficult": 12,
+          "total_questions": 66,
+          "weightage_percent": 100
+        },
+        "objectives": {
+          "knowledge": 24,
+          "comprehension": 38,
+          "application": 24,
+          "expression_creativity": 9
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "I. Multiple Choice Questions",
+          "instructions": "Choose the correct alternative and write it with its alphabet. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u4-p-q1",
+              "question_number": 1,
+              "type": "mcq",
+              "question": "A grasshopper belongs to the family of _____________",
+              "options": [
+                "A) birds",
+                "B) insects",
+                "C) reptiles",
+                "D) mammals"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "B) Insects"
+            },
+            {
+              "id": "u4-p-q2",
+              "question_number": 2,
+              "type": "mcq",
+              "question": "Grasshoppers produce their unique chirping song by rubbing their _____________",
+              "options": [
+                "A) antennae together",
+                "B) hind legs against forewings",
+                "C) teeth",
+                "D) eyes"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "B) Hind legs against forewings"
+            },
+            {
+              "id": "u4-p-q3",
+              "question_number": 3,
+              "type": "mcq",
+              "question": "How many pairs of jointed legs does an adult grasshopper have?",
+              "options": [
+                "A) Two pairs",
+                "B) Three pairs",
+                "C) Four pairs",
+                "D) Five pairs"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "B) Three pairs"
+            },
+            {
+              "id": "u4-p-q4",
+              "question_number": 4,
+              "type": "mcq",
+              "question": "The body of an insect is divided into three distinct segments: head, thorax and _____________",
+              "options": [
+                "A) tail",
+                "B) abdomen",
+                "C) spine",
+                "D) chest"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "B) Abdomen"
+            },
+            {
+              "id": "u4-p-q5",
+              "question_number": 5,
+              "type": "mcq",
+              "question": "The green color of the grasshopper helps it to hide from predators by _____________",
+              "options": [
+                "A) camouflage",
+                "B) flying high",
+                "C) hibernation",
+                "D) stinging"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "A) Camouflage"
+            },
+            {
+              "id": "u4-p-q6",
+              "question_number": 6,
+              "type": "mcq",
+              "question": "What is the antonym of the word 'Friend'?",
+              "options": [
+                "A) Companion",
+                "B) Ally",
+                "C) Enemy",
+                "D) Helper"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-10",
+              "answer": "C) Enemy"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "II. Vocabulary and Grammar",
+          "instructions": "Do as directed. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u4-p-q7",
+              "question_number": 7,
+              "type": "grammar",
+              "question": "Write the past tense form of the verb 'hop'.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-14",
+              "answer": "hopped"
+            },
+            {
+              "id": "u4-p-q8",
+              "question_number": 8,
+              "type": "grammar",
+              "question": "Write the past tense form of the verb 'jump'.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-14",
+              "answer": "jumped"
+            },
+            {
+              "id": "u4-p-q9",
+              "question_number": 9,
+              "type": "grammar",
+              "question": "Punctuate the following sentence correctly:\n'did you see the green grasshopper raju'",
+              "difficulty": "Average",
+              "learning_outcome": "LO-13",
+              "answer": "Did you see the green grasshopper, Raju?"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "III. One Sentence Answer Questions",
+          "instructions": "Answer the following questions in a sentence each. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u4-p-q10",
+              "question_number": 10,
+              "type": "short_answer",
+              "question": "Where are grasshoppers typically found?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "Grasshoppers are found in open grasslands, meadows, pastures, and garden shrubs."
+            },
+            {
+              "id": "u4-p-q11",
+              "question_number": 11,
+              "type": "short_answer",
+              "question": "What do grasshoppers primarily feed upon?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "Grasshoppers primarily feed on green grass, leaves, stems, and agricultural crops."
+            },
+            {
+              "id": "u4-p-q12",
+              "question_number": 12,
+              "type": "short_answer",
+              "question": "How do grasshoppers take in oxygen to breathe?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "Grasshoppers breathe through tiny breathing apertures called spiracles located on the sides of their bodies."
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "IV. Two to Three Sentences Answer Questions",
+          "instructions": "Answer the following questions in 2-3 sentences each. (2 Marks)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "u4-p-q13",
+              "question_number": 13,
+              "type": "paragraph",
+              "question": "How do the long hind legs benefit a grasshopper?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "The powerful long hind legs allow the grasshopper to leap enormous distances into the air, enabling it to swiftly escape from birds, lizards, and other predators."
+            },
+            {
+              "id": "u4-p-q14",
+              "question_number": 14,
+              "type": "paragraph",
+              "question": "Explain how camouflage protects the grasshopper in green fields.",
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "The bright green and yellowish shades of a grasshopper’s body blend seamlessly with surrounding grass and foliage. This camouflage makes it virtually invisible to enemies hunting for food."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-4-poem",
+      "unit_number": 4,
+      "title": "A Nurse's Song",
+      "type": "Poem",
+      "pdf_pages": {
+        "questions": "41-43",
+        "answers": "79-80"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 20,
+          "average": 18,
+          "difficult": 8,
+          "total_questions": 46,
+          "weightage_percent": 100
+        },
+        "objectives": {
+          "knowledge": 18,
+          "comprehension": 24,
+          "application": 16,
+          "expression_creativity": 8
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "I. Multiple Choice Questions",
+          "instructions": "Choose the correct alternative and write it with its alphabet. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u4-poem-q1",
+              "question_number": 1,
+              "type": "mcq",
+              "question": "Where were the happy children playing in 'A Nurse's Song'?",
+              "options": [
+                "A) In the street",
+                "B) On the green",
+                "C) In the classroom",
+                "D) By the seashore"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-2",
+              "answer": "B) On the green"
+            },
+            {
+              "id": "u4-poem-q2",
+              "question_number": 2,
+              "type": "mcq",
+              "question": "Why did the nurse call the children to come indoors?",
+              "options": [
+                "A) It was raining",
+                "B) The sun had gone down and night was approaching",
+                "C) School had started",
+                "D) She was angry"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-2",
+              "answer": "B) The sun had gone down and night was approaching"
+            },
+            {
+              "id": "u4-poem-q3",
+              "question_number": 3,
+              "type": "mcq",
+              "question": "Who composed the poem 'A Nurse's Song'?",
+              "options": [
+                "A) William Wordsworth",
+                "B) William Blake",
+                "C) Robert Frost",
+                "D) Christina Rossetti"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-2",
+              "answer": "B) William Blake"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "II. One Sentence Answer Questions",
+          "instructions": "Answer the following questions in a sentence each. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u4-poem-q4",
+              "question_number": 4,
+              "type": "short_answer",
+              "question": "What sounds were heard echoing across the green hill?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-2",
+              "answer": "The joyful voices and cheerful laughter of children playing were heard echoing across the green hill."
+            },
+            {
+              "id": "u4-poem-q5",
+              "question_number": 5,
+              "type": "short_answer",
+              "question": "What reason did the children give to request more time to play outside?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "The children pleaded that daylight was still lingering in the sky and the birds in the sky had not yet gone to sleep."
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "III. Quote from Memory",
+          "instructions": "Quote from memory the opening lines of 'A Nurse's Song'. (LO-26) (4 Marks)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "u4-poem-q6",
+              "question_number": 6,
+              "type": "quote_memory",
+              "question": "When the voices of children...................\n...........................................................\n...........................................................\n.............................................. rests.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-26",
+              "answer": "When the voices of children are heard on the green,\nAnd laughing is heard on the hill,\nMy heart is at rest within my breast,\nAnd everything else is still."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-5-prose",
+      "unit_number": 5,
+      "title": "The Story of Ikki",
+      "type": "Prose",
+      "pdf_pages": {
+        "questions": "44-47",
+        "answers": "81-82"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 29,
+          "average": 25,
+          "difficult": 12,
+          "total_questions": 66,
+          "weightage_percent": 100
+        },
+        "objectives": {
+          "knowledge": 25,
+          "comprehension": 39,
+          "application": 24,
+          "expression_creativity": 10
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "I. Multiple Choice Questions",
+          "instructions": "Four alternatives are given for each question. Choose the correct alternative and write it down. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u5-p-q1",
+              "question_number": 1,
+              "type": "mcq",
+              "question": "Ikki was a kind-hearted boy belonging to the indigenous community of _____________",
+              "options": [
+                "A) Hokkaido in Japan",
+                "B) Tibet",
+                "C) Mongolia",
+                "D) Korea"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "A) Hokkaido in Japan"
+            },
+            {
+              "id": "u5-p-q2",
+              "question_number": 2,
+              "type": "mcq",
+              "question": "The creature that Ikki found injured in the snow was a _____________",
+              "options": [
+                "A) deer",
+                "B) baby crane (tancho)",
+                "C) snow fox",
+                "D) bear"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "B) Baby crane (tancho)"
+            },
+            {
+              "id": "u5-p-q3",
+              "question_number": 3,
+              "type": "mcq",
+              "question": "In Japan, the red-crowned crane is regarded as a sacred symbol of _____________",
+              "options": [
+                "A) longevity and peace",
+                "B) war and power",
+                "C) wealth",
+                "D) storm"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "A) Longevity and peace"
+            },
+            {
+              "id": "u5-p-q4",
+              "question_number": 4,
+              "type": "mcq",
+              "question": "What did Ikki feed the hungry baby crane to nurse it back to health?",
+              "options": [
+                "A) Small fresh fish",
+                "B) Rice cakes",
+                "C) Nuts",
+                "D) Berries"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "A) Small fresh fish"
+            },
+            {
+              "id": "u5-p-q5",
+              "question_number": 5,
+              "type": "mcq",
+              "question": "Choose the synonym of the word 'Heal':",
+              "options": [
+                "A) Cure",
+                "B) Hurt",
+                "C) Damage",
+                "D) Break"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-10",
+              "answer": "A) Cure"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "II. Vocabulary and Grammar",
+          "instructions": "Do as directed. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u5-p-q6",
+              "question_number": 6,
+              "type": "grammar",
+              "question": "Write the past tense form of the verb 'feed'.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-14",
+              "answer": "fed"
+            },
+            {
+              "id": "u5-p-q7",
+              "question_number": 7,
+              "type": "fill_blank",
+              "question": "Fill in the blank with suitable preposition:\nIkki wrapped the bird ________ a warm blanket.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-12",
+              "answer": "in"
+            },
+            {
+              "id": "u5-p-q8",
+              "question_number": 8,
+              "type": "grammar",
+              "question": "Identify the adjective in the sentence: 'Ikki was a compassionate boy.'",
+              "difficulty": "Average",
+              "learning_outcome": "LO-12",
+              "answer": "compassionate"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "III. One Sentence Answer Questions",
+          "instructions": "Answer the following questions in a sentence each. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u5-p-q9",
+              "question_number": 9,
+              "type": "short_answer",
+              "question": "What was Ikki's reaction upon seeing the wounded crane in the snow?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "Ikki felt deep pity and immediately picked up the shivering crane to take it home and treat its wounds."
+            },
+            {
+              "id": "u5-p-q10",
+              "question_number": 10,
+              "type": "short_answer",
+              "question": "How did the crane express its gratitude towards Ikki?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "The crane rubbed its gentle head against Ikki's shoulder and stayed by his side until its wings had healed."
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "IV. Two to Three Sentences Answer Questions",
+          "instructions": "Answer the following questions in 2-3 sentences each. (2 Marks)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "u5-p-q11",
+              "question_number": 11,
+              "type": "paragraph",
+              "question": "What moral lesson does the story of Ikki teach students?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-17",
+              "answer": "The story teaches us to have deep love and compassion towards helpless animals and birds. It reminds us that kindness towards nature is always rewarded with friendship and inner peace."
+            },
+            {
+              "id": "u5-p-q12",
+              "question_number": 12,
+              "type": "paragraph",
+              "question": "Describe how Ikki nursed the baby crane until it was ready to fly.",
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "Ikki sheltered the bird in a cozy corner of his hut, bandaged its broken wing, and fed it fresh fish daily. With his constant care and affection, the bird regained its strength and soared back into the sky."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-5-poem",
+      "unit_number": 5,
+      "title": "Plant a Tree",
+      "type": "Poem",
+      "pdf_pages": {
+        "questions": "48-50",
+        "answers": "83-84"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 19,
+          "average": 16,
+          "difficult": 9,
+          "total_questions": 44,
+          "weightage_percent": 100
+        },
+        "objectives": {
+          "knowledge": 18,
+          "comprehension": 22,
+          "application": 15,
+          "expression_creativity": 8
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "I. Multiple Choice Questions",
+          "instructions": "Choose the correct alternative and write it down. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u5-poem-q1",
+              "question_number": 1,
+              "type": "mcq",
+              "question": "A person who plants a tree plants shelter and a home for singing _____________",
+              "options": [
+                "A) birds",
+                "B) fishes",
+                "C) tigers",
+                "D) insects"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-2",
+              "answer": "A) Birds"
+            },
+            {
+              "id": "u5-poem-q2",
+              "question_number": 2,
+              "type": "mcq",
+              "question": "Trees offer comforting ____________ to weary travelers under the hot sun.",
+              "options": [
+                "A) rain",
+                "B) cool shade",
+                "C) dust",
+                "D) noise"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-2",
+              "answer": "B) Cool shade"
+            },
+            {
+              "id": "u5-poem-q3",
+              "question_number": 3,
+              "type": "mcq",
+              "question": "Identify the rhyming pair in the poem:",
+              "options": [
+                "A) tree - see",
+                "B) shade - cold",
+                "C) leaf - stone",
+                "D) sky - run"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-10",
+              "answer": "A) Tree - see"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "II. Quote from Memory",
+          "instructions": "Quote the stanza from memory. (LO-26) (4 Marks)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "u5-poem-q4",
+              "question_number": 4,
+              "type": "quote_memory",
+              "question": "What does he plant who plants a tree?............\n.......................................................................\n.......................................................................\n.................................................... in the sky.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-26",
+              "answer": "What does he plant who plants a tree?\nHe plants a friend of sun and sky;\nHe plants the flag of breezes free;\nThe shaft of beauty, towering high."
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "III. Two to Three Sentences Answer Questions",
+          "instructions": "Answer in 2-3 sentences. (2 Marks)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "u5-poem-q5",
+              "question_number": 5,
+              "type": "paragraph",
+              "question": "Why does the poet say that one who plants a tree plants a 'friend of sun and sky'?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-17",
+              "answer": "The poet calls the tree a friend of sun and sky because it reaches upward towards the heavens, dances in the gentle breezes, absorbs sunlight to produce life, and keeps the atmosphere cool and pure."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-6-prose",
+      "unit_number": 6,
+      "title": "White Mice",
+      "type": "Prose",
+      "pdf_pages": {
+        "questions": "51-54",
+        "answers": "85-86"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 30,
+          "average": 26,
+          "difficult": 13,
+          "total_questions": 69,
+          "weightage_percent": 100
+        },
+        "objectives": {
+          "knowledge": 26,
+          "comprehension": 39,
+          "application": 24,
+          "expression_creativity": 10
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "I. Multiple Choice Questions",
+          "instructions": "Choose the correct alternative and write it down. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u6-p-q1",
+              "question_number": 1,
+              "type": "mcq",
+              "question": "The author was traveling in the train accompanied by his _____________",
+              "options": [
+                "A) Grandfather",
+                "B) Uncle",
+                "C) Schoolmaster",
+                "D) Friend"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "A) Grandfather"
+            },
+            {
+              "id": "u6-p-q2",
+              "question_number": 2,
+              "type": "mcq",
+              "question": "Where had the young boy secretly kept his pair of white mice?",
+              "options": [
+                "A) In a cage",
+                "B) In his coat pocket",
+                "C) Under the seat",
+                "D) Inside a suitcase"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "B) In his coat pocket"
+            },
+            {
+              "id": "u6-p-q3",
+              "question_number": 3,
+              "type": "mcq",
+              "question": "The sudden appearance of the white mouse in the train compartment caused _____________",
+              "options": [
+                "A) fear and amusement among passengers",
+                "B) a fight",
+                "C) the train to stop",
+                "D) anger"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "A) Fear and amusement among passengers"
+            },
+            {
+              "id": "u6-p-q4",
+              "question_number": 4,
+              "type": "mcq",
+              "question": "The singular form of the word 'mice' is _____________",
+              "options": [
+                "A) mouses",
+                "B) mouse",
+                "C) micer",
+                "D) mis"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-12",
+              "answer": "B) Mouse"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "II. Vocabulary and Grammar",
+          "instructions": "Follow instructions given. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u6-p-q5",
+              "question_number": 5,
+              "type": "grammar",
+              "question": "Change into indirect speech:\nGrandfather said, 'Be careful with the mice.'",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-14",
+              "answer": "Grandfather advised him to be careful with the mice."
+            },
+            {
+              "id": "u6-p-q6",
+              "question_number": 6,
+              "type": "grammar",
+              "question": "Write the opposite of the word 'Cautious'.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-10",
+              "answer": "Careless / Reckless"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "III. One Sentence Answer Questions",
+          "instructions": "Answer in a sentence each. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u6-p-q7",
+              "question_number": 7,
+              "type": "short_answer",
+              "question": "Why did the boy decide to carry the white mice with him?",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "The boy carried the white mice because they were his favorite pets and he did not want to leave them unattended at home."
+            },
+            {
+              "id": "u6-p-q8",
+              "question_number": 8,
+              "type": "short_answer",
+              "question": "How did Grandfather react when the mouse popped out of the pocket?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "Grandfather pretended not to know anything and suppressed a mischievous chuckle while passengers panicked."
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "IV. Two to Three Sentences Answer Questions",
+          "instructions": "Answer in 2-3 sentences each. (2 Marks)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "u6-p-q9",
+              "question_number": 9,
+              "type": "paragraph",
+              "question": "Narrate the humorous incident that occurred inside the railway compartment.",
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "While passengers were dozing off, one white mouse escaped from the boy's coat and crawled into a lady passenger's sweet basket. When she reached for food, she screamed in fright and jumped on the berth, creating hilarious commotion in the coach."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-6-poem",
+      "unit_number": 6,
+      "title": "The Way Through the Woods",
+      "type": "Poem",
+      "pdf_pages": {
+        "questions": "55-57",
+        "answers": "87-88"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 18,
+          "average": 15,
+          "difficult": 8,
+          "total_questions": 41,
+          "weightage_percent": 100
+        },
+        "objectives": {
+          "knowledge": 16,
+          "comprehension": 22,
+          "application": 15,
+          "expression_creativity": 7
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "I. Multiple Choice Questions",
+          "instructions": "Choose the correct alternative and write it down. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u6-poem-q1",
+              "question_number": 1,
+              "type": "mcq",
+              "question": "How many years ago was the road through the woods closed?",
+              "options": [
+                "A) Fifty years",
+                "B) Seventy years",
+                "C) Twenty years",
+                "D) A hundred years"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-2",
+              "answer": "B) Seventy years"
+            },
+            {
+              "id": "u6-poem-q2",
+              "question_number": 2,
+              "type": "mcq",
+              "question": "Who composed the mystical poem 'The Way Through the Woods'?",
+              "options": [
+                "A) Rudyard Kipling",
+                "B) Robert Louis Stevenson",
+                "C) William Blake",
+                "D) Sarojini Naidu"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-2",
+              "answer": "A) Rudyard Kipling"
+            },
+            {
+              "id": "u6-poem-q3",
+              "question_number": 3,
+              "type": "mcq",
+              "question": "What has overgrown and hidden the old vanished path?",
+              "options": [
+                "A) Trees, coppice and anemones",
+                "B) Concrete roads",
+                "C) River waters",
+                "D) High brick walls"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "A) Trees, coppice and anemones"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "II. Quote from Memory",
+          "instructions": "Quote from memory the opening lines of the poem. (LO-26) (4 Marks)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "u6-poem-q4",
+              "question_number": 4,
+              "type": "quote_memory",
+              "question": "They shut the road through the woods..........\n.......................................................................\n.......................................................................\n.................................. now you would never know.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-26",
+              "answer": "They shut the road through the woods\nSeventy years ago.\nWeather and rain have undone it again,\nAnd now you would never know."
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "III. Short Answer Questions",
+          "instructions": "Answer in 2-3 sentences. (2 Marks)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "u6-poem-q5",
+              "question_number": 5,
+              "type": "paragraph",
+              "question": "What mysterious sound can still be heard in the quiet woods at dusk?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-17",
+              "answer": "On late summer evenings, when there is no breeze, one can hear the ghostly canter of a horse's feet and the swish of a skirt along the forgotten track, even though there is no visible road."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-7-prose",
+      "unit_number": 7,
+      "title": "Neerja Bhanot",
+      "type": "Prose",
+      "pdf_pages": {
+        "questions": "58-60",
+        "answers": "89-90"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 31,
+          "average": 28,
+          "difficult": 14,
+          "total_questions": 73,
+          "weightage_percent": 100
+        },
+        "objectives": {
+          "knowledge": 28,
+          "comprehension": 42,
+          "application": 25,
+          "expression_creativity": 11
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "I. Multiple Choice Questions",
+          "instructions": "Choose the correct alternative and write it down. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u7-p-q1",
+              "question_number": 1,
+              "type": "mcq",
+              "question": "Neerja Bhanot served as a Senior Flight Purser for _____________",
+              "options": [
+                "A) Air India",
+                "B) Pan American World Airways",
+                "C) British Airways",
+                "D) Indian Airlines"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "B) Pan American World Airways"
+            },
+            {
+              "id": "u7-p-q2",
+              "question_number": 2,
+              "type": "mcq",
+              "question": "Pan Am Flight 73 was hijacked by heavily armed terrorists at ____________ airport.",
+              "options": [
+                "A) Karachi",
+                "B) Mumbai",
+                "C) New York",
+                "D) Frankfurt"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "A) Karachi"
+            },
+            {
+              "id": "u7-p-q3",
+              "question_number": 3,
+              "type": "mcq",
+              "question": "Neerja Bhanot sacrificed her life while shielding ____________ from gunfire.",
+              "options": [
+                "A) three small children",
+                "B) the flight pilots",
+                "C) the luggage",
+                "D) the hijackers"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "A) Three small children"
+            },
+            {
+              "id": "u7-p-q4",
+              "question_number": 4,
+              "type": "mcq",
+              "question": "For her extraordinary courage and bravery, Neerja was posthumously awarded the _____________",
+              "options": [
+                "A) Param Vir Chakra",
+                "B) Ashoka Chakra",
+                "C) Bharat Ratna",
+                "D) Padma Shri"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-1",
+              "answer": "B) Ashoka Chakra"
+            },
+            {
+              "id": "u7-p-q5",
+              "question_number": 5,
+              "type": "mcq",
+              "question": "Neerja Bhanot became the ____________ recipient of India's highest peacetime gallantry award.",
+              "options": [
+                "A) youngest and first woman",
+                "B) oldest",
+                "C) tenth",
+                "D) only military"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "A) Youngest and first woman"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "II. Vocabulary and Grammar",
+          "instructions": "Do as directed. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u7-p-q6",
+              "question_number": 6,
+              "type": "grammar",
+              "question": "Give the noun form of the adjective 'brave'.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-11",
+              "answer": "bravery"
+            },
+            {
+              "id": "u7-p-q7",
+              "question_number": 7,
+              "type": "grammar",
+              "question": "Identify the tense in the sentence: 'Neerja saved many lives.'",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-14",
+              "answer": "Simple Past Tense"
+            },
+            {
+              "id": "u7-p-q8",
+              "question_number": 8,
+              "type": "grammar",
+              "question": "Add a prefix to 'selfish' to show selfless quality.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-11",
+              "answer": "unselfish"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "III. One Sentence Answer Questions",
+          "instructions": "Answer each question in a sentence. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u7-p-q9",
+              "question_number": 9,
+              "type": "short_answer",
+              "question": "What alert action did Neerja take immediately as the hijackers boarded the plane?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "Neerja immediately keyed the hijack alert code over the intercom, warning the cockpit crew who escaped through the overhead hatch so the plane could not take off."
+            },
+            {
+              "id": "u7-p-q10",
+              "question_number": 10,
+              "type": "short_answer",
+              "question": "How did Neerja protect the American passengers from being targeted?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "Neerja and her crew hid the passports of American passengers under seats and inside rubbish chutes so the hijackers could not identify them."
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "IV. Two to Three Sentences Answer Questions",
+          "instructions": "Answer in 2-3 sentences each. (2 Marks)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "u7-p-q11",
+              "question_number": 11,
+              "type": "paragraph",
+              "question": "How did Neerja help the trapped passengers escape when terrorists opened fire?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "When power failed and terrorists opened fire indiscriminately, Neerja boldly unbolted the emergency chute doors and guided panicked passengers down the slide to safety, prioritizing others over herself."
+            },
+            {
+              "id": "u7-p-q12",
+              "question_number": 12,
+              "type": "paragraph",
+              "question": "Why will Neerja Bhanot always be remembered as the 'Heroine of the Hijack'?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-17",
+              "answer": "Neerja demonstrated supreme dedication to duty, exceptional composure under gunfire, and ultimate sacrifice by laying down her life to save hundreds of passengers, making her an enduring symbol of courage."
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "V. Essay / Detailed Answer Question",
+          "instructions": "Answer in 6-8 sentences. (Difficult) (LO-15) (4 Marks)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "u7-p-q13",
+              "question_number": 13,
+              "type": "essay",
+              "question": "Write a short biographical sketch highlighting the courage and sacrifice of Neerja Bhanot.",
+              "difficulty": "Difficult",
+              "learning_outcome": "LO-15",
+              "answer": "Neerja Bhanot was born in Chandigarh on September 7, 1963. She became a model and then a senior flight purser with Pan Am. On September 5, 1986, Pan Am Flight 73 was hijacked by four armed terrorists at Karachi airport. Showing remarkable presence of mind, she alerted the pilots who escaped, preventing the hijackers from taking off. Over a harrowing 17-hour standoff, she tended to terrified passengers, hid American passports, and finally opened emergency exit chutes. As bullets flew, she shielded three innocent children and lost her life just two days before her 23rd birthday. She was posthumously honored with the Ashoka Chakra, becoming a national legend."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-7-poem",
+      "unit_number": 7,
+      "title": "In the Bazaars of Hyderabad",
+      "type": "Poem",
+      "pdf_pages": {
+        "questions": "61-63",
+        "answers": "91-92"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 22,
+          "average": 18,
+          "difficult": 9,
+          "total_questions": 49,
+          "weightage_percent": 100
+        },
+        "objectives": {
+          "knowledge": 20,
+          "comprehension": 25,
+          "application": 16,
+          "expression_creativity": 8
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "I. Multiple Choice Questions",
+          "instructions": "Choose the correct alternative and write it down. (1 Mark)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "u7-poem-q1",
+              "question_number": 1,
+              "type": "mcq",
+              "question": "Who composed the vibrant poem 'In the Bazaars of Hyderabad'?",
+              "options": [
+                "A) Sarojini Naidu",
+                "B) Toru Dutt",
+                "C) Rabindranath Tagore",
+                "D) Kamala Das"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-2",
+              "answer": "A) Sarojini Naidu"
+            },
+            {
+              "id": "u7-poem-q2",
+              "question_number": 2,
+              "type": "mcq",
+              "question": "What do the merchants display and sell in the marketplace?",
+              "options": [
+                "A) Turbans of crimson and silver, and purple brocade tunics",
+                "B) Electronic gadgets",
+                "C) Modern machinery",
+                "D) Plastic goods"
+              ],
+              "difficulty": "Easy",
+              "learning_outcome": "LO-2",
+              "answer": "A) Turbans of crimson and silver, and purple brocade tunics"
+            },
+            {
+              "id": "u7-poem-q3",
+              "question_number": 3,
+              "type": "mcq",
+              "question": "The flower-girls weave crowns for the brow of a bridegroom and sheets of white blossoms to _____________",
+              "options": [
+                "A) perfume the sleep of the dead",
+                "B) make tea",
+                "C) paint walls",
+                "D) feed cattle"
+              ],
+              "difficulty": "Average",
+              "learning_outcome": "LO-7",
+              "answer": "A) Perfume the sleep of the dead"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "II. Quote from Memory",
+          "instructions": "Quote from memory the opening lines of the poem. (LO-26) (4 Marks)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "u7-poem-q4",
+              "question_number": 4,
+              "type": "quote_memory",
+              "question": "What do you sell, O ye merchants?...........\n.......................................................................\n.......................................................................\n.................................. handles of jade.",
+              "difficulty": "Easy",
+              "learning_outcome": "LO-26",
+              "answer": "What do you sell, O ye merchants?\nRichly your wares are displayed.\nTurbans of crimson and silver,\nTunics of purple brocade,\nMirrors with panels of amber,\nDaggers with handles of jade."
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "III. Short Answer Questions",
+          "instructions": "Answer in 2-3 sentences. (2 Marks)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "u7-poem-q5",
+              "question_number": 5,
+              "type": "paragraph",
+              "question": "How does Sarojini Naidu celebrate Indian crafts and culture in this poem?",
+              "difficulty": "Average",
+              "learning_outcome": "LO-17",
+              "answer": "Sarojini Naidu paints an exquisite picture of traditional Indian bazaars filled with sensory delights: shimmering brocades, fragrant spices, musical instruments, jewelry, and flower garlands that serve every milestone of life from marriage to mourning."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

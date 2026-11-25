@@ -1,0 +1,6 @@
+{
+  "name": "ಪ್ರಶ್ನೆ ಪತ್ರಿಕೆ ರಚನಾ ಸಾಧನ - Question Paper Generator",
+  "description": "Dynamic Karnataka State Syllabus Question Paper and Answer Key Generator by S R Angadi supporting Class 6 and future classes with automatic JSON discovery, customizable section blueprints, intelligent question selection, and A4 print export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

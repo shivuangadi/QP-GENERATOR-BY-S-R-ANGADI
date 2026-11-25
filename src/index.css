@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@theme {
+  --font-kannada: "Noto Sans Kannada", "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-sans: "Plus Jakarta Sans", "Noto Sans Kannada", system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-kannada);
+  }
+  body {
+    font-family: var(--font-kannada);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Custom scrollbars for clean educational dashboard */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Screen vs Print utility visibility */
+.print-only {
+  display: none;
+}
+
+/* Print layout optimizations for pristine A4 export */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm 15mm 15mm;
+  }
+
+  /* Force display of print target and hide app chrome */
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-family: "Noto Sans Kannada", serif, sans-serif !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .printable-document {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    background: transparent !important;
+  }
+
+  .question-block {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .section-block {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .page-break-always {
+    page-break-before: always;
+    break-before: page;
+  }
+}

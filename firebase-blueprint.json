@@ -1,0 +1,130 @@
+{
+  "entities": {
+    "QuestionBank": {
+      "title": "QuestionBank",
+      "description": "A syllabus-aligned question bank containing chapters and questions.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "grade": { "type": "string" },
+        "subject": { "type": "string" },
+        "medium": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "totalChapters": { "type": "number" },
+        "totalQuestions": { "type": "number" },
+        "chapters": { "type": "array" },
+        "metadata": { "type": "object" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "title", "grade", "subject", "totalChapters", "totalQuestions", "chapters", "createdAt"]
+    },
+    "QuestionPaper": {
+      "title": "QuestionPaper",
+      "description": "A generated examination question paper and answer key.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "schoolName": { "type": "string" },
+        "examName": { "type": "string" },
+        "grade": { "type": "string" },
+        "subject": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "totalMarks": { "type": "number" },
+        "totalQuestions": { "type": "number" },
+        "sections": { "type": "array" },
+        "header": { "type": "object" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "schoolName", "examName", "grade", "subject", "totalMarks", "totalQuestions", "sections", "createdAt"]
+    },
+    "UploadedPdf": {
+      "title": "UploadedPdf",
+      "description": "Metadata and scanned structure of uploaded textbook/LBA PDF files.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "fileName": { "type": "string" },
+        "fileSizeMB": { "type": "string" },
+        "totalPages": { "type": "number" },
+        "grade": { "type": "string" },
+        "gradeKey": { "type": "string" },
+        "subject": { "type": "string" },
+        "subjectCode": { "type": "string" },
+        "serverPdfUrl": { "type": "string" },
+        "linkedBankId": { "type": "string" },
+        "detectedDoc": { "type": "object" },
+        "uploadedAt": { "type": "string" }
+      },
+      "required": ["id", "fileName", "totalPages", "uploadedAt"]
+    },
+    "QuestionImage": {
+      "title": "QuestionImage",
+      "description": "A compressed question or answer key diagram image stored individually in Firebase so question bank JSON only stores its URL.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "dataUrl": { "type": "string", "maxLength": 350000 },
+        "mimeType": { "type": "string", "maxLength": 40 },
+        "sizeKB": { "type": "number" },
+        "width": { "type": "number" },
+        "height": { "type": "number" },
+        "gradeKey": { "type": "string", "maxLength": 20 },
+        "subjectCode": { "type": "string", "maxLength": 20 },
+        "chapterId": { "type": "string", "maxLength": 64 },
+        "questionId": { "type": "string", "maxLength": 80 },
+        "role": { "type": "string", "enum": ["question", "answer"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "dataUrl", "mimeType", "sizeKB", "role", "createdAt"]
+    },
+    "OnlineTestAttempt": {
+      "title": "OnlineTestAttempt",
+      "description": "A completed student online MCQ test attempt with score, selected chapters, and solved Q&A summary.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "studentUid": { "type": "string", "maxLength": 128 },
+        "studentName": { "type": "string", "maxLength": 120 },
+        "studentEmail": { "type": "string", "format": "email", "maxLength": 160 },
+        "grade": { "type": "string", "maxLength": 80 },
+        "subject": { "type": "string", "maxLength": 80 },
+        "chapters": { "type": "array" },
+        "score": { "type": "number" },
+        "totalQuestions": { "type": "number" },
+        "correctCount": { "type": "number" },
+        "wrongCount": { "type": "number" },
+        "unansweredCount": { "type": "number" },
+        "percentage": { "type": "number" },
+        "timeTakenSeconds": { "type": "number" },
+        "emailSent": { "type": "boolean" },
+        "items": { "type": "array" },
+        "submittedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "studentUid", "studentName", "studentEmail", "grade", "subject", "score", "totalQuestions", "percentage", "submittedAt"]
+    }
+  },
+  "firestore": {
+    "/question_banks/{bankId}": {
+      "schema": { "$ref": "#/entities/QuestionBank" },
+      "description": "Collection of saved question banks."
+    },
+    "/question_papers/{paperId}": {
+      "schema": { "$ref": "#/entities/QuestionPaper" },
+      "description": "Collection of generated question papers."
+    },
+    "/uploaded_pdfs/{pdfId}": {
+      "schema": { "$ref": "#/entities/UploadedPdf" },
+      "description": "Collection of uploaded PDF document records for reuse."
+    },
+    "/question_images/{imageId}": {
+      "schema": { "$ref": "#/entities/QuestionImage" },
+      "description": "Collection of individually stored compressed question/answer diagram images."
+    },
+    "/online_test_attempts/{attemptId}": {
+      "schema": { "$ref": "#/entities/OnlineTestAttempt" },
+      "description": "Collection of student online MCQ test attempts and solved answers."
+    }
+  }
+}

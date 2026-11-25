@@ -1,0 +1,3597 @@
+{
+  "metadata": {
+    "title": "अधिगम प्रतिफल आधारित मूल्यांकन प्रश्न कोश (प्रश्न-उत्तर बैंक)",
+    "kannada_title": "ಕಲಿಕಾಫಲ ಆಧಾರಿತ ಮೌಲ್ಯಾಂಕನ ಪ್ರಶ್ನೆಕೋಠಿ (ಪ್ರಶ್ನೋತ್ತರ ಬ್ಯಾಂಕ್)",
+    "english_title": "Learning Outcomes Based Assessment (LBA) Question and Answer Bank",
+    "grade": "6th Standard (कक्षा 6)",
+    "subject": "तृतीय भाषा हिंदी (Hindi Third Language)",
+    "academic_year": "2026-27",
+    "department": "ಕರ್ನಾಟಕ ಸರ್ಕಾರ, ಸಾರ್ವಜನಿಕ ಶಿಕ್ಷಣ ಇಲಾಖೆ / Karnataka School Education Department",
+    "institution": "ರಾಜ್ಯ ಶಿಕ್ಷಣ ಸಂಶೋಧನೆ ಮತ್ತು ತರಬೇತಿ ಇಲಾಖೆ (DSERT), ಬೆಂಗಳೂರು ಮತ್ತು ಜಿಲ್ಲಾ ಶಿಕ್ಷಣ ಮತ್ತು ತರಬೇತಿ ಸಂಸ್ಥೆ (DIET), ವಿಜಯಪುರ",
+    "version": "1.0.0",
+    "total_chapters": 25,
+    "total_questions": 168,
+    "source_pdf": "6th HINDI LBA Question Bank 2026-27",
+    "source_pdf_pages": "1 to 72",
+    "verified": true,
+    "no_ai_generated_questions": true
+  },
+  "learning_outcomes": [
+    {
+      "code": "LO 1",
+      "title": "कविता, कहानी एवं वार्तालाप को ध्यानपूर्वक सुनकर समझते हैं उससे संबंधित प्रश्नों के उत्तर देते हैं।"
+    },
+    {
+      "code": "LO 2",
+      "title": "छात्र कहानी, कविता एवं वार्तालाप को ध्यानपूर्वक सुनते हैं और उसके मुख्य विचार/ संदेश पहचानते हैं तथा पात्रों का परिचय प्राप्त करते हैं।"
+    },
+    {
+      "code": "LO 3",
+      "title": "छात्र परिस्थिति के अनुरूप उपयुक्त भाषा एवं शब्दों का चयन करते हुए अपने विचारों को आत्मविश्वास के साथ प्रभावी ढंग से व्यक्त करते हैं और उचित प्रतिक्रिया देते हैं।"
+    },
+    {
+      "code": "LO 4",
+      "title": "छात्र अन्य भाषा के सभी स्वरों और व्यंजनों को पहचान कर उनका शुद्ध उच्चारण करते हैं और बारहखड़ी के माध्यम से व्यंजनों के साथ मात्राओं के संयोजन को समझ कर उनका सही उच्चारण करते हैं।"
+    },
+    {
+      "code": "LO 5",
+      "title": "छात्र दूसरों के विचारों को सुनकर उपयुक्त भाषा में सम्मानपूर्वक प्रतिक्रिया देते हैं और सामूहिक सहभागिता व्यक्त करते हैं।"
+    },
+    {
+      "code": "LO 6",
+      "title": "छात्र ध्वनि एवं अक्षरों की पहचान करते हुए सार्थक शब्द बनाते हैं और शब्दों के ध्वनि एवं अक्षरों को विभाजित करते हैं।"
+    },
+    {
+      "code": "LO 7",
+      "title": "सामान्य एवं भिन्न ध्वनियोंवाले शब्दों की पहचान करते हुए सही उच्चारण के साथ शब्दों को पढ़ते हैं।"
+    },
+    {
+      "code": "LO 8",
+      "title": "छात्र मुद्रित पाठ के शब्द, वाक्य एवं अनुच्छेद की पहचान करते हुए उनमें प्रयुक्त पूर्ण विराम (।), अल्प विराम (,), प्रश्नवाचक (?) तथा विस्मयादिबोधक (!) चिह्नों को पहचानते हैं।"
+    },
+    {
+      "code": "LO 9",
+      "title": "छात्र कहानी एवं अनुच्छेद का शुद्ध उच्चारण करते हुए विराम-चिह्नों को ध्यान में रखते हुए उचित ठहराव के साथ पढ़ते हैं।"
+    },
+    {
+      "code": "LO 10",
+      "title": "विद्यार्थी पढ़ते समय उचित गति, स्वर एवं लय के साथ शब्दों का सही उच्चारण करते हैं।"
+    },
+    {
+      "code": "LO 11",
+      "title": "छात्र कहानी, कविता एवं पोस्टर का मुख्य भाव समझते हुए उसके मुख्य पात्र, घटनाओं एवं संदेश पहचानते हैं और पठित सामग्री से संबंधित प्रश्नों के उत्तर देते हैं।"
+    },
+    {
+      "code": "LO 12",
+      "title": "विद्यार्थी चित्रों एवं संदर्भ के आधार पर अर्थ का अनुमान लगाते हुए अपने विचार सरल भाषा में प्रस्तुत करते हैं।"
+    },
+    {
+      "code": "LO 13",
+      "title": "छात्र अपनी रुचि के अनुसार बाल साहित्य की पुस्तकें चुनकर पढ़ते हैं, पुस्तक के विषय, पात्र एवं संदेश पर चर्चा करते हैं।"
+    },
+    {
+      "code": "LO 14",
+      "title": "छात्र दिए गए विषय पर अपने अनुभवों एवं विचारों को क्रमबद्धता से अनुच्छेद के रूप में लिखते हुए सरल, स्पष्ट एवं सार्थक वाक्यों का प्रयोग करते हैं।"
+    },
+    {
+      "code": "LO 15",
+      "title": "छात्र संज्ञा, सर्वनाम और क्रिया शब्दों की सहायता से छोटे और सरल वाक्य बनाते हैं।"
+    },
+    {
+      "code": "LO 16",
+      "title": "छात्र लिंग, वचन और काल के बुनियादी अंतर को समझकर वाक्यों में प्रयोग करते हैं।"
+    },
+    {
+      "code": "LO 17",
+      "title": "छात्र दिए गए विषय के अनुसार सरल एवं आकर्षक पोस्टर तैयार करते हैं और किसी कार्यक्रम के लिए आवश्यक जानकारी सहित आमंत्रण-पत्र / घोष वाक्य (नारा) लिखते हैं।"
+    },
+    {
+      "code": "LO 18",
+      "title": "छात्र पोस्टर, आमंत्रण पत्र एवं निर्देशों में उचित भाषा एवं प्रस्तुति शैली का प्रयोग करते हुए रचनात्मकता का प्रदर्शन करते हैं।"
+    },
+    {
+      "code": "LO 19",
+      "title": "छात्र अपनी कल्पना एवं अनुभवों के आधार पर सरल एवं रचनात्मक कहानियाँ लिखते हैं और विषय या चित्र के आधार पर कविता एवं संवाद लिखते हैं।"
+    },
+    {
+      "code": "LO 20",
+      "title": "छात्र लेखन में उपयुक्त शब्दावली, व्याकरण एवं विराम-चिह्नों का सही प्रयोग करते हैं।"
+    },
+    {
+      "code": "LO 21",
+      "title": "छात्र विभिन्न पाठों को सुनकर एवं पढ़कर नए शब्दों की पहचान करते हैं और उनका प्रयोग मौखिक एवं लिखित रूप में अभिव्यक्त करते हैं।"
+    },
+    {
+      "code": "LO 22",
+      "title": "छात्र विलोम एवं पर्यायवाची शब्दों की पहचान कर उनका उचित प्रयोग करते हैं।"
+    },
+    {
+      "code": "LO 23",
+      "title": "छात्र शब्दकोश, चित्रों एवं अन्य संदर्भ स्रोतों की सहायता से अपनी शब्दावली का विस्तार करते हैं।"
+    },
+    {
+      "code": "LO 24",
+      "title": "1 से 50 तक की गिनती का मौखिक तथा लिखित रूप में प्रयोग करते हैं।"
+    }
+  ],
+  "chapters": [
+    {
+      "id": "lesson-01",
+      "chapter_number": 1,
+      "title": "संरचक रेखाएँ",
+      "type": "व्याकरण / रेखाभ्यास",
+      "pdf_pages": {
+        "questions": "1-2",
+        "answers": "44"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 19,
+          "total_questions": 5,
+          "total_marks": 19
+        },
+        "objectives": {
+          "knowledge": 14,
+          "comprehension": 5
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) संरचक रेखाएँ तथा उनके नाम से मिलाइए",
+          "instructions": "संरचक रेखाएँ तथा उनके नाम से मिलाइए (4 अंक)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "h-l1-q1",
+              "question_number": 1,
+              "type": "match",
+              "question": "संरचक रेखाएँ तथा उनके नाम से मिलाइए :\nपड़ी रेखा, खड़ी रेखा, तिरछी रेखा, अर्धवृत्त / गोल, पूर्णवृत्त / गोल",
+              "items": [
+                {
+                  "left": "पड़ी रेखा",
+                  "right": "---"
+                },
+                {
+                  "left": "खड़ी रेखा",
+                  "right": "|"
+                },
+                {
+                  "left": "तिरछी रेखा",
+                  "right": "\\"
+                },
+                {
+                  "left": "अर्धवृत्त / गोल",
+                  "right": "⤻"
+                },
+                {
+                  "left": "पूर्णवृत्त / गोल",
+                  "right": "O"
+                }
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 6",
+              "answer": "पड़ी रेखा - ---\nखड़ी रेखा - |\nतिरछी रेखा - \\\nअर्धवृत्त / गोल - ⤻\nपूर्णवृत्त / गोल - O"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) संरचक रेखाएँ तथा उनके नाम से मिलाइए (मात्रा चिह्न)",
+          "instructions": "संरचक रेखाएँ तथा उनके नाम से मिलाइए (4 अंक)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "h-l1-q2",
+              "question_number": 2,
+              "type": "match",
+              "question": "संरचक रेखाएँ तथा उनके नाम से मिलाइए :\nचंद्रबिंदु, अर्धचंद्र, शिरो रेखा, अनुस्वार",
+              "items": [
+                {
+                  "left": "चंद्रबिंदु",
+                  "right": "ँ"
+                },
+                {
+                  "left": "अर्धचंद्र",
+                  "right": "ॅ"
+                },
+                {
+                  "left": "शिरो रेखा",
+                  "right": "¯¯"
+                },
+                {
+                  "left": "अनुस्वार",
+                  "right": "ं"
+                }
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 6",
+              "answer": "चंद्रबिंदु - ँ\nअर्धचंद्र - ॅ\nशिरो रेखा - ¯¯\nअनुस्वार - ं"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) आवरण में दिए गए अक्षरों को सही वर्ग में लिखिए",
+          "instructions": "आवरण में दिए गए अक्षरों को सही वर्ग में लिखिए : ( क ज त्र द म घ ट न च त र ) (5 अंक)",
+          "marks_per_question": 5,
+          "questions": [
+            {
+              "id": "h-l1-q3",
+              "question_number": 3,
+              "type": "classification",
+              "question": "आवरण में दिए गए अक्षरों को सही वर्ग में लिखिए :\n( क ज त्र द म घ ट न च त र )\n1. पड़ी रेखा वर्ग -\n2. खड़ी रेखा वर्ग -\n3. तिरछी रेखा वर्ग -",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 6",
+              "answer": "1. पड़ी रेखा वर्ग : ज, म, न, च\n2. खड़ी रेखा वर्ग : क, ज, त्र, म, घ, न, च, त\n3. तिरछी रेखा वर्ग : त्र, त, र"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) नीचे दिए गए रेखाओं का सुलेखन कीजिए",
+          "instructions": "नीचे दिए गए रेखाओं का सुलेखन कीजिए (1 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l1-q4",
+              "question_number": 4,
+              "type": "handwriting",
+              "question": "नीचे दिए गए रेखाओं का सुलेखन कीजिए :\n1. - - - - -\n2. / / / / /\n3. ( ( ( ( (\n4. ) ) ) ) )",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 6",
+              "answer": "1. - - - - -\n2. / / / / /\n3. ( ( ( ( (\n4. ) ) ) ) )"
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "5) आकृति में दिए गए रेखाओं को पहचान कर सही विकल्प चुनिए",
+          "instructions": "आकृति में दिए गए रेखाओं को पहचान कर सही विकल्प चुनिए (5 अंक)",
+          "marks_per_question": 5,
+          "questions": [
+            {
+              "id": "h-l1-q5-1",
+              "question_number": 5.1,
+              "type": "mcq",
+              "question": "- o - o - o -o - इसमें पड़ी रेखाएँ हैं :",
+              "options": [
+                "अ) 2",
+                "आ) 3",
+                "इ) 4",
+                "ई) 5"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 7",
+              "answer": "ई) 5 (उत्तर कुंजी: 5)"
+            },
+            {
+              "id": "h-l1-q5-2",
+              "question_number": 5.2,
+              "type": "mcq",
+              "question": "० -० -० इसमें पूर्ण गोल है :",
+              "options": [
+                "अ) 2",
+                "आ) 3",
+                "इ) 5",
+                "ई) 1"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 7",
+              "answer": "आ) 3"
+            },
+            {
+              "id": "h-l1-q5-3",
+              "question_number": 5.3,
+              "type": "mcq",
+              "question": "”c “ इस अक्षर को कहते है :",
+              "options": [
+                "अ) अर्धगोल",
+                "आ) अर्धमात्रा",
+                "इ) चंद्र बिंदु",
+                "ई) पूर्ण गोल"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 7",
+              "answer": "अ) अर्धगोल"
+            },
+            {
+              "id": "h-l1-q5-4",
+              "question_number": 5.4,
+              "type": "mcq",
+              "question": "“M” इसमें तिरछी रेखाएँ हैं :",
+              "options": [
+                "अ) 1",
+                "आ) 2",
+                "इ) 3",
+                "ई) 4"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 7",
+              "answer": "आ) 2"
+            },
+            {
+              "id": "h-l1-q5-5",
+              "question_number": 5.5,
+              "type": "mcq",
+              "question": "“K” इसमें खड़ी रेखा है :",
+              "options": [
+                "अ) 2",
+                "आ) 4",
+                "इ) 1",
+                "ई) 3"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 7",
+              "answer": "इ) 1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-02",
+      "chapter_number": 2,
+      "title": "वर्णमाला",
+      "type": "वर्णमाला",
+      "pdf_pages": {
+        "questions": "3-4",
+        "answers": "45"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 10,
+          "average": 3,
+          "total_questions": 9,
+          "total_marks": 11
+        },
+        "objectives": {
+          "knowledge": 10,
+          "comprehension": 1
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) स्वरमाला पूर्ण कीजिए",
+          "instructions": "खाली जगह भरिए (1 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l2-q1",
+              "question_number": 1,
+              "type": "fill_blank",
+              "question": "स्वरमाला पूर्ण कीजिए :\nअ ___ ___ ई ___ ___ ___ ए ___ ___ औ",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 6",
+              "answer": "अ आ इ ई उ ऊ ऋ ए ऐ ओ औ"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) ह्रस्व, दीर्घ और अयोगवाह स्वर की पंक्ति में लिखिए",
+          "instructions": "आवरण में दिये गये स्वर वर्णों को ह्रस्व और दीर्घ स्वर की पंक्ति में लिखिए : (अ आ इ ई उ ऊ ऋ ए ऐ ओ औ अं अ: ) (3 अंक)",
+          "marks_per_question": 3,
+          "questions": [
+            {
+              "id": "h-l2-q2",
+              "question_number": 2,
+              "type": "classification",
+              "question": "आवरण में दिये गये स्वर वर्णों को ह्रस्व और दीर्घ स्वर की पंक्ति में लिखिए :\nह्रस्व स्वर :\nदीर्घ स्वर :\nअयोगवाह :",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 7",
+              "answer": "ह्रस्व स्वर : अ, इ, उ, ऋ\nदीर्घ स्वर : आ, ई, ऊ, ए, ऐ, ओ, औ\nअयोगवाह : अं और अ:"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) क से ह तक के व्यंजन लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (1 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l2-q3",
+              "question_number": 3,
+              "type": "short_answer",
+              "question": "क से ह तक के व्यंजन लिखिए :",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 7",
+              "answer": "क ख ग घ ङ ।\nच छ ज झ ञ ।\nट ठ ड ढ ण ।\nत थ द ध न ।\nप फ ब भ म ।\nय र ल व श ष स ह ।"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) संयुक्त व्यंजन लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (1 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l2-q4",
+              "question_number": 4,
+              "type": "short_answer",
+              "question": "संयुक्त व्यंजन लिखिए :",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 7",
+              "answer": "क्ष, त्र, ज्ञ, श्र"
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "5) उत्क्षिप्त व्यंजन लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (1 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l2-q5",
+              "question_number": 5,
+              "type": "short_answer",
+              "question": "उत्क्षिप्त व्यंजन लिखिए :",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 4",
+              "answer": "'ड़' और 'ढ़'"
+            }
+          ]
+        },
+        {
+          "section_id": "VI",
+          "title": "6) खाली जगह भरिए",
+          "instructions": "खाली जगह भरिए (1 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l2-q6",
+              "question_number": 6,
+              "type": "fill_blank",
+              "question": "उचित अक्षरों से खाली जगह भरिए :\n१) च ___, ज ___ ञ\n२) प __ , ब __ म\n३) श ___ ___ ____",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 7",
+              "answer": "१) च छ ज झ ञ\n२) प फ ब भ म\n३) श ष स ह"
+            }
+          ]
+        },
+        {
+          "section_id": "VII",
+          "title": "7) क-वर्ग के व्यंजन लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (1 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l2-q7",
+              "question_number": 7,
+              "type": "short_answer",
+              "question": "क-वर्ग के व्यंजन लिखिए :",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 7",
+              "answer": "क ख ग घ ङ"
+            }
+          ]
+        },
+        {
+          "section_id": "VIII",
+          "title": "8) त-वर्ग व्यंजन लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (1 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l2-q8",
+              "question_number": 8,
+              "type": "short_answer",
+              "question": "त-वर्ग व्यंजन लिखिए :",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 7",
+              "answer": "त थ द ध न"
+            }
+          ]
+        },
+        {
+          "section_id": "IX",
+          "title": "9) अंतस्थ व्यंजन लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (1 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l2-q9",
+              "question_number": 9,
+              "type": "short_answer",
+              "question": "अंतस्थ व्यंजन लिखिए :",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 7",
+              "answer": "य र ल व"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-03",
+      "chapter_number": 3,
+      "title": "पढ़ो समझो और लिखो (स्वर और व्यंजन)",
+      "type": "स्वर और व्यंजन",
+      "pdf_pages": {
+        "questions": "5-7",
+        "answers": "45-46"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 8,
+          "average": 6,
+          "total_questions": 5,
+          "total_marks": 14
+        },
+        "objectives": {
+          "knowledge": 2,
+          "comprehension": 5,
+          "expression": 7
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) प्रश्नों के उत्तर लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l3-q1-1",
+              "question_number": 1.1,
+              "type": "short_answer",
+              "question": "अवर्गीय व्यंजन अक्षरों को लिखिए।",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 7",
+              "answer": "य र ल व श ष स ह ।"
+            },
+            {
+              "id": "h-l3-q1-2",
+              "question_number": 1.2,
+              "type": "short_answer",
+              "question": "अल्पप्राण अक्षरों को लिखिए।",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 6",
+              "answer": "क, ग, च, ज, ट, ड, त, द, प, ब ।"
+            },
+            {
+              "id": "h-l3-q1-3",
+              "question_number": 1.3,
+              "type": "short_answer",
+              "question": "महाप्राण अक्षरों को लिखिए।",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 6",
+              "answer": "ख, घ, छ, झ, ठ, ढ, थ, ध, फ, भ ।"
+            },
+            {
+              "id": "h-l3-q1-4",
+              "question_number": 1.4,
+              "type": "short_answer",
+              "question": "अनुनासिक अक्षरों को लिखिए।",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 6",
+              "answer": "ङ, ञ, ण, न, म"
+            },
+            {
+              "id": "h-l3-q1-5",
+              "question_number": 1.5,
+              "type": "short_answer",
+              "question": "संयुक्त व्यंजन अक्षरों को लिखिए।",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 7",
+              "answer": "क्ष, त्र, ज्ञ, श्र ।"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) शब्दों को पढ़िए और उनके अर्थ कन्नड़ में लिखिए",
+          "instructions": "अनुवाद (2 अंक)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "h-l3-q2",
+              "question_number": 2,
+              "type": "translation",
+              "question": "निम्नलिखित शब्दों को पढ़िए तथा उनके अर्थ कन्नड़ में लिखिए :\nआम, घर, कमल, खग, ऐनक, कलम, मगर, सड़क, नल, रथ, यज्ञ",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 23",
+              "answer": "1. आम : ಮಾವು\n2. घर : ಮನೆ\n3. कमल : ಕಮಲ\n4. खग : ಪಕ್ಷಿ\n5. ऐनक : ಕನ್ನಡಕ\n6. कलम : ಲೇಖನಿ\n7. मगर : ಮೊಸಳೆ\n8. सड़क : ರಸ್ತೆ\n9. नल : ನಲ್ಲಿ\n10. रथ : ತೇರು / ರಥ\n11. यज्ञ : ಯಜ್ಞ / ಹೋಮ"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) चित्र देखिए और जोड़िए",
+          "instructions": "मिलान करना (5 अंक)",
+          "marks_per_question": 5,
+          "questions": [
+            {
+              "id": "h-l3-q3",
+              "question_number": 3,
+              "type": "match",
+              "question": "चित्र देखिए और जोड़िए :\n1. घर का चित्र\n2. खग (पक्षी) का चित्र\n3. कलम का चित्र\n4. मगर का चित्र\n5. बस का चित्र",
+              "items": [
+                {
+                  "left": "चित्र 1",
+                  "right": "घर"
+                },
+                {
+                  "left": "चित्र 2",
+                  "right": "खग"
+                },
+                {
+                  "left": "चित्र 3",
+                  "right": "कलम"
+                },
+                {
+                  "left": "चित्र 4",
+                  "right": "मगर"
+                },
+                {
+                  "left": "चित्र 5",
+                  "right": "बस"
+                }
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 12",
+              "answer": "1. घर\n2. खग\n3. कलम\n4. मगर\n5. बस"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) बिनामात्रा वाले वाक्यों को पढ़िए",
+          "instructions": "पठन अभ्यास (5 अंक)",
+          "marks_per_question": 5,
+          "questions": [
+            {
+              "id": "h-l3-q4",
+              "question_number": 4,
+              "type": "reading",
+              "question": "बिनामात्रा वाले वाक्यों को पढ़िए :\nअमर इधर आ। सड़क पर मत चल। आलस मत कर। कसरत कर। नटखट मत बन।",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 6",
+              "answer": "अमर इधर आ। सड़क पर मत चल। आलस मत कर। कसरत कर। नटखट मत बन।"
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "5) सार्थक शब्द बनाइए",
+          "instructions": "उदाहरण के अनुसार सार्थक शब्द बनाइए (1 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l3-q5-a",
+              "question_number": 5.1,
+              "type": "word_formation",
+              "question": "अ) दो अक्षरवाले सार्थक शब्द बनाइए (उदाहरण: ह य -> यह) :\n1. ल ब\n2. स द\n3. न त\n4. र घ\n5. थ र\n6. ल ज\n7. र ड\n8. क ए\n9. ल न\n10. ल फ",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "1. बल\n2. दस\n3. तन\n4. घर\n5. रथ\n6. जल\n7. डर\n8. एक\n9. नल\n10. फल"
+            },
+            {
+              "id": "h-l3-q5-b",
+              "question_number": 5.2,
+              "type": "word_formation",
+              "question": "आ) तीन अक्षरवाले सार्थक शब्द बनाइए :\n1. ल म क\n2. र ह ठ\n3. क म न\n4. ल स फ\n5. न ज भ",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "1. कमल\n2. ठहर\n3. नमक\n4. फसल\n5. भजन"
+            },
+            {
+              "id": "h-l3-q5-c",
+              "question_number": 5.3,
+              "type": "word_formation",
+              "question": "इ) चार अक्षरवाले सार्थक शब्द बनाइए :\n1. स म र थ\n2. ट ख ट न\n3. ड झ त प\n4. ग म ग ज\n5. ल म ट ख",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "1. थरमस\n2. नटखट\n3. पतझड़\n4. जगमग\n5. खटमल"
+            },
+            {
+              "id": "h-l3-q5-d",
+              "question_number": 5.4,
+              "type": "fill_blank",
+              "question": "ई) सार्थक शब्द लिखिए :\nश ____ द, न _____ र, भ ____ न, अ ____ र, च ____ ण",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "1. शरद\n2. नगर\n3. भवन\n4. अमर\n5. चरण"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-04",
+      "chapter_number": 4,
+      "title": "स्वर तथा उनकी मात्राएँ",
+      "type": "मात्राएँ",
+      "pdf_pages": {
+        "questions": "8-9",
+        "answers": "46-47"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 4,
+          "average": 26,
+          "total_questions": 14,
+          "total_marks": 30
+        },
+        "objectives": {
+          "knowledge": 29,
+          "comprehension": 1
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) नमूने के अनुसार स्वरों की मात्रा से बारहखड़ी लिखिए",
+          "instructions": "बारहखड़ी लेखन (4 अंक)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "h-l4-q1",
+              "question_number": 1,
+              "type": "short_answer",
+              "question": "नमूने के अनुसार स्वरों की मात्रा से बारहखड़ी लिखिए :\nउदाहरण: क का कि की कु कू कृ के कै को कौ कं क:\nच, ट, ब, म, ल",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 4",
+              "answer": "च चा चि ची चु चू चृ चे चै चो चौ चं च:\nट टा टि टी टु टू टृ टे टै टो टौ टं ट:\nब बा बि बी बु बू बृ बे बै बो बौ बं ब:\nम मा मि मी मु मू मृ मे मै मो मौ मं म:\nल ला लि ली लु लू लृ ले लै लो लौ लं ल:"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2-13) विभिन्न मात्राओं वाले 4-4 शब्द लिखिए",
+          "instructions": "मात्रा अभ्यास (2 अंक प्रत्येक)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "h-l4-q2",
+              "question_number": 2,
+              "type": "short_answer",
+              "question": "`आ’ की मात्रावाले 4 शब्द लिखिए (उदाहरण: चारा, मान) :",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "काम, घास, चार, सात, बाल, आम, चाल, चाय, जाल"
+            },
+            {
+              "id": "h-l4-q3",
+              "question_number": 3,
+              "type": "short_answer",
+              "question": "इ की मात्रावाले 4 शब्द लिखिए (उदाहरण: किशन, किरण) :",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "दिन, चित्र, शिला, मित्र, दिल, निधि, सिर, पिता, किला, विमान"
+            },
+            {
+              "id": "h-l4-q4",
+              "question_number": 4,
+              "type": "short_answer",
+              "question": "ई की मात्रावाले 4 शब्द लिखिए (उदाहरण: नील, बीन) :",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "पीला, नीला, कीड़ा, गीत, बीस, सीटी, दीदी, गीली, जीजी, लीची"
+            },
+            {
+              "id": "h-l4-q5",
+              "question_number": 5,
+              "type": "short_answer",
+              "question": "उ की मात्रावाले 4 शब्द लिखिए (उदाहरण: कुल, तुम) :",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "मुन्नी, पुल, सुधा, सुन, चुन, खुल, खुशी, पुत्र, छुप, बुन"
+            },
+            {
+              "id": "h-l4-q6",
+              "question_number": 6,
+              "type": "short_answer",
+              "question": "ऊ की मात्रावाले 4 शब्द लिखिए (उदाहरण: कूद, खून) :",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "झूला, दूध, जूता, धूल, पूजा, धूप, चूना, भूख"
+            },
+            {
+              "id": "h-l4-q7",
+              "question_number": 7,
+              "type": "short_answer",
+              "question": "ए की मात्रावाले 4 शब्द लिखिए (उदाहरण: केसर, खेलना) :",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "रेल, मेल, खेल, देश, केला, बेल, रेट, जेब, सपेरा, नेवला"
+            },
+            {
+              "id": "h-l4-q8",
+              "question_number": 8,
+              "type": "short_answer",
+              "question": "ऐ की मात्रावाले 4 शब्द लिखिए (उदाहरण: कैसे, वैसे) :",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "गैया, बैल, वैर, भैया, मैना, सैर, चैन, मैदान, बैसाखी, पैदल, बैठक"
+            },
+            {
+              "id": "h-l4-q9",
+              "question_number": 9,
+              "type": "short_answer",
+              "question": "ओ की मात्रावाले 4 शब्द लिखिए (उदाहरण: खोलना, बोलना) :",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "लोग, छोटा, लोभी, रोटी, गोल, रोक, सोच"
+            },
+            {
+              "id": "h-l4-q10",
+              "question_number": 10,
+              "type": "short_answer",
+              "question": "औ की मात्रावाले 4 शब्द लिखिए (उदाहरण: औषध, औरत) :",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "पौधा, लौकी, नौका, कौन, कौआ, चौथा"
+            },
+            {
+              "id": "h-l4-q11",
+              "question_number": 11,
+              "type": "short_answer",
+              "question": "अं की मात्रावाले 4 शब्द लिखिए (उदाहरण: अंक, अंत) :",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "हंस, झंडा, खंभा, चंदा, अंडा, संत, संग, ठंडा, अंगूर, अंदर"
+            },
+            {
+              "id": "h-l4-q12",
+              "question_number": 12,
+              "type": "short_answer",
+              "question": "विसर्ग (:) युक्त 4 शब्द लिखिए (उदाहरण: नमः, पुनः) :",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "अतः, पुनः, प्रायः, अंततः, शनैः, क्रमशः, मूलतः, संभवतः, नमः, प्रातः"
+            },
+            {
+              "id": "h-l4-q13",
+              "question_number": 13,
+              "type": "short_answer",
+              "question": "चंद्रबिंदु (ँ) युक्त 4 शब्द लिखिए (उदाहरण: बूँद, पूँछ) :",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "अँगूठी, अँधेरा, आँख, आँगन, आँच, आँधी, आँसू, उँगली, ऊँचा, ऊँट"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "14) नमूने के अनुसार शब्द बनाइए",
+          "instructions": "वर्ण विच्छेद को मिलाकर शब्द बनाना (1 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l4-q14",
+              "question_number": 14,
+              "type": "word_synthesis",
+              "question": "नमूने के अनुसार शब्द बनाइए (उदाहरण: ग् + ा + ज + र = गाजर) :\nच ् + ि + रा + ग\nभ ् + ी + त + र\nद ् + ु + का + न\nस ् + ू + र + ज\nक ् + ृ + पा\nल ् + े + ख + क\nम ् + ै + दा + न\nभ ् + ो + ज + न\nम ् + ौ + स + म\nब ् + ं + द + र\nछ + ः",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "चिराग, भीतर, दुकान, सूरज, कृपा, लेखक, मैदान, भोजन, मौसम, बंदर, छः"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-05",
+      "chapter_number": 5,
+      "title": "'र' की मात्राएँ : रेफ़ (c) पदेन (/, ^)",
+      "type": "मात्रा अभ्यास",
+      "pdf_pages": {
+        "questions": "10",
+        "answers": "47"
+      },
+      "blueprint": {
+        "difficulty": {
+          "difficult": 11,
+          "total_questions": 5,
+          "total_marks": 11
+        },
+        "objectives": {
+          "comprehension": 11
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1-4) 'र' के विभिन्न रूपों वाले शब्द लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (2 अंक प्रत्येक)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "h-l5-q1",
+              "question_number": 1,
+              "type": "short_answer",
+              "question": "रेफ़ ( c ) युक्त 4 शब्द लिखिए (उदाहरण: कर्म, धर्म) :",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 4",
+              "answer": "मर्म, कार्य, मार्ग, खर्चा, दर्शन, आदर्श, धार्मिक, दर्पण, अर्जुन, गर्व"
+            },
+            {
+              "id": "h-l5-q2",
+              "question_number": 2,
+              "type": "short_answer",
+              "question": "पदेन युक्त ( / ) 4 शब्द लिखिए (उदाहरण: क्रम, प्रजा) :",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 4",
+              "answer": "भ्रम, प्रेम, चक्र, उम्र, सब्र, प्रथम, प्रसार, प्रसाद, प्रकट, प्रकाश, प्रयोग"
+            },
+            {
+              "id": "h-l5-q3",
+              "question_number": 3,
+              "type": "short_answer",
+              "question": "पदेन युक्त ( ^ ) 4 शब्द लिखिए (उदाहरण: ट्रक, ड्रम) :",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 4",
+              "answer": "ट्रेन, ड्राइवर, मेट्रो, ड्रामा, राष्ट्र, ट्रक, उष्ट्र"
+            },
+            {
+              "id": "h-l5-q4",
+              "question_number": 4,
+              "type": "short_answer",
+              "question": "'ऋ' मात्रायुक्त 4 शब्द लिखिए (उदाहरण: मातृ, पितृ) :",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 4",
+              "answer": "कृषक, अमृत, पृथक, हृदय, कृपण, मृणाल, सृजन, कृष्ण, वृथा, मृदु"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "5) निम्नलिखित शब्दों में 'र' की मात्राएँ लगाकर सार्थक शब्द बनाइए",
+          "instructions": "1 वाक्य में उत्तर लिखना (3 अंक)",
+          "marks_per_question": 3,
+          "questions": [
+            {
+              "id": "h-l5-q5",
+              "question_number": 5,
+              "type": "word_formation",
+              "question": "निम्नलिखित शब्दों में 'र' की मात्राएँ लगाकर सार्थक शब्द बनाइए :\n1. पवीण\n2. पाथना\n3. धम\n4. पथा\n5. राष्टीय कायकम",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 7",
+              "answer": "1. प्रवीण\n2. प्रार्थना\n3. धर्म\n4. प्रथा\n5. राष्ट्रीय कार्यक्रम"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-06",
+      "chapter_number": 6,
+      "title": "संयुक्ताक्षर",
+      "type": "व्याकरण / संयुक्ताक्षर",
+      "pdf_pages": {
+        "questions": "11-12",
+        "answers": "48"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 7,
+          "average": 6,
+          "difficult": 8,
+          "total_questions": 10,
+          "total_marks": 21
+        },
+        "objectives": {
+          "knowledge": 14,
+          "comprehension": 7
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1-4) खड़ीपाई के स्वरूपानुसार व्यंजन और संयुक्ताक्षर",
+          "instructions": "स्वरूपानुसार व्यंजन व संयुक्ताक्षर लिखिए",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "h-l6-q1",
+              "question_number": 1,
+              "type": "classification",
+              "question": "हिंदी व्यंजनाक्षरों को स्वरूप के अनुसार लिखिए :\n• अंत खड़ीपाई वाले व्यंजन\n• मध्य खड़ीपाई वाले व्यंजन\n• बिना खड़ीपाई वाले व्यंजन",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 6",
+              "answer": "• अंत खड़ी पाई वाले व्यंजन : ख ग घ च ज झ ञ ण त थ ध न प ब भ म य ल व श ष स क्ष, त्र, ज्ञ, श्र\n• मध्य खड़ी पाई वाले व्यंजन : क फ\n• बिना खड़ी पाई वाले व्यंजन : ङ छ ट ठ ड ढ द र ह"
+            },
+            {
+              "id": "h-l6-q2",
+              "question_number": 2,
+              "type": "short_answer",
+              "question": "अंत खड़ीपाई वाले संयुक्ताक्षर के 4 उदाहरण लिखिए (उदाहरण: बच्चा, प्यासा) :",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 6",
+              "answer": "मक्का, ग्वाला, सच्चा, पत्ता, चश्मा"
+            },
+            {
+              "id": "h-l6-q3",
+              "question_number": 3,
+              "type": "short_answer",
+              "question": "मध्य खड़ीपाई वाले व्यंजन के संयुक्ताक्षर के 4 उदाहरण लिखिए (उदाहरण: भक्ति, हफ्ता) :",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 6",
+              "answer": "कुत्ता, फौज, कार्य, फसल, कलम, कबूतर, फूल, फल, फ़कीर, कृषक"
+            },
+            {
+              "id": "h-l6-q4",
+              "question_number": 4,
+              "type": "short_answer",
+              "question": "बिना खड़ीपाई वाले व्यंजन के संयुक्ताक्षर के 4 उदाहरण लिखिए (उदाहरण: छुट्टी, विद्या, खड्ग) :",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 6",
+              "answer": "लट्टू, अड्डा, बुद्धी, साद्य, उद्धार, निर्भर, कार्य, क्रम, बाह्य, ब्रह्म"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "5-10) संयुक्ताक्षर शब्द अभ्यास एवं विग्रह",
+          "instructions": "संयुक्ताक्षर अभ्यास",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "h-l6-q5",
+              "question_number": 5,
+              "type": "word_synthesis",
+              "question": "संयुक्ताक्षर पढ़िए और शब्द पूर्ण कीजिए :\nक् + ष = क्ष  : र - क, -- त्रिय\nत् + र = त्र  : प --, ने --\nज् + ञ = ज्ञ  : य --, वि --न\nश् + र = श्र  : --म, -- वण",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 7",
+              "answer": "रक्षक, पत्र, यज्ञ, श्रम, क्षत्रिय, नेत्र, प्राज्ञ, श्रवण"
+            },
+            {
+              "id": "h-l6-q6",
+              "question_number": 6,
+              "type": "fill_blank",
+              "question": "क्ष, क्षा, क्षे की सहायता से शब्द पूर्ण कीजिए :\n1. शि ___ क\n2. र ___ क\n3. ___ म\n4. क ___\n5. ___ मा",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 4",
+              "answer": "1. शिक्षक\n2. रक्षक\n3. क्षेम\n4. कक्षा\n5. क्षमा"
+            },
+            {
+              "id": "h-l6-q7",
+              "question_number": 7,
+              "type": "reading",
+              "question": "पढ़िए और लिखिए :\n1. क्षत्रिय\n2. श्रमिक\n3. पत्र\n4. श्रवण कुमार",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 7",
+              "answer": "1. क्षत्रिय\n2. श्रमिक\n3. पत्र\n4. श्रवण कुमार"
+            },
+            {
+              "id": "h-l6-q8",
+              "question_number": 8,
+              "type": "short_answer",
+              "question": "चार संयुक्त अक्षर लिखिए :",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 4",
+              "answer": "त्र, क्ष, ज्ञ, श्र"
+            },
+            {
+              "id": "h-l6-q9",
+              "question_number": 9,
+              "type": "word_analysis",
+              "question": "संयुक्ताक्षर शब्द का विग्रह करके लिखिए :\n'राष्ट्रीय कार्यक्रम'",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "र + आ + ष् + ट् + र + ई + य् + अ + क + आ + र् + य + अ + क् + र + अ + म् + अ"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-07",
+      "chapter_number": 7,
+      "title": "गिनती (1 से 20 तक)",
+      "type": "गिनती / संख्या ज्ञान",
+      "pdf_pages": {
+        "questions": "14",
+        "answers": "48-49"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 11,
+          "average": 7,
+          "total_questions": 5,
+          "total_marks": 18
+        },
+        "objectives": {
+          "knowledge": 15,
+          "comprehension": 3
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) 1 से लेकर 20 तक गिनती, संख्या और अक्षरों में लिखिए",
+          "instructions": "2-3 वाक्य में उत्तर लिखना (4 अंक)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "h-l7-q1",
+              "question_number": 1,
+              "type": "counting",
+              "question": "1 से लेकर 20 तक गिनती संख्या तथा अक्षरों में लिखिए :",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 24",
+              "answer": "१ एक, २ दो, ३ तीन, ४ चार, ५ पाँच, ६ छह, ७ सात, ८ आठ, ९ नौ, १० दस, ११ ग्यारह, १२ बारह, १३ तेरह, १४ चौदह, १५ पंद्रह, १६ सोलह, १७ सत्रह, १८ अठारह, १९ उन्नीस, २० बीस"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) 1 से 20 तक उल्टी गिनती, संख्या और अक्षरों में लिखिए",
+          "instructions": "2-3 वाक्य में उत्तर लिखना (4 अंक)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "h-l7-q2",
+              "question_number": 2,
+              "type": "counting",
+              "question": "1 से 20 तक उल्टी गिनती संख्याओं तथा अक्षरों में लिखिए :",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 24",
+              "answer": "२० बीस, १९ उन्नीस, १८ अठारह, १७ सत्रह, १६ सोलह, १५ पंद्रह, १४ चौदह, १३ तेरह, १२ बारह, ११ ग्यारह, १० दस, ९ नौ, ८ आठ, ७ सात, ६ छह, ५ पाँच, ४ चार, ३ तीन, २ दो, १ एक"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) अंक और अक्षरों में लिखिए",
+          "instructions": "खाली जगह भरना (4 अंक)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "h-l7-q3",
+              "question_number": 3,
+              "type": "table_completion",
+              "question": "तालिका पूर्ण कीजिए (अंग्रेजी अंक / हिंदी अंक / अक्षर या शब्दों में) :\n13 - ___ - ___\n___ - ४ - ___\n___ - ___ - छह\n19 - ___ - ___",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 24",
+              "answer": "13 | १३ | तेरह\n4  | ४  | चार\n6  | ६  | छह\n19 | १९ | उन्नीस"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) गिनती जोड़कर लिखिए",
+          "instructions": "मिलान करना (3 अंक)",
+          "marks_per_question": 3,
+          "questions": [
+            {
+              "id": "h-l7-q4",
+              "question_number": 4,
+              "type": "match",
+              "question": "गिनती जोड़कर लिखिए :\nपाँच, सत्रह, आठ, चौदह, ग्यारह, पंद्रह, बारह",
+              "items": [
+                {
+                  "left": "पाँच",
+                  "right": "५"
+                },
+                {
+                  "left": "सत्रह",
+                  "right": "१७"
+                },
+                {
+                  "left": "आठ",
+                  "right": "८"
+                },
+                {
+                  "left": "चौदह",
+                  "right": "१४"
+                },
+                {
+                  "left": "ग्यारह",
+                  "right": "११"
+                },
+                {
+                  "left": "पंद्रह",
+                  "right": "१५"
+                },
+                {
+                  "left": "बारह",
+                  "right": "१२"
+                }
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 24",
+              "answer": "पाँच - ५\nसत्रह - १७\nआठ - ८\nचौदह - १४\nग्यारह - ११\nपंद्रह - १५\nबारह - १२"
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "5) कन्नड संख्याएँ लिखिए",
+          "instructions": "2-3 वाक्य में उत्तर लिखना (अनुवाद) (3 अंक)",
+          "marks_per_question": 3,
+          "questions": [
+            {
+              "id": "h-l7-q5",
+              "question_number": 5,
+              "type": "translation",
+              "question": "कन्नड संख्याएँ लिखिए :\nएक, नौ, सोलह, अठारह, बीस",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 24",
+              "answer": "एक : ೧\nनौ : ೯\nसोलह : ೧೬\nअठारह : ೧೮\nबीस : ೨೦"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-08",
+      "chapter_number": 8,
+      "title": "मैं, हम, तू, तुम, आप",
+      "type": "सर्वनाम अभ्यास",
+      "pdf_pages": {
+        "questions": "15-16",
+        "answers": "50"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 2,
+          "average": 9,
+          "difficult": 9,
+          "total_questions": 6,
+          "total_marks": 20
+        },
+        "objectives": {
+          "knowledge": 2,
+          "expression": 18
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) तालिका की सहायता से सार्थक वाक्य बनाइए",
+          "instructions": "1 वाक्य में उत्तर लिखना (4 अंक)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "h-l8-q1",
+              "question_number": 1,
+              "type": "sentence_formation",
+              "question": "तालिका की सहायता से सार्थक वाक्य बनाइए :\n( मैं / हम / तू / तुम ) + ( जाता / पढ़ता / गाता / खेलता ) + ( हूँ / है / हैं / हो )",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 15",
+              "answer": "1. मैं जाता हूँ।\n2. हम पढ़ते हैं।\n3. तू गाता है।\n4. तुम खेलते हो।"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) सही अनुक्रम में लिखकर सार्थक वाक्य बनाइए",
+          "instructions": "वाक्य का सही अनुक्रम में लिखना (5 अंक)",
+          "marks_per_question": 5,
+          "questions": [
+            {
+              "id": "h-l8-q2",
+              "question_number": 2,
+              "type": "reordering",
+              "question": "सही अनुक्रम में लिखकर सार्थक वाक्य बनाइए :\n1. हूँ / छात्र / मैं\n2. लड़कियाँ / हैं / हम\n3. तुम / हो / किसान\n4. हैं / आप / अध्यापक\n5. है / खेलती / सरला",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 15",
+              "answer": "1. मैं छात्र हूँ।\n2. हम लड़कियाँ हैं।\n3. तुम किसान हो।\n4. आप अध्यापक हैं।\n5. सरला खेलती है।"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) निम्नलिखित सर्वनामों की सहायता से वाक्य बनाइए",
+          "instructions": "1 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 5,
+          "questions": [
+            {
+              "id": "h-l8-q3",
+              "question_number": 3,
+              "type": "sentence_formation",
+              "question": "निम्नलिखित सर्वनामों की सहायता से वाक्य बनाइए :\nमैं :\nतू :\nहम :\nतुम :\nआप :",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 15",
+              "answer": "• मैं : मैं गाँव जाता हूँ।\n• तू : तू कहाँ जा रहा है?\n• हम : हम बाज़ार जाएँगे।\n• तुम : तुम गाँव जाओगे।\n• आप : आप आएँगे।"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) एक वाक्य में उत्तर लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (1 अंक प्रत्येक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l8-q4",
+              "question_number": 4,
+              "type": "short_answer",
+              "question": "निम्नलिखित प्रश्नों के उत्तर दीजिए :\n1. गोपाल कौन है?\n2. गोपाल कहाँ जाता है?\n3. सरला क्या करती है?\n4. लड़के क्या करते हैं?\n5. मोहन क्या पीता है?",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "1. गोपाल छात्र है।\n2. गोपाल स्कूल जाता है।\n3. सरला लिखती है।\n4. लड़के पाठ पढ़ते हैं।\n5. मोहन दूध पीता है।"
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "5) उचित शब्द से खाली जगह भरिए",
+          "instructions": "उचित शब्द से खाली जगह भरिए (मोहन, गोपाल, लड़के) (1 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l8-q5",
+              "question_number": 5,
+              "type": "fill_blank",
+              "question": "उचित शब्द से खाली जगह भरिए (मोहन, गोपाल, लड़के) :\n1. मैं ----- हूँ।\n2. हम ------ हैं।\n3. तू ---------- है।",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 15",
+              "answer": "1. गोपाल\n2. लड़के\n3. मोहन"
+            }
+          ]
+        },
+        {
+          "section_id": "VI",
+          "title": "6) वाक्य पूर्ण कीजिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (4 अंक)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "h-l8-q6",
+              "question_number": 6,
+              "type": "fill_blank",
+              "question": "वाक्य पूर्ण कीजिए :\n1. राजू किताब ______ है।\n2. विद्यार्थी पाठशाला ______ हैं।\n3. रानी किताब ______ है।\n4. विद्यार्थिनी पाठशाला ______ हैं।",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 1",
+              "answer": "1. पढ़ता\n2. जाते\n3. पढ़ती\n4. जाती"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-09",
+      "chapter_number": 9,
+      "title": "यह, ये, वह, वे",
+      "type": "सर्वनाम व वचन",
+      "pdf_pages": {
+        "questions": "16-17",
+        "answers": "51"
+      },
+      "blueprint": {
+        "difficulty": {
+          "average": 16,
+          "total_questions": 4,
+          "total_marks": 16
+        },
+        "objectives": {
+          "knowledge": 11,
+          "comprehension": 5
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) रिक्त स्थान भरिए",
+          "instructions": "खाली जगह भरना (3 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l9-q1",
+              "question_number": 1,
+              "type": "fill_blank",
+              "question": "रिक्त स्थान भरिए :\n1. ______ पढ़ा ।\n2. ______ पढ़े ।\n3. ______ चला ।\n4. _____ सुना ।\n5. _____ सुने ।",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 16",
+              "answer": "1. यह\n2. वे\n3. वह\n4. यह\n5. वह"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) कोष्टक में दिये गये शब्दों में से उचित शब्द चुनकर सार्थक वाक्य बनाइये",
+          "instructions": "कोष्ठक से सही शब्द चुनकर वाक्य बनाना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l9-q2",
+              "question_number": 2,
+              "type": "fill_blank",
+              "question": "उचित शब्द चुनकर सार्थक वाक्य बनाइए :\n1. ___ संतरा है। (यह / ये)\n2. ____ तितलियाँ हैं। (वह / वे)\n3. _____ फूल है। (वह / वे)\n4. ____ कलम है। (यह / ये)",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 16",
+              "answer": "1. यह संतरा है।\n2. वे तितलियाँ हैं।\n3. वे फूल हैं। (या वह फूल है)\n4. यह कलम है।"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) निम्नलिखित शब्दों का बहुवचन रूप लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (3 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l9-q3",
+              "question_number": 3,
+              "type": "plural_form",
+              "question": "निम्नलिखित शब्दों का बहुवचन रूप लिखिए :\n1. लड़का :\n2. मुर्गा :\n3. किताब :\n4. लड़की :\n5. तितली :\n6. पाठशाला :\n7. महिला :",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 16",
+              "answer": "1. लड़का - लड़के\n2. मुर्गा - मुर्गे\n3. किताब - किताबें\n4. लड़की - लड़कियाँ\n5. तितली - तितलियाँ\n6. पाठशाला – पाठशालाएँ\n7. महिला - महिलाएँ"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) निम्नलिखित शब्दों का एक वचन रूप लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l9-q4",
+              "question_number": 4,
+              "type": "singular_form",
+              "question": "निम्नलिखित शब्दों का एक वचन रूप लिखिए :\n1. कलमें -\n2. पुस्तकें -\n3. संतरे -\n4. ये -\n5. वे -",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 16",
+              "answer": "1. कलमें - कलम\n2. पुस्तकें - पुस्तक\n3. संतरे - संतरा\n4. ये - यह\n5. वे - वह"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-10",
+      "chapter_number": 10,
+      "title": "मेरा, हमारा, तेरा, तुम्हारा",
+      "type": "संबंधवाचक सर्वनाम",
+      "pdf_pages": {
+        "questions": "17-19",
+        "answers": "51"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 21,
+          "average": 4,
+          "total_questions": 6,
+          "total_marks": 25
+        },
+        "objectives": {
+          "knowledge": 23,
+          "comprehension": 2
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) निम्नलिखित प्रश्नों के उत्तर लिखिए (स्व-परिचय)",
+          "instructions": "1 वाक्य में उत्तर लिखना (7 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l10-q1",
+              "question_number": 1,
+              "type": "short_answer",
+              "question": "निम्नलिखित प्रश्नों के उत्तर लिखिए :\n1. तुम्हारा नाम क्या है?\n2. तुम्हारा गाँव कौन सा है?\n3. तुम्हारे पिताजी का नाम क्या है?\n4. तुम्हारी माता जी का नाम क्या है?",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 5",
+              "answer": "1. मेरा नाम सुरेश है।\n2. मेरा गाँव का नाम हासन है।\n3. मेरे पिताजी का नाम रमेश हैं।\n4. मेरी माताजी का नाम सीता है।"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) निम्नलिखित प्रश्नों के उत्तर लिखिए (पाठ आधारित)",
+          "instructions": "2-3 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l10-q2",
+              "question_number": 2,
+              "type": "short_answer",
+              "question": "निम्नलिखित प्रश्नों के उत्तर लिखिए :\n1. सविता के भाई कौन है?\n2. सतीश की बहन कौन है?\n3. खरगोश क्या खाता है?\n4. गाँव के पास क्या है?\n5. विद्यालय कैसा है?",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "1. सविता के भाई सतीश है।\n2. सतीश की बहन सविता है।\n3. खरगोश गाजर खाता है।\n4. गाँव के पास विद्यालय है।\n5. विद्यालय साफ सुथरा है।"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) कोष्टक में दिये गये शब्दों की सहायता से रिक्त स्थान भरकर सार्थक वाक्य बनाइए",
+          "instructions": "खाली जगह भरना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l10-q3",
+              "question_number": 3,
+              "type": "fill_blank",
+              "question": "रिक्त स्थान भरकर सार्थक वाक्य बनाइए :\n1. _____ भाई है। (मेरी / मेरे)\n2. _____ बहन है। (मेरी / मेरा)\n3. _____ चाचा है। (मेरे / मेरी)\n4. _____ माँ है। (मेरी / मेरा)\n5. _____ मित्र है। (मेरी / मेरा)",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 15",
+              "answer": "1. मेरे\n2. मेरी\n3. मेरे\n4. मेरी\n5. मेरा"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) नमूने के अनुसार वाक्य बनाइए",
+          "instructions": "1 वाक्य में उत्तर लिखना (4 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l10-q4",
+              "question_number": 4,
+              "type": "sentence_transformation",
+              "question": "नमूने के अनुसार वाक्य बनाइए :\nजैसे:- यह मेरा देश है। -> यह हमारा देश है।\n1. यह मेरा गाँव है।\n2. यह मेरा खेत है।\n3. यह मेरा दोस्त है।\n\nजैसे :- यह तेरा घर है। -> यह तुम्हारा घर है।\n1. यह तेरा भाई है।\n2. यह तेरा मित्र है।\n3. यह तेरा स्कूल है।\n4. यह तेरा गाँव है।\n5. यह तेरा बक्सा है।",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 16",
+              "answer": "भाग 1 :\n1. यह हमारा गाँव है।\n2. यह हमारा खेत है।\n3. यह हमारा दोस्त है।\n\nभाग 2 :\n1. यह तुम्हारा भाई है।\n2. यह तुम्हारा मित्र है।\n3. यह तुम्हारा स्कूल है।\n4. यह तुम्हारा गाँव है।\n5. यह तुम्हारा बक्सा है।"
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "5) आवरण में दिए गए शब्दों से वाक्यांश पूर्ण कीजिए",
+          "instructions": "खाली जगह भरना (2 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l10-q5",
+              "question_number": 5,
+              "type": "paragraph_completion",
+              "question": "आवरण में दिए गए शब्दों से वाक्यांश पूर्ण कीजिए : (वफादार, गाजर, साफ-सुथरा, कमरा)\nमेरा नाम सविता है। यह मेरा ------ है। हमारे घर में एक कुत्ता है। कुत्ता ----- होता।\nतेरा खरगोश प्यार है। तेरा खरगोश ------ खाता है। यह तुम्हारा विद्यालय है। तुम्हारा विद्यालय ----- है।",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 14",
+              "answer": "कमरा, वफादार, गाजर, साफ सुथरा"
+            }
+          ]
+        },
+        {
+          "section_id": "VI",
+          "title": "6) मिलान कीजिए",
+          "instructions": "मिलान करना (2 अंक)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "h-l10-q6",
+              "question_number": 6,
+              "type": "match",
+              "question": "मिलान कीजिए :\n1. सतीश - a) गाजर खाता है ।\n2. कुत्ता - b) साफ़ सुथरा है ।\n3. खरगोश - c) बड़ा भाई है ।\n4. विद्यालय - d) वफ़ादार होता है ।",
+              "items": [
+                {
+                  "left": "1. सतीश",
+                  "right": "c) बड़ा भाई है ।"
+                },
+                {
+                  "left": "2. कुत्ता",
+                  "right": "d) वफ़ादार होता है ।"
+                },
+                {
+                  "left": "3. खरगोश",
+                  "right": "a) गाजर खाता है ।"
+                },
+                {
+                  "left": "4. विद्यालय",
+                  "right": "b) साफ़ सुथरा है ।"
+                }
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "1 - c) बड़ा भाई |\n2 - d) वफादार |\n3 - a) गाजर खाता है |\n4 - b) साफ सुथरा |"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-11",
+      "chapter_number": 11,
+      "title": "इसका, इनका, उसका, उनका",
+      "type": "अन्य पुरुष सर्वनाम",
+      "pdf_pages": {
+        "questions": "19-20",
+        "answers": "52"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 18,
+          "total_questions": 4,
+          "total_marks": 18
+        },
+        "objectives": {
+          "knowledge": 13,
+          "comprehension": 5
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) उचित शब्दों से रिक्त स्थान भरकर सार्थक वाक्य बनाइये",
+          "instructions": "खाली जगह भरना (6 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l11-q1",
+              "question_number": 1,
+              "type": "fill_blank",
+              "question": "उचित शब्दों से रिक्त स्थान भरकर सार्थक वाक्य बनाइए :\n1. यह घोड़ा है । ____ रंग काला है। (इसका / उसका)\n2. राघव ______ पड़ोसी है। (हमारा / हमारे)\n3. ___ परिवार बड़ा है। (इसका / इनका)\n4. ____ घर स्कूल के पास है। (मेरा / मेरी)\n5. _____ बहन अध्यापिका है। (मेरा / मेरी)\n6. शास्त्री जी _____ देश के प्रधानमंत्री थे। _______ पूरा नाम लाल बहादुर शास्त्री है। ____ “जय जवान जय किसान” का नारा प्रसिद्ध है। (हमारा / हमारे, इनका / उनका)",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 15",
+              "answer": "1. इसका\n2. हमारा\n3. इनका\n4. मेरा\n5. मेरी\n6. हमारे, उनका, उनका"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) एक वाक्य में उत्तर लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l11-q2",
+              "question_number": 2,
+              "type": "short_answer",
+              "question": "निम्नलिखित प्रश्नों के उत्तर एक वाक्य में लिखिए :\n1. घोड़ा कैसा है?\n2. सुरेश क्या काम करता है?\n3. नवीन का भाई क्या काम करता है?\n4. शास्त्रीजी का पूरा नाम क्या है?\n5. शास्त्रीजी का प्रसिद्ध नारा कौन सा है?",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "1. घोड़ा काला है।\n2. सुरेश कपड़ों के व्यापारी है।\n3. नवीन का भाई वकील है।\n4. शास्त्री जी का पूरा नाम लाल बहादुर शास्त्री है।\n5. लाल बहादुर शास्त्री जी का नारा 'जय जवान जय किसान' है।"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) सही विकल्प चुनकर वाक्य बनाइए",
+          "instructions": "बहुविकल्पीय प्रश्न (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l11-q3-1",
+              "question_number": 3.1,
+              "type": "mcq",
+              "question": "हाथी एक जंगली जानवर है। ______ शरीर बड़ा है।",
+              "options": [
+                "अ) इसके",
+                "आ) उसका"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 21",
+              "answer": "आ) उसका"
+            },
+            {
+              "id": "h-l11-q3-2",
+              "question_number": 3.2,
+              "type": "mcq",
+              "question": "मोहन कुमार डॉक्टर है | ______ अपना अस्पताल है।",
+              "options": [
+                "अ) इसका",
+                "आ) इनकी"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 21",
+              "answer": "अ) इसका"
+            },
+            {
+              "id": "h-l11-q3-3",
+              "question_number": 3.3,
+              "type": "mcq",
+              "question": "किशन एक किसान है। ______ खेत हरा भरा है।",
+              "options": [
+                "अ) इनकी",
+                "आ) उसका"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 21",
+              "answer": "आ) उसका"
+            },
+            {
+              "id": "h-l11-q3-4",
+              "question_number": 3.4,
+              "type": "mcq",
+              "question": "कविता सुंदर लिखती है। ______ लिखावट शुद्ध भी होती है।",
+              "options": [
+                "अ) इसकी",
+                "आ) इसका"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 21",
+              "answer": "अ) इसकी"
+            },
+            {
+              "id": "h-l11-q3-5",
+              "question_number": 3.5,
+              "type": "mcq",
+              "question": "राकेश फ़ौजी है। लेकिन ______ भाई वकील है।",
+              "options": [
+                "अ) उनकी",
+                "आ) उनके"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 21",
+              "answer": "आ) उनके"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) जोड़कर लिखिए",
+          "instructions": "खाली जगह भरना (2 अंक)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "h-l11-q4",
+              "question_number": 4,
+              "type": "match",
+              "question": "जोड़कर लिखिए :\nइसका - नारा\nइनका - कमीज़\nउसकी - बहन\nउनकी - घर",
+              "items": [
+                {
+                  "left": "इसका",
+                  "right": "घर"
+                },
+                {
+                  "left": "इनका",
+                  "right": "नारा"
+                },
+                {
+                  "left": "उसकी",
+                  "right": "कमीज़"
+                },
+                {
+                  "left": "उनकी",
+                  "right": "बहन"
+                }
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 15",
+              "answer": "घर, नारा, कमीज़, बहन"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-12",
+      "chapter_number": 12,
+      "title": "का, की, के",
+      "type": "कारक / संबंध कारक",
+      "pdf_pages": {
+        "questions": "21-22",
+        "answers": "52-53"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 12,
+          "average": 10,
+          "total_questions": 4,
+          "total_marks": 22
+        },
+        "objectives": {
+          "knowledge": 6,
+          "comprehension": 16
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) खाली जगह भरिए",
+          "instructions": "खाली जगह भरना (3 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l12-q1",
+              "question_number": 1,
+              "type": "fill_blank",
+              "question": "का, की, के का सही प्रयोग करके वाक्य पूर्ण कीजिये :\n1. राजा दशरथ ___ बड़ा बेटा राम था। (का, की)\n2. राजा दशरथ ____ चार बेटे थे। (की, के)\n3. राजा दशरथ ___ तीन रानियाँ थीं। (के, की)",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 15",
+              "answer": "1. का\n2. के\n3. की"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) निम्नलिखित प्रश्नों के उत्तर लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (6 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l12-q2",
+              "question_number": 2,
+              "type": "short_answer",
+              "question": "निम्नलिखित प्रश्नों के उत्तर लिखिए :\n1. शीला का भाई कौन है?\n2. राजू का मित्र कौन है?\n3. शफी का बड़ा भाई कौन है?\n4. दीपक के बैल क्या करते हैं?\n5. अलमारी की चाबी कहाँ है?",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "1. राजू शीला का भाई है ।\n2. शफ़ी राजू का मित्र है।\n3. शफी का बड़ा भाई सैयद है।\n4. दीपक के बैल गाड़ी खींचते हैं ।\n5. अलमारी की चाबी मेज पर है ।"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) “का, की, के“ का प्रयोग करते हुए वाक्य रचना कीजिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (3 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l12-q3",
+              "question_number": 3,
+              "type": "sentence_formation",
+              "question": "“का, की, के“ का प्रयोग करते हुए एक-एक वाक्य रचना कीजिये :",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 16",
+              "answer": "1. राम का भाई लक्ष्मण है।\n2. सीता की बहन रीता है ।\n3. दीपक के बैल सुंदर है ।"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) रिक्त स्थान पूर्ण कीजिए (19 वाक्य)",
+          "instructions": "खाली जगह भरना (10 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l12-q4",
+              "question_number": 4,
+              "type": "fill_blank",
+              "question": "रिक्त स्थान पूर्ण कीजिए :\n1. वह संजू ___ भाई है।\n2. यह दीपा ___ बहन है।\n3. वे सीमा ___ पिता है।\n4. मोहन __ मित्र गाँव गया है।\n5. कविता —- भाई मैसूर में है।\n6. राकेश ____ पिता अच्छे हैं।\n7. मंगला ___ मौसी बाज़ार गई है।\n8. शीला ___ घड़ी अच्छी है।\n9. फूल ___ रंग लाल है।\n10. सलमा ___ पास स्कूटी है।\n11. अजित ___ कुर्ता सफेद है।\n12. अमित देश ___ रक्षा करता है।\n13. सागर ___ मित्र साहिल है।\n14. दादी ___ लाडली आरती है।\n15. रूपा ___ सहेली सलमा है।\n16. महेश ___ स्कूल दूर है।\n17. राजू शीला ___ भाई है।\n18. ये दीपक ___ बैल है।\n19. ये अमर ___ पिताजी है।",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 16",
+              "answer": "1. का\n2. की\n3. के\n4. का\n5. के\n6. के\n7. की\n8. की\n9. का\n10. के\n11. का\n12. की\n13. का\n14. की\n15. की\n16. का\n17. के\n18. के\n19. के"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-13",
+      "chapter_number": 13,
+      "title": "आया, आये, आयी, आयीं",
+      "type": "क्रिया / भूतकाल",
+      "pdf_pages": {
+        "questions": "22-23",
+        "answers": "53"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 4,
+          "average": 15,
+          "total_questions": 3,
+          "total_marks": 19
+        },
+        "objectives": {
+          "knowledge": 5,
+          "comprehension": 14
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) जोड़कर वाक्य बनाइए",
+          "instructions": "मिलान करना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l13-q1",
+              "question_number": 1,
+              "type": "match",
+              "question": "जोड़कर वाक्य बनाइए :\n(किसान, पिताजी, बबीता, सहेलियाँ, व्यापारी) + (आया।, आये।, आयी।, आयीं।)",
+              "items": [
+                {
+                  "left": "किसान",
+                  "right": "आया।"
+                },
+                {
+                  "left": "पिताजी",
+                  "right": "आये।"
+                },
+                {
+                  "left": "बबीता",
+                  "right": "आयी।"
+                },
+                {
+                  "left": "सहेलियाँ",
+                  "right": "आयीं।"
+                },
+                {
+                  "left": "व्यापारी",
+                  "right": "आया।"
+                }
+              ],
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 1",
+              "answer": "1) किसान आया ।\n2) पिताजी आये ।\n3) बबीता आयी ।\n4) सहेलियाँ आयीं ।\n5) व्यापारी आया।"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) निम्नलिखित वाक्यों का बहुवचन रूप लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (10 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l13-q2",
+              "question_number": 2,
+              "type": "plural_form",
+              "question": "निम्नलिखित वाक्यों का बहुवचन रूप लिखिए :\n1. छात्र बाहर से अंदर आया।\n2. छात्र बाहर गया।\n3. छात्र हाथ में फूल लेकर आया।\n4. छात्र किताब लेकर आया।\n5. लड़का पानी लाया।\n6. लड़की आयी।\n7. छात्रा आयी।\n8. सहेली गयी।",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 16",
+              "answer": "1. छात्र बाहर से अंदर आये ।\n2. छात्र बाहर गये।\n3. छात्र हाथ में फूल लेकर आये।\n4. छात्र किताब लेकर आये।\n5. लड़के पानी लाये।\n6. लड़कियाँ आयीं।\n7. छात्राएँ आयीं।\n8. सहेलियाँ गयीं।"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) वाक्य पूर्ण कीजिए",
+          "instructions": "बहुविकल्पीय प्रश्न (4 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l13-q3-1",
+              "question_number": 3.1,
+              "type": "mcq",
+              "question": "माली बगीचे से ----।",
+              "options": [
+                "अ) आया",
+                "आ) आयी"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 15",
+              "answer": "अ) आया"
+            },
+            {
+              "id": "h-l13-q3-2",
+              "question_number": 3.2,
+              "type": "mcq",
+              "question": "दादाजी जलेबी ----।",
+              "options": [
+                "अ) लाया",
+                "आ) लायें"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 15",
+              "answer": "आ) लायें"
+            },
+            {
+              "id": "h-l13-q3-3",
+              "question_number": 3.3,
+              "type": "mcq",
+              "question": "वनिेता पाठशाला से ----।",
+              "options": [
+                "अ) आयी",
+                "आ) आया"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 15",
+              "answer": "अ) आयी"
+            },
+            {
+              "id": "h-l13-q3-4",
+              "question_number": 3.4,
+              "type": "mcq",
+              "question": "चिड़ियाँ ----।",
+              "options": [
+                "अ) आयी",
+                "आ) आयीं"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 15",
+              "answer": "आ) आयीं"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-14",
+      "chapter_number": 14,
+      "title": "था, थे, थी, थीं",
+      "type": "सहायक क्रिया / भूतकाल",
+      "pdf_pages": {
+        "questions": "23-24",
+        "answers": "53-54"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 14,
+          "average": 7,
+          "total_questions": 4,
+          "total_marks": 21
+        },
+        "objectives": {
+          "knowledge": 9,
+          "comprehension": 12
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) निम्नलिखित प्रश्नों के उत्तर लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (7 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l14-q1",
+              "question_number": 1,
+              "type": "short_answer",
+              "question": "निम्नलिखित प्रश्नों के उत्तर लिखिए :\n1. सिपाही कौन था ?\n2. देश की रक्षा कौन करता था ?\n3. राकेश और साहिल कौन थे ?\n4. राकेश और साहिल शाम को क्या करते थे ?\n5. दादी की लाडली कौन थी ?\n6. रूपा और सलमा कौन थी ?\n7. झूला कौन-कौन झूलती थीं ?",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 3",
+              "answer": "1) अमित सिपाही था।\n2) अमित देश की रक्षा करता था।\n3) राकेश और राहिल मित्र थे।\n4) राकेश राहिल शाम को खेलते थे।\n5) दादी की लाडली आरती थी।\n6) रुपा और सलमा सहेलियाँ थीं।\n7) रूपा और सलमा झूला झूलती थी।"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) जोड़कर वाक्य बनाइए",
+          "instructions": "मिलान करना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l14-q2",
+              "question_number": 2,
+              "type": "match",
+              "question": "जोड़कर वाक्य बनाइए :\n1. रमेश देश की - १. खेलते थे।\n2. सुनिल और आनंद - २. सहेलियाँ थी।\n3. आरती अच्छी - ३. रक्षा करता था।\n4. कमला और राधा - ४. लाडली थी।\n5. सविता दादी की - ५. खिलाड़ी थी।",
+              "items": [
+                {
+                  "left": "1. रमेश देश की",
+                  "right": "३. रक्षा करता था।"
+                },
+                {
+                  "left": "2. सुनिल और आनंद",
+                  "right": "१. खेलते थे।"
+                },
+                {
+                  "left": "3. आरती अच्छी",
+                  "right": "५. खिलाड़ी थी।"
+                },
+                {
+                  "left": "4. कमला और राधा",
+                  "right": "२. सहेलियाँ थी।"
+                },
+                {
+                  "left": "5. सविता दादी की",
+                  "right": "४. लाडली थी।"
+                }
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "1) - ३ (रमेश देश की रक्षा करता था)\n2) - १ (सुनिल और आनंद खेलते थे)\n3) - ५ (आरती अच्छी खिलाड़ी थी)\n4) - २ (कमला और राधा सहेलियाँ थी)\n5) - ४ (सविता दादी की लाडली थी)"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) नमूने के अनुसार वाक्य लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (4 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l14-q3",
+              "question_number": 3,
+              "type": "sentence_transformation",
+              "question": "नमूने के अनुसार वाक्य लिखिए (उदाहरण: गीता गाती है। -> गीता गाती थी।) :\n1. रमेश सपना देखता है।\n2. महाराजा लड़ते हैं ।\n3. कुत्ता भागता है।\n4. छात्र स्कूल जाते हैं।",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "(1) रमेश सपना देखता था ।\n(2) महाराज लड़ते थे ।\n(3) कुत्ता भागता था ।\n(4) छात्र स्कूल जाते थे ।"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) अन्यवचन रूप लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l14-q4",
+              "question_number": 4,
+              "type": "plural_form",
+              "question": "अन्यवचन रूप लिखिए :\n1. कक्षा -\n2. कपड़ा -\n3. कलम -\n4. छाता -\n5. जूता -\n6. टोपी -\n7. चिड़ियाँ -\n8. चुहियाँ -\n9. गुड़ियाँ -\n10. डिबियाँ -",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 16",
+              "answer": "1. कक्षाएँ\n2. कपड़े\n3. कलमें\n4. छाते\n5. जूते\n6. टोपियाँ\n7. चिड़िया\n8. चुहिया\n9. गुड़िया\n10. डिबिया"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-15",
+      "chapter_number": 15,
+      "title": "ता, ते, ती",
+      "type": "वर्तमान काल प्रत्यय",
+      "pdf_pages": {
+        "questions": "25-26",
+        "answers": "54"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 15,
+          "average": 5,
+          "total_questions": 4,
+          "total_marks": 20
+        },
+        "objectives": {
+          "knowledge": 6,
+          "comprehension": 14
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) ता, ते, ती का प्रयोग करते हुए वाक्य पूर्ण कीजिए",
+          "instructions": "खाली जगह भरना (6 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l15-q1",
+              "question_number": 1,
+              "type": "fill_blank",
+              "question": "ता, ते, ती का प्रयोग करते हुए वाक्य पूर्ण कीजिए :\n1. राधा गाँव जा__ है।\n2. सुमन दूध पी__ है।\n3. लता सुंदर गा__ है।\n4. खरगोश गाजर खा__ है।\n5. बच्चे मैदान में खेल__ हैं।\n6. लड़कियाँ पाठ पढ़__ हैं।",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 16",
+              "answer": "1) जाती\n2) पीता\n3) गाती\n4) खाती\n5) खेलते\n6) पढ़ती"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) प्रश्नों के उत्तर लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l15-q2",
+              "question_number": 2,
+              "type": "short_answer",
+              "question": "प्रश्नों के उत्तर लिखिए :\n1. पंछी आसमान में क्या करते हैं?\n2. तितली कैसी होती है?\n3. तितली फूलों से क्या चूसती है?\n4. रमेश कैसे गाता है?\n5. पेड़ों पर कौन बैठते हैं?",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 9",
+              "answer": "1) पंछी आसमान में उड़ते हैं।\n2) तितली सुंदर होती है।\n3) तितली फूल से मधु चूसती है।\n4) रमेश अच्छा गाता है।\n5) पेड़ों पर पंछी बैठते हैं।"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) खाली जगह भरिए",
+          "instructions": "खाली जगह भरना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l15-q3",
+              "question_number": 3,
+              "type": "fill_blank",
+              "question": "खाली जगह भरिए :\n1. रमेश ____ है | (गाता, गाती)\n2. वे पेड़ों पर _____ हैं | (बैठता, बैठती / बैठते)\n3. राम ____ है | (अच्छा, अच्छी)\n4. तितली फूल से मधु _____ है | (चूसता, चूसती)\n5. राम दूध ____ है | (पीता, पीती)",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "1. गाता\n2. बैठते\n3. अच्छा\n4. चूसती\n5. पीता"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) वाक्य पूरा करो “ता, ती, ते” लगाकर",
+          "instructions": "खाली जगह भरना (4 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l15-q4",
+              "question_number": 4,
+              "type": "fill_blank",
+              "question": "वाक्य पूरा कीजिए :\n1. बंदर केला खा _______ है | (ता / ती)\n2. सुमा दूध पी _________ है | (ती / ता)\n3. अध्यापक पाठ पढ़ा ________ हैं | (ते / ता)\n4. लड़कियाँ मैदान में खेल _________ हैं | (ते / ती)",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 16",
+              "answer": "1. ता\n2. ती\n3. ते\n4. ती"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-16",
+      "chapter_number": 16,
+      "title": "रहा, रही, रहे",
+      "type": "अपूर्ण वर्तमान काल",
+      "pdf_pages": {
+        "questions": "26-27",
+        "answers": "54"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 13,
+          "average": 3,
+          "total_questions": 4,
+          "total_marks": 16
+        },
+        "objectives": {
+          "knowledge": 13,
+          "comprehension": 3
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) रहा, रही, रहे की सहायता से वाक्य पूर्ण कीजिए",
+          "instructions": "खाली जगह भरना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l16-q1",
+              "question_number": 1,
+              "type": "fill_blank",
+              "question": "रहा, रही, रहे, इनका प्रयोग करके वाक्य पूरा कीजिये :\n1. रवि रोटी खा __ है।\n2. रीना परोठा खा___ है।\n3. पिताजी कॉफी पी___ है।\n4. अनूप कपड़े बेच__ है।\n5. नीता गाड़ी चला___ है।",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 16",
+              "answer": "1. रहा\n2. रही\n3. रहे\n4. रहा\n5. रही"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) जोड़कर लिखिए",
+          "instructions": "मिलान करना (3 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l16-q2",
+              "question_number": 2,
+              "type": "match",
+              "question": "जोड़कर लिखिए :\n1. अनुराधा लिख - रहे हैं।\n2. अशोक पढ़ - रही है।\n3. दीपक और रोहित आ - रहा है।",
+              "items": [
+                {
+                  "left": "1. अनुराधा लिख",
+                  "right": "रही है।"
+                },
+                {
+                  "left": "2. अशोक पढ़",
+                  "right": "रहा है।"
+                },
+                {
+                  "left": "3. दीपक और रोहित आ",
+                  "right": "रहे हैं।"
+                }
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "1. अनुराधा लिख - रही है।\n2. अशोक पढ़ - रहा है।\n3. दीपक और रोहित आ - रहे हैं।"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) रिक्त स्थान भरिए (10 वाक्य)",
+          "instructions": "खाली जगह भरना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l16-q3",
+              "question_number": 3,
+              "type": "fill_blank",
+              "question": "रिक्त स्थान भरिए :\n1. बच्चा हँस__ है।\n2. बूढ़ा आ___ है।\n3. बुढ़िया जा___ है।\n4. मोरनी देख___ है।\n5. घोड़ा दौड़ ___है।\n6. सुधा लिख___ है।\n7. अध्यापक पढ़ा___ है।\n8. शेर दहाड़ ___है।\n9. कोमल नाच___ है।\n10. नाना जी आ___है।",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 16",
+              "answer": "1. रहा\n2. रहे (या रहा)\n3. रहीं (या रही)\n4. रही\n5. रहा\n6. रही\n7. रहे\n8. रहा\n9. रही\n10. रहे"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) प्रश्नों के उत्तर लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (3 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l16-q4",
+              "question_number": 4,
+              "type": "short_answer",
+              "question": "प्रश्नों के उत्तर लिखिए :\n1. बच्चा क्या कर रहा है?\n2. कौन आ रहे हैं?\n3. कोयल कैसे गा रही है?",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 3",
+              "answer": "1. बच्चा खा रहा है।\n2. नानाजी आ रहे हैं।\n3. कोयल मीठे गा रही है।"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-17",
+      "chapter_number": 17,
+      "title": "जायेगा, जायेंगे, जायेगी, जायेंगी",
+      "type": "भविष्यत् काल",
+      "pdf_pages": {
+        "questions": "27-28",
+        "answers": "55"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 14,
+          "average": 5,
+          "total_questions": 3,
+          "total_marks": 19
+        },
+        "objectives": {
+          "knowledge": 14,
+          "comprehension": 5
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) सही शब्द भरिए",
+          "instructions": "खाली जगह भरना (6 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l17-q1",
+              "question_number": 1,
+              "type": "fill_blank",
+              "question": "सही शब्द भरिए :\n1. विजय धारवाड़ ___ । (जायेगी / जायेगा)\n2. वह पेड़ा ___ । (लायेंगी / लायेगा)\n3. अंजली नागपुर __ । (जायेगा / जायेगी)\n4. वह संतरे __ । (लायेंगी / लायेगा)\n5. पिताजी शहर ___ । (जायेंगी / जायेंगे)\n6. वह किताबें ___ । (लायेगी / लायेंगे)",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 16",
+              "answer": "1) जायेगा\n2) लायेगा\n3) जायेगी\n4) लायेगा\n5) जायेंगे\n6) लायेगी"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) प्रश्नों के उत्तर लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (8 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l17-q2",
+              "question_number": 2,
+              "type": "short_answer",
+              "question": "प्रश्नों के उत्तर लिखिए :\n1. मनोहर कहाँ जायेगा?\n2. वह क्या लायेगा?\n3. चाचाजी कहाँ जायेंगे?\n4. वे क्या लायेंगे?\n5. मेला देखने कौन जायेगी?\n6. वे क्या लायेंगी?\n7. सरला कहाँ जायेगी?\n8. सरला क्या जीतकर आयेगी?",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 3",
+              "answer": "1) मनोहर दूकान जायेगा ।\n2) वह राशन लायेगा ।\n3) चाचा जी शहर जाएँगे ।\n4) वे खिलौने लायेंगे ।\n5) मेला देखने महिलाएँ जायेंगी ।\n6) वे साड़ियाँ लायेंगी ।\n7) सरला स्कूल जायेगी ।\n8) सरला पुरस्कार जीतकर आयेगी ।"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) उदाहरण के अनुसार लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l17-q3",
+              "question_number": 3,
+              "type": "verb_conjugation",
+              "question": "उदाहरण के अनुसार लिखिए (उदाहरण: आना - आयेगा - आयेगी) :\n(1) जाना - _________ - _________\n(2) उठना - _________ - _________\n(3) बैठना - _________ - _________\n(4) पढ़ना - _________ - _________\n(5) खेलना - _________ - _________",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 1",
+              "answer": "(1) जाना – जाएगा – जाएगी\n(2) उठना – उठेगा - उठेगी\n(3) बैठना – बैठेगा – बैठेगी\n(4) पढ़ना – पढ़ेगा – पढ़ेगी\n(5) खेलना – खेलेगा – खेलेगी"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-18",
+      "chapter_number": 18,
+      "title": "चिड़िया (कविता)",
+      "type": "कविता",
+      "pdf_pages": {
+        "questions": "29-30",
+        "answers": "55-56"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 15,
+          "average": 5,
+          "total_questions": 5,
+          "total_marks": 20
+        },
+        "objectives": {
+          "knowledge": 15,
+          "comprehension": 5
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) उत्तर लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l18-q1",
+              "question_number": 1,
+              "type": "short_answer",
+              "question": "निम्नलिखित प्रश्नों के उत्तर लिखिए :\n1. चिड़िया क्या गाती है?\n2. चिड़िया कैसी है?\n3. चिड़िया हमें कब जगाती है?\n4. चिड़िया कहाँ उड़ती है?\n5. चिड़िया किसके मन को भाती है?",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "1. चिड़िया गाना गाती है ।\n2. चिड़िया रंग बिरंगे पंखोंवाली है ।\n3. चिड़िया हमें सुबह जगाती हैं।\n4. चिड़िया आसमान में उड़ती है ।\n5. चिड़िया सबके मन को भाती है ।"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) विलोम शब्द लिखिए",
+          "instructions": "बेमेल शब्द / विलोम शब्द (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l18-q2",
+              "question_number": 2,
+              "type": "antonyms",
+              "question": "विलोम शब्द लिखिए :\n1. सुबह x\n2. ऊपर x\n3. आकाश x\n4. हँसना x\n5. बैठना x",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 22",
+              "answer": "1. सुबह x शाम\n2. ऊपर x नीचे\n3. आकाश x धरती\n4. हँसना x रोना\n5. बैठना x उठना"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) जोड़कर लिखिए",
+          "instructions": "मिलान करना (4 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l18-q3",
+              "question_number": 3,
+              "type": "match",
+              "question": "जोड़कर लिखिए :\n1. चिड़िया - १. जगाती है ।\n2. मैं चिड़िया होती - २. भाती है ।\n3. चिड़िया हमें - ३. चूँ-चूँ करके उड़ती है ।\n4. सबके मन को - ४. तो आसमान में उड़ती ।",
+              "items": [
+                {
+                  "left": "1. चिड़िया",
+                  "right": "३. चूँ-चूँ करके उड़ती है ।"
+                },
+                {
+                  "left": "2. मैं चिड़िया होती",
+                  "right": "४. तो आसमान में उड़ती ।"
+                },
+                {
+                  "left": "3. चिड़िया हमें",
+                  "right": "१. जगाती है ।"
+                },
+                {
+                  "left": "4. सबके मन को",
+                  "right": "२. भाती है ।"
+                }
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 22",
+              "answer": "1. - ३. चूँ-चूँ करके उड़ती ।\n2. - ४. तो आसमान में उड़ती ।\n3. - १. जगाती है ।\n4. - २. भाती है ।"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) चित्र देखकर पक्षियों के नाम लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (3 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l18-q4",
+              "question_number": 4,
+              "type": "picture_identification",
+              "question": "चित्र देखकर पक्षियों के नाम लिखिए :\n(चिड़िया, तोता, कबूतर, मोर, बगुला, बाज)",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 12",
+              "answer": "1) तोता 2) चिड़िया 3) मोर 4) कबूतर 5) बाज 6) बगुला"
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "5) समानार्थक शब्द लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (3 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l18-q5",
+              "question_number": 5,
+              "type": "synonyms",
+              "question": "समानार्थक शब्द लिखिए :\n1. सुबह =\n2. आसमान =\n3. पक्षी =",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 22",
+              "answer": "1. सवेरा\n2. आकाश\n3. चिड़िया / पंछी"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-19",
+      "chapter_number": 19,
+      "title": "हाथी मेरा साथी (कहानी)",
+      "type": "कहानी",
+      "pdf_pages": {
+        "questions": "31-32",
+        "answers": "56"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 15,
+          "average": 6,
+          "difficult": 6,
+          "total_questions": 6,
+          "total_marks": 27
+        },
+        "objectives": {
+          "knowledge": 10,
+          "comprehension": 17
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) निम्नलिखित प्रश्नों के उत्तर लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (6 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l19-q1",
+              "question_number": 1,
+              "type": "short_answer",
+              "question": "निम्नलिखित प्रश्नों के उत्तर लिखिए :\n1. किसको प्यास लगी थी?\n2. किसका गला सूख रहा था?\n3. गिलहरी किसकी खोज में निकली?\n4. कुएँ में क्या था?\n5. हाथी ने गिलहरी को पानी किससे पिलाया?\n6. हाथी गिलहरी को कहाँ ले गया?",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 13",
+              "answer": "1. गिलहरी को प्यास लगी थी ।\n2. गिलहरी का गला सूख रहा था ।\n3. गिलहरी पानी के खोज में निकली ।\n4. कुएँ में पानी था ।\n5. हाथी ने गिलहरी को अपने सूँड से पानी पिलाया।\n6. हाथी गिलहरी को एक कुएं के पास ले गया ।"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) अपनी मातृभाषा में अनुवाद कीजिए",
+          "instructions": "2-3 वाक्य में उत्तर लिखना (अनुवाद) (6 अंक)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "h-l19-q2",
+              "question_number": 2,
+              "type": "translation",
+              "question": "अपनी मातृभाषा में अनुवाद कीजिए :\n1. एक मोर था।\n2. एक कोयल थी।\n3. दोनों अच्छे साथी थे।",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 12",
+              "answer": "1. ಒಂದು ನವಿಲು ಇತ್ತು.\n2. ಒಂದು ಕೋಗಿಲೆ ಇತ್ತು.\n3. ಇಬ್ಬರೂ ಒಳ್ಳೆಯ ಮಿತ್ರರಾಗಿದ್ದರು."
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) निम्नलिखित वाक्य किसने किससे कहा ?",
+          "instructions": "1 वाक्य में उत्तर लिखना (2 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l19-q3",
+              "question_number": 3,
+              "type": "speaker_listener",
+              "question": "निम्नलिखित वाक्य किसने किससे कहा ?\n1. थोड़ा पानी पिला दो।\n2. अब से तू मेरा साथी।",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 5",
+              "answer": "1. थोड़ा पानी पिला दो। - गिलहरी ने हाथी को कहा ।\n2. अब से तू मेरा साथी। - गिलहरी ने हाथी को कहा ।"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) पाँच पालतू जानवर तथा पाँच जंगली जानवरों के नाम लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l19-q4",
+              "question_number": 4,
+              "type": "classification",
+              "question": "पाँच पालतू जानवर तथा पाँच जंगली जानवरों के नाम लिखिए :",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "पालतू जानवर : बिल्ली, गाय, बकरी, भैंस, कुत्ता\nजंगली जानवर : शेर, बाघ, चीता, भालू, हाथी"
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "5) सही (✓ )या गलत ( X ) लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l19-q5",
+              "question_number": 5,
+              "type": "true_false",
+              "question": "सही (✓) या गलत (X) लिखिए :\n1. हाथी पानी की खोज में निकला । (__)\n2. गिलहरी को प्यास लगी थी। (__)\n3. गिलहरी ने अपनी सूंड से पानी पिलाया। (__)",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 3",
+              "answer": "1. (X)\n2. (✓)\n3. (X)"
+            }
+          ]
+        },
+        {
+          "section_id": "VI",
+          "title": "6) शब्द पूर्ण कीजिए",
+          "instructions": "खाली जगह भरना (3 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l19-q6",
+              "question_number": 6,
+              "type": "fill_blank",
+              "question": "शब्द पूर्ण कीजिए :\n1. गि __ह ___\n2. पा___\n3. हा___",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "1. गिलहरी\n2. पानी\n3. हाथी"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-20",
+      "chapter_number": 20,
+      "title": "रेल का खेल (कविता)",
+      "type": "कविता",
+      "pdf_pages": {
+        "questions": "33-35",
+        "answers": "57-58"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 14,
+          "average": 14,
+          "difficult": 7,
+          "total_questions": 9,
+          "total_marks": 35
+        },
+        "objectives": {
+          "knowledge": 10,
+          "appreciation": 11,
+          "expression": 14
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) निम्नलिखित प्रश्नों के उत्तर लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (4 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l20-q1",
+              "question_number": 1,
+              "type": "short_answer",
+              "question": "निम्नलिखित प्रश्नों के उत्तर लिखिए :\n1. बच्चों ने क्या बनाई?\n2. इंजन कौन बनता है?\n3. गार्ड कौन बनी?\n4. रेल क्या उड़ाती जाती है?",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "1. बच्चों ने रेल बनाई |\n2. मोहन इंजन बनता है |\n3. शीला गार्ड बनी |\n4. रेल धुआँ उड़ाती जाती है |"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) जोड़कर लिखिए",
+          "instructions": "मिलान करना (4 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l20-q2",
+              "question_number": 2,
+              "type": "match",
+              "question": "जोड़कर लिखिए :\n1. मोहन - १. रेल चली।\n2. शीला - २. खेल।\n3. छुक-छुक - ३. इंजन बना ।\n4. बच्चे खेले - ४. गार्ड बनी।",
+              "items": [
+                {
+                  "left": "1. मोहन",
+                  "right": "३. इंजन बना ।"
+                },
+                {
+                  "left": "2. शीला",
+                  "right": "४. गार्ड बनी।"
+                },
+                {
+                  "left": "3. छुक-छुक",
+                  "right": "१. रेल चली।"
+                },
+                {
+                  "left": "4. बच्चे खेले",
+                  "right": "२. खेल।"
+                }
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 22",
+              "answer": "1. मोहन - ३. इंजन बना।\n2. शीला - २. गार्ड बनी।\n3. छुक-छुक - १. रेल चली।\n4. बच्चे खेले - ४. खेल।"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) रिक्त स्थान भरिए",
+          "instructions": "खाली जगह भरना (4 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l20-q3",
+              "question_number": 3,
+              "type": "fill_blank",
+              "question": "रिक्त स्थान भरिए :\n1. मोहन तुम __________ बन जाओ |\n2. लाल _____ झंडा दिखलाओ।\n3. ________ उड़ाती जाती रेल ।\n4. रेल _______ पर चलती है ।",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "1. इंजन\n2. हरी\n3. धुआँ\n4. पटरी"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) रेल का खेल कविता लिखिए",
+          "instructions": "4-5 वाक्य में उत्तर लिखना (4 अंक)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "h-l20-q4",
+              "question_number": 4,
+              "type": "quote_memory",
+              "question": "रेल का खेल कविता लिखिए :",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 1",
+              "answer": "आओ बच्चो खेलें खेल।\nमिलकर सभी बनाएँ रेल।।\nमोहन तुम इंजन बन जाओ।\nसीटी देकर रेल चलाओ।।\nशीला गार्ड बनो तुम पीछे।\nलाल-हरी झंडी दिखलाओ।।\nछुक-छुक करती चलती रेल।\nधुआँ उड़ाती जाती रेल।।"
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "5) चित्र देखकर वाहनों के नाम लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (2 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l20-q5",
+              "question_number": 5,
+              "type": "picture_identification",
+              "question": "चित्र देखकर वाहनों के नाम लिखिए : (साइकिल, कार, घोड़ा गाड़ी, हवाई जहाज, रेल)",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 12",
+              "answer": "हवाई जहाज, रेल, साइकिल, घोड़ा गाड़ी, कार"
+            }
+          ]
+        },
+        {
+          "section_id": "VI",
+          "title": "6) इस कविता की पंक्तियाँ पूर्ण कीजिए",
+          "instructions": "खाली जगह भरना (4 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l20-q6",
+              "question_number": 6,
+              "type": "fill_blank",
+              "question": "कविता की पंक्तियाँ पूर्ण कीजिए :\nमोहन---------------\n---------------चलाओ।\nछुक छुक--------\n--------जाती रेल ।",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 12",
+              "answer": "मोहन तुम इंजन बन जाओ |\nसिटी देखकर रेल चलाओ\nछुक छुक करती जाती रेल |\nधुआ उड़ाती जाती रेल।"
+            }
+          ]
+        },
+        {
+          "section_id": "VII",
+          "title": "7) कन्नड या अंग्रेजी में अनुवाद कीजिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (3 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l20-q7",
+              "question_number": 7,
+              "type": "translation",
+              "question": "कन्नड या अंग्रेजी में अनुवाद कीजिए :\nखेल = _____________\nझंडा = _____________\nधुआँ = ___________",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 12",
+              "answer": "1. ಆಟ / Play\n2. ಧ್ವಜ / Flag\n3. ಹೊಗೆ / Smoke"
+            }
+          ]
+        },
+        {
+          "section_id": "VIII",
+          "title": "8) पाँच खेलों के नाम लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l20-q8",
+              "question_number": 8,
+              "type": "short_answer",
+              "question": "पाँच खेलों के नाम लिखिए।",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 1",
+              "answer": "गेंद बल्ला (क्रिकेट), खो-खो, कबड्डी, गिल्ली डंडा, हॉकी"
+            }
+          ]
+        },
+        {
+          "section_id": "IX",
+          "title": "9) पाँच फलों के नाम लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l20-q9",
+              "question_number": 9,
+              "type": "short_answer",
+              "question": "पाँच फलों के नाम लिखिए।",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 1",
+              "answer": "आम, संतरा, अनार, अमरुद, अंगूर"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-21",
+      "chapter_number": 21,
+      "title": "चतुर बंदर (कहानी)",
+      "type": "कहानी",
+      "pdf_pages": {
+        "questions": "35-37",
+        "answers": "58"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 16,
+          "average": 5,
+          "total_questions": 5,
+          "total_marks": 21
+        },
+        "objectives": {
+          "knowledge": 16,
+          "comprehension": 5
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) सही शब्द से रिक्त स्थान पूर्ण कीजिये",
+          "instructions": "खाली जगह भरना (4 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l21-q1",
+              "question_number": 1,
+              "type": "fill_blank",
+              "question": "सही शब्द से रिक्त स्थान पूर्ण कीजिए :\n1. बंदर और मगरमच्छ में गहरी ---- थी। (दुश्मनी / दोस्ती)\n2. बंदर मीठे-मीठे ----- तोड़ कर देता था। (जामुन / अंगूर)\n3. मगरमच्छ की पीठ पर ----- बैठ गया । (बंदर / मेंढक)\n4. बंदर ने ----- से काम लिया। (मूर्खता / चतुराई)",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "1. दोस्ती\n2. जामुन\n3. बंदर\n4. चतुराई"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) के, की, का, को का प्रयोग करके वाक्य पूरा कीजिये",
+          "instructions": "खाली जगह भरना (4 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l21-q2",
+              "question_number": 2,
+              "type": "fill_blank",
+              "question": "के, की, का, को का प्रयोग करके वाक्य पूरा कीजिए :\n1. मगरमच्छ नदी ___ सैर करता था।\n2. बंदर मगरमच्छ ___ जामुन देता था।\n3. बंदर ____ कलेजा कितना मीठा होगा।\n4. मगरमच्छ ____ पत्नी ने कलेजा माँगा ।",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 16",
+              "answer": "1. का\n2. को\n3. का\n4. की"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) वर्गेतर शब्द चुनकर लिखिए",
+          "instructions": "विषम शब्द चुनना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l21-q3",
+              "question_number": 3,
+              "type": "odd_one_out",
+              "question": "वर्गेतर शब्द चुनकर लिखिए :\n1. गाय, कुत्ता, बिल्ली, शेर\n2. सीता, गीता, राम, लता\n3. जामुन, आलू, सेब, केला\n4. बंदर, मोर, शेर, हिरण\n5. बैंगन, भिंडी, अनार, लौकी\n6. गिलहरी, तोता, मोर, कबूतर\n7. आम, आलू, अमरूद, सेब\n8. पीला, हरा, ठंडा, नीला\n9. दूध, पानी, घी, दही\n10. शीला, रमेश, संदीप, राजेश",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 15",
+              "answer": "1. शेर\n2. राम\n3. आलू\n4. मोर\n5. अनार\n6. गिलहरी\n7. आलू\n8. ठंडा\n9. पानी\n10. शीला"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) प्रश्नों के उत्तर लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (3 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l21-q4",
+              "question_number": 4,
+              "type": "short_answer",
+              "question": "निम्नलिखित प्रश्नों के उत्तर लिखिए :\n1. मगरमच्छ का दोस्त कौन था ?\n2. नदी में कौन रहता था ?\n3. बंदर मगरमच्छ को खाने के लिए क्या देता था ?",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 8",
+              "answer": "1. मगरमच्छ का दोस्त बंदर था ।\n2. नदी में मगरमच्छ रहता था ।\n3. बंदर मगरमच्छ को खाने के लिए मीठे जामुन देता था ।"
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "5) सही उत्तर चुनकर लिखिए",
+          "instructions": "बहुविकल्पीय प्रश्न (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l21-q5-1",
+              "question_number": 5.1,
+              "type": "mcq",
+              "question": "बंदर मगरमच्छ के ---- पर बैठकर सैर करता था ।",
+              "options": [
+                "A. पेट",
+                "B. पीठ",
+                "C. कमर",
+                "D. सेना"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 23",
+              "answer": "B. पीठ"
+            },
+            {
+              "id": "h-l21-q5-2",
+              "question_number": 5.2,
+              "type": "mcq",
+              "question": "बंदर मगरमच्छ को --------- देता था ।",
+              "options": [
+                "A. अमरूद",
+                "B. सेब",
+                "C. केला",
+                "D. जामुन"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 23",
+              "answer": "D. जामुन"
+            },
+            {
+              "id": "h-l21-q5-3",
+              "question_number": 5.3,
+              "type": "mcq",
+              "question": "मगरमच्छ की पत्नी ने -------------- माँगा ।",
+              "options": [
+                "A. जामुन",
+                "B. कलेजा",
+                "C. मिठाई",
+                "D. दवाई"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 23",
+              "answer": "B. कलेजा"
+            },
+            {
+              "id": "h-l21-q5-4",
+              "question_number": 5.4,
+              "type": "mcq",
+              "question": "मगरमच्छ ने बंदर को ----------------- के लिए बुलाया ।",
+              "options": [
+                "A. खेलने",
+                "B. नाचने",
+                "C. तैरने",
+                "D. खाने"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 23",
+              "answer": "C. तैरने (या D. खाने पर)"
+            },
+            {
+              "id": "h-l21-q5-5",
+              "question_number": 5.5,
+              "type": "mcq",
+              "question": "--------- बहुत चतुर निकला।",
+              "options": [
+                "A. मोर",
+                "B. बंदर",
+                "C. मगरमच्छ",
+                "D. मछली"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 23",
+              "answer": "B. बंदर"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-22",
+      "chapter_number": 22,
+      "title": "माँ का प्यार (कविता)",
+      "type": "कविता",
+      "pdf_pages": {
+        "questions": "37-38",
+        "answers": "58-59"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 13,
+          "difficult": 11,
+          "total_questions": 7,
+          "total_marks": 24
+        },
+        "objectives": {
+          "knowledge": 13,
+          "appreciation": 9,
+          "comprehension": 2
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) निम्नलिखित प्रश्नों के उत्तर एक वाक्य में लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l22-q1",
+              "question_number": 1,
+              "type": "short_answer",
+              "question": "निम्नलिखित प्रश्नों के उत्तर एक वाक्य में लिखिए :\n1. पग-पग पर कौन संभालती है?\n2. उँगली पकड़ कर कौन लिखाती है?\n3. बच्चे की पहली गुरु कौन है?\n4. किसकी ममता का आर-पार नहीं है?\n5. 'माँ का प्यार' कविता के कवि कौन है?",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 3",
+              "answer": "1) पग-पग पर माँ ने संभालती है ।\n2) उँगली पकड़कर माँ लिखाती (सिखाती) है ।\n3) बच्चे की पहली गुरु माँ है ।\n4) माँ की ममता का कोई आर न पार है ।\n5) माँ का प्यार कविता के कवि का नाम डॉक्टर टी. जी प्रभा शंकर प्रेमी है।"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) खाली जगह भरिए",
+          "instructions": "खाली जगह भरना (3 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l22-q2",
+              "question_number": 2,
+              "type": "fill_blank",
+              "question": "खाली जगह भरिए :\n1. मेरी माँ रोज़ ____ जागती है।\n2. मेरे पिताजी रोज़ ____ कहानी सुनाते हैं।\n3. मेरी नानी रोज़ ____ से फल लाती हैं।",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 2",
+              "answer": "1) सुबह ।\n2) शाम ।\n3) बाज़ार ।"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) कंठस्थ पद्य लिखिए",
+          "instructions": "कंठस्थ पद्य लिखना (4 अंक)",
+          "marks_per_question": 4,
+          "questions": [
+            {
+              "id": "h-l22-q3",
+              "question_number": 3,
+              "type": "quote_memory",
+              "question": "कंठस्थ पद्य लिखिए :",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 10",
+              "answer": "उंगली पकड़कर चलना सिखाया,\nखाकर ठोकर उठना सिखाया।\nमाँ का प्यार है सबसे प्यारा,\nजगत में इसका आर न पारा।।"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) इन शब्दों का अर्थ कन्नड या अंग्रेजी में लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (3 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l22-q4",
+              "question_number": 4,
+              "type": "translation",
+              "question": "इन शब्दों का अर्थ कन्नड या अंग्रेजी में लिखिए :\nपोसना -\nठोकर खाना -\nसूरत -",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 12",
+              "answer": "1. पोसना : ಪೋಷಣೆ / take care of\n2. ठोकर खाना : ಪೆಟ್ಟು ತಿನ್ನುವುದು / to stumble\n3. सूरत : ಮುಖ / face"
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "5) इन पंक्तियों को पूरा कीजिये",
+          "instructions": "खाली जगह भरना (2 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l22-q5",
+              "question_number": 5,
+              "type": "fill_blank",
+              "question": "इन पंक्तियों को पूरा कीजिये :\nउंगली ---------------\n--------------- सिखाया।",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 10",
+              "answer": "उंगली पकड़कर लिखना सिखाया\nखाकर ठोकर उठना सिखाया |"
+            }
+          ]
+        },
+        {
+          "section_id": "VI",
+          "title": "6) 'माँ का प्यार' कविता से हमें क्या सीख मिलती है ?",
+          "instructions": "2-3 वाक्य में उत्तर लिखना (2 अंक)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "h-l22-q6",
+              "question_number": 6,
+              "type": "paragraph",
+              "question": "'माँ का प्यार' कविता से हमें क्या सीख मिलती है ?",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 1",
+              "answer": "माँ की ममता और माँ के प्यार का महत्व जानते हैं और उनका आदर करना सीखते हैं।"
+            }
+          ]
+        },
+        {
+          "section_id": "VII",
+          "title": "7) जोड़कर लिखिए",
+          "instructions": "मिलान करना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l22-q7",
+              "question_number": 7,
+              "type": "match",
+              "question": "जोड़कर लिखिए :\n1. पाला पोसा - अ) आर न पार ।\n2. उंगली पकड़कर - आ) माँ का प्यार ।\n3. सदा बसी है - इ) लिखना सिखाया ।\n4. माँ की ममता - ई) माँ की मूरत।\n5. उसका कोई - उ) मेरी माँ ने ।",
+              "items": [
+                {
+                  "left": "1. पाला पोसा",
+                  "right": "उ) मेरी माँ ने ।"
+                },
+                {
+                  "left": "2. उंगली पकड़कर",
+                  "right": "इ) लिखना सिखाया ।"
+                },
+                {
+                  "left": "3. सदा बसी है",
+                  "right": "ई) माँ की मूरत।"
+                },
+                {
+                  "left": "4. माँ की ममता",
+                  "right": "आ) माँ का प्यार ।"
+                },
+                {
+                  "left": "5. उसका कोई",
+                  "right": "अ) आर न पार ।"
+                }
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "1. - उ) मेरी माँ ने |\n2. - इ) लिखना सिखाया |\n3. - ई) माँ की मूरत |\n4. - आ) माँ का प्यार |\n5. - अ) आर न पार |"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-23",
+      "chapter_number": 23,
+      "title": "अक्षर ही अक्षर (निबंध)",
+      "type": "निबंध",
+      "pdf_pages": {
+        "questions": "39-41",
+        "answers": "59-60"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 8,
+          "average": 13,
+          "difficult": 4,
+          "total_questions": 8,
+          "total_marks": 25
+        },
+        "objectives": {
+          "knowledge": 8,
+          "comprehension": 4,
+          "expression": 13
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) एक वाक्य में उत्तर लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (4 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l23-q1",
+              "question_number": 1,
+              "type": "short_answer",
+              "question": "एक वाक्य में उत्तर लिखिए :\n1. अक्षर शब्द का अर्थ क्या है ?\n2. भाषा की आवश्यकता किसके लिए है ?\n3. प्रारंभ में मानव अपने विचार कैसे प्रकट करते थे ?\n4. मनुष्य कैसे जीवी है?",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "1) अक्षर शब्द का अर्थ है जो घट न सकें या नष्ट न हो सकें ।\n2) परस्पर अपने विचार विनिमय के लिए भाषा की आवश्यकता है।\n3) प्रारंभ में मानव चित्रों के माध्यम से अपने विचार प्रकट करते थे ।\n4) मनुष्य संघ जीवी हैं|"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) सही उत्तर चुनकर लिखिए",
+          "instructions": "बहुविकल्पीय प्रश्न (4 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l23-q2-1",
+              "question_number": 2.1,
+              "type": "mcq",
+              "question": "समाचार पत्र में देखो __________ ।",
+              "options": [
+                "a) पुस्तक",
+                "b) भाषा",
+                "c) गाना",
+                "d) अक्षर"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 21",
+              "answer": "d) अक्षर"
+            },
+            {
+              "id": "h-l23-q2-2",
+              "question_number": 2.2,
+              "type": "mcq",
+              "question": "अक्षरों की खोज __________ की सबसे बड़ी सोच है |",
+              "options": [
+                "a) मनुष्य",
+                "b) भाषा",
+                "c) नागरिक",
+                "d) समाज"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 21",
+              "answer": "a) मनुष्य"
+            },
+            {
+              "id": "h-l23-q2-3",
+              "question_number": 2.3,
+              "type": "mcq",
+              "question": "चलते-चलते मानव ने _______ को अपनाया |",
+              "options": [
+                "a) खाना",
+                "b) अक्षर",
+                "c) भाषा",
+                "d) विचार"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 21",
+              "answer": "c) भाषा"
+            },
+            {
+              "id": "h-l23-q2-4",
+              "question_number": 2.4,
+              "type": "mcq",
+              "question": "प्रारंभ में _________ के माध्यम से मानव विचार प्रकट करता था |",
+              "options": [
+                "a) चित्रों",
+                "b) भाव",
+                "c) माध्यम",
+                "d) किताब"
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 21",
+              "answer": "a) चित्रों"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) कन्नड़ में अनुवाद कीजिए",
+          "instructions": "2-3 वाक्य में उत्तर लिखना (अनुवाद) (2 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l23-q3",
+              "question_number": 3,
+              "type": "translation",
+              "question": "कन्नड़ में अनुवाद कीजिए :\na) मुझे नींद आ रही है |\nb) मुझे डर लग रहा है |",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 12",
+              "answer": "a) ನನಗೆ ನಿದ್ರೆ ಬರುತ್ತಿದೆ.\nb) ನನಗೆ ಭಯ ಆಗುತ್ತಿದೆ."
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) विलोम शब्द लिखिए",
+          "instructions": "बेमेल शब्द / विलोम शब्द (1 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l23-q4",
+              "question_number": 4,
+              "type": "antonyms",
+              "question": "विलोम शब्द लिखिए :\n1) दुःख x _____________\n2) मित्र x __________",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 22",
+              "answer": "1) सुख\n2) शत्रु"
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "5) समानार्थक शब्द लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (1 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l23-q5",
+              "question_number": 5,
+              "type": "synonyms",
+              "question": "समानार्थक शब्द लिखिए :\n1) खोज =\n2) आरंभ =\n3) अक्षर =",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 22",
+              "answer": "1) तलाश\n2) शुरुआत\n3) “जो घट न सके या नष्ट न हो सके”"
+            }
+          ]
+        },
+        {
+          "section_id": "VI",
+          "title": "6) दो-तीन वाक्यों में उत्तर लिखिए",
+          "instructions": "2-3 वाक्य में उत्तर लिखना (4 अंक)",
+          "marks_per_question": 2,
+          "questions": [
+            {
+              "id": "h-l23-q6",
+              "question_number": 6,
+              "type": "paragraph",
+              "question": "दो-तीन वाक्यों में उत्तर लिखिए :\n1. अक्षरों का महत्व समझाइए |\n2. अक्षरों के द्वारा किसका प्रचार-प्रसार हो रहा हैं ?",
+              "difficulty": "कठिन",
+              "learning_outcome": "LO 3",
+              "answer": "1. अक्षर से मानव पढ़ना – लिखना सीखता है । अक्षर से शब्द बनता है ।\n2. अक्षरों की खोज मनुष्य की सबसे बड़ी सोच हैं | अक्षरों के द्वारा पीढ़ी दर पीढ़ी ज्ञान का प्रचार-प्रसार हो रहा हैं ।"
+            }
+          ]
+        },
+        {
+          "section_id": "VII",
+          "title": "7) वर्णमाला के अक्षरों को सही तालिका में लिखिए",
+          "instructions": "तालिका वर्गीकरण (10 अंक)",
+          "marks_per_question": 10,
+          "questions": [
+            {
+              "id": "h-l23-q7",
+              "question_number": 7,
+              "type": "classification",
+              "question": "वर्णमाला के अक्षरों को सही तालिका में लिखिए (स्वर, अयोगवाह, व्यंजन, संयुक्ताक्षर) :",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 4",
+              "answer": "स्वर : अ, आ, इ, ई, उ, ऊ, ऋ, ए, ऐ, ओ, औ\nअयोगवाह : अं, अ:\nव्यंजन : क से ह तक\nसंयुक्ताक्षर : क्ष, त्र, ज्ञ, श्र"
+            }
+          ]
+        },
+        {
+          "section_id": "VIII",
+          "title": "8) अपने परिवार वालों के नाम लिखिए",
+          "instructions": "व्यक्तिगत उत्तर (3 अंक)",
+          "marks_per_question": 3,
+          "questions": [
+            {
+              "id": "h-l23-q8",
+              "question_number": 8,
+              "type": "personal_response",
+              "question": "अपने परिवार वालों के नाम लिखिए।",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 1",
+              "answer": "व्यक्तिगत उत्तर (जैसे: पिता का नाम, माता का नाम, भाई/बहन का नाम)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-24",
+      "chapter_number": 24,
+      "title": "गिनती (21 से 50 तक)",
+      "type": "गिनती / संख्या ज्ञान",
+      "pdf_pages": {
+        "questions": "41-42",
+        "answers": "60-61"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 19,
+          "average": 5,
+          "total_questions": 5,
+          "total_marks": 24
+        },
+        "objectives": {
+          "knowledge": 14,
+          "comprehension": 10
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) 21 से 50 तक गिनती लिखिए",
+          "instructions": "4-5 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 5,
+          "questions": [
+            {
+              "id": "h-l24-q1",
+              "question_number": 1,
+              "type": "counting",
+              "question": "21 से 50 तक गिनती अंकों में लिखिए :",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 24",
+              "answer": "1) २१, २२, २३, २४, २५, २६, २७, २८, २९, ३०\n2) ३१, ३२, ३३, ३४, ३५, ३६, ३७, ३८, ३९, ४०\n3) ४१, ४२, ४३, ४४, ४५, ४६, ४७, ४८, ४९, ५०"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) गिनती को अक्षरों में लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l24-q2",
+              "question_number": 2,
+              "type": "counting",
+              "question": "गिनती को अक्षरों में लिखिए :\n1) इकतीस से चालीस तक\n2) इकतालीस से पचास तक",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 24",
+              "answer": "1) इकतीस, बत्तीस, तैंतीस, चौंतीस, पैंतीस, छत्तीस, सैंतीस, अड़तीस, उनतीस, चालीस\n2) इकतालीस, बयालीस, तैंतालीस, चौवालीस, पैंतालीस, छियालीस, सैंतालीस, अड़तालीस, उनचास, पचास"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) अंकों में लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l24-q3",
+              "question_number": 3,
+              "type": "number_conversion",
+              "question": "शब्दों से अंकों में लिखिए :\n1) तेईस\n2) अट्ठाईस\n3) तैंतीस\n4) पैंतीस\n5) अठारह",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 24",
+              "answer": "1) २३\n2) २८\n3) ३३\n4) ३५\n5) १८"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) अक्षरों में लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l24-q4",
+              "question_number": 4,
+              "type": "number_conversion",
+              "question": "अंकों से अक्षरों में लिखिए :\n1) 37\n2) 40\n3) 43\n4) 45\n5) 50",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 24",
+              "answer": "1) सैंतीस\n2) चालीस\n3) तैंतालीस\n4) पैंतालीस\n5) पचास"
+            }
+          ]
+        },
+        {
+          "section_id": "V",
+          "title": "5) हिंदी अंक और अक्षरों में लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (4 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l24-q5",
+              "question_number": 5,
+              "type": "number_conversion",
+              "question": "अंग्रेजी संख्या को हिंदी अंक और अक्षरों में लिखिए :\n1) 21\n2) 25\n3) 29\n4) 47",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 24",
+              "answer": "1) 21 : २१, इक्कीस\n2) 25 : २५, पच्चीस\n3) 29 : २९, उनतीस\n4) 47 : ४७, सैंतालीस"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-25",
+      "chapter_number": 25,
+      "title": "वनमहोत्सव (वार्तालाप)",
+      "type": "वार्तालाप",
+      "pdf_pages": {
+        "questions": "42-43",
+        "answers": "61-62"
+      },
+      "blueprint": {
+        "difficulty": {
+          "easy": 11,
+          "average": 1,
+          "total_questions": 4,
+          "total_marks": 12
+        },
+        "objectives": {
+          "knowledge": 11,
+          "comprehension": 1
+        }
+      },
+      "sections": [
+        {
+          "section_id": "I",
+          "title": "1) उत्तर लिखिए",
+          "instructions": "1 वाक्य में उत्तर लिखना (1 अंक प्रत्येक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l25-q1",
+              "question_number": 1,
+              "type": "short_answer",
+              "question": "निम्नलिखित प्रश्नों के उत्तर लिखिए :\n1. बच्चे स्कूल में कौन-सा उत्सव मना रहे थे ?\n2. विश्व पर्यावरण दिवस कब मनाया जाता है ?\n3. विश्व पर्यावरण दिवस का महत्व क्या है ?\n4. पर्यावरण के प्रति जागृति लाने के लिए क्या करना चाहिए ?\n5. लता और गीता ने क्या कहा ?\n6. सबसे पहले पेड़ किसने लगवाये था ?\n7. राजीव ने गुरुजी से क्या कहा ?\n8. पेड़ लगाने से क्या-क्या लाभ हैं?",
+              "difficulty": "सामान्य",
+              "learning_outcome": "LO 1",
+              "answer": "1) बच्चे स्कूल में वन महोत्सव मना रहे थे |\n2) विश्व पर्यावरण दिवस 5 जून को मनाया जाता है |\n3) पर्यावरण के प्रति जागृति लाने के लिए विश्व पर्यावरण दिवस मनाया जाता है |\n4) पेड़ - पौधों को बचाना चाहिए |\n5) लता और गीता ने पेड़ों के चारों तरफ तारों के बाड़ लगाने के लिए कहा |\n6) स्कूल के मुख्य अध्यापक ने सबसे पहले पेड़ लगाया था |\n7) राजीव ने कहा मैं हर साल अपने जन्मदिन एक पेड़ लगाकर मनाऊँगा |\n8) पेड़ों से वर्षा होती है, शुद्ध हवा मिलती है और पेड़ों से छाया मिलती है |"
+            }
+          ]
+        },
+        {
+          "section_id": "II",
+          "title": "2) खाली जगह भरिए",
+          "instructions": "खाली जगह भरना (3 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l25-q2",
+              "question_number": 2,
+              "type": "fill_blank",
+              "question": "खाली जगह भरिए :\n1. ______ विश्व पर्यावरण दिवस है।\n2. इन पेड़ों के चारों तरफ ______ की बाड़ लगायेंगी।\n3. गुरुजी, हम हर साल ______ मनायेंगे।\n4. पेड़ लगाने से यह धरती ______ हो जायेगी।",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 1",
+              "answer": "1) 5 जून\n2) तारों\n3) जन्मदिन\n4) हरी-भरी"
+            }
+          ]
+        },
+        {
+          "section_id": "III",
+          "title": "3) सही [✔] या गलत [x] का चिह्न लगाइए",
+          "instructions": "1 वाक्य में उत्तर लिखना (3 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l25-q3",
+              "question_number": 3,
+              "type": "true_false",
+              "question": "सही [✔] या गलत [x] का चिह्न लगाइए :\n1. पेड़ों से अधिक वर्षा होती है। ( _____ )\n2. पेड़ों से छाया मिलती है। ( _____ )\n3. पेड़ों से हानी होती है। ( _____ )",
+              "difficulty": "सरल",
+              "learning_outcome": "LO 20",
+              "answer": "1) [✔]\n2) [✔]\n3) [x]"
+            }
+          ]
+        },
+        {
+          "section_id": "IV",
+          "title": "4) जोड़कर लिखिए",
+          "instructions": "मिलान करना (5 अंक)",
+          "marks_per_question": 1,
+          "questions": [
+            {
+              "id": "h-l25-q4",
+              "question_number": 4,
+              "type": "match",
+              "question": "जोड़कर लिखिए :\n1) विश्व पर्यावरण दिवस - वर्षा होती है।\n2) पेड़ -पौधों को - रक्षा करेंगे।\n3) सभी पेड़ों को - बचाना चाहिये ।\n4) हम सभी उनकी - 5 जून ।\n5) पेड़ों से - पानी डालूँगा ।",
+              "items": [
+                {
+                  "left": "1) विश्व पर्यावरण दिवस",
+                  "right": "5 जून ।"
+                },
+                {
+                  "left": "2) पेड़ -पौधों को",
+                  "right": "पानी डालूँगा ।"
+                },
+                {
+                  "left": "3) सभी पेड़ों को",
+                  "right": "बचाना चाहिये ।"
+                },
+                {
+                  "left": "4) हम सभी उनकी",
+                  "right": "रक्षा करेंगे।"
+                },
+                {
+                  "left": "5) पेड़ों से",
+                  "right": "वर्षा होती है।"
+                }
+              ],
+              "difficulty": "सरल",
+              "learning_outcome": "LO 18",
+              "answer": "1) विश्व पर्यावरण दिवस - 5 जून ।\n2) पेड़ -पौधों को - पानी डालूँगा ।\n3) सभी पेड़ों को - बचाना चाहिये ।\n4) हम सभी उनकी - रक्षा करेंगे।\n5) पेड़ों से - वर्षा होती है।"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

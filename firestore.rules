@@ -1,0 +1,149 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to validate ID
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128;
+    }
+
+    // Question Banks collection
+    match /question_banks/{bankId} {
+      allow read: if true;
+      allow create, update: if isValidId(bankId)
+        && request.resource.data.id is string
+        && request.resource.data.title is string
+        && request.resource.data.grade is string
+        && request.resource.data.subject is string;
+      allow delete: if true;
+
+      // Chunked chapters subcollection for large question banks (> 750 KB)
+      match /chapter_chunks/{chunkId} {
+        allow read: if true;
+        allow create, update: if isValidId(bankId)
+          && isValidId(chunkId)
+          && request.resource.data.chunkIndex is int
+          && request.resource.data.chapters is list;
+        allow delete: if isValidId(bankId) && isValidId(chunkId);
+      }
+    }
+
+    // Generated Question Papers collection
+    match /question_papers/{paperId} {
+      allow read: if true;
+      allow create, update: if isValidId(paperId)
+        && request.resource.data.id is string
+        && request.resource.data.schoolName is string
+        && request.resource.data.grade is string
+        && request.resource.data.subject is string;
+      allow delete: if true;
+    }
+
+    // Uploaded PDF records collection
+    match /uploaded_pdfs/{pdfId} {
+      allow read: if true;
+      allow create, update: if isValidId(pdfId)
+        && request.resource.data.id is string
+        && request.resource.data.fileName is string;
+      allow delete: if true;
+    }
+
+    // Compressed Question / Answer Images (individual small docs, <= 250 KB)
+    match /question_images/{imageId} {
+      allow read: if true;
+      allow create, update: if isValidId(imageId)
+        && imageId.matches('^[a-zA-Z0-9_\\-]+$')
+        && request.resource.data.id is string
+        && request.resource.data.id == imageId
+        && request.resource.data.dataUrl is string
+        && request.resource.data.dataUrl.size() > 0
+        && request.resource.data.dataUrl.size() <= 350000
+        && request.resource.data.mimeType is string
+        && request.resource.data.mimeType.size() > 0
+        && request.resource.data.mimeType.size() <= 40
+        && request.resource.data.role in ['question', 'answer'];
+      allow delete: if isValidId(imageId) && imageId.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Auth & Admin helpers
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated()
+        && request.auth.token.email == 'shivu.angadi@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    function isValidEmail(email) {
+      return email is string
+        && email.size() >= 5
+        && email.size() <= 160
+        && email.matches('^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    function isValidOnlineTestAttempt(attemptId) {
+      return isValidId(attemptId)
+        && attemptId.matches('^[a-zA-Z0-9_\\-]+$')
+        && request.resource.data.keys().hasAll([
+          'id', 'studentUid', 'studentName', 'studentEmail', 'grade', 'subject',
+          'score', 'totalQuestions', 'percentage', 'submittedAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'id', 'studentUid', 'studentName', 'studentEmail', 'grade', 'subject',
+          'chapters', 'score', 'totalQuestions', 'correctCount', 'wrongCount',
+          'unansweredCount', 'percentage', 'timeTakenSeconds', 'emailSent',
+          'items', 'submittedAt'
+        ])
+        && request.resource.data.id == attemptId
+        && request.resource.data.studentUid is string
+        && request.resource.data.studentUid.size() > 0
+        && request.resource.data.studentUid.size() <= 128
+        && request.resource.data.studentName is string
+        && request.resource.data.studentName.size() > 0
+        && request.resource.data.studentName.size() <= 120
+        && isValidEmail(request.resource.data.studentEmail)
+        && request.resource.data.grade is string
+        && request.resource.data.grade.size() <= 80
+        && request.resource.data.subject is string
+        && request.resource.data.subject.size() <= 80
+        && request.resource.data.totalQuestions is int
+        && request.resource.data.totalQuestions >= 1
+        && request.resource.data.totalQuestions <= 100
+        && request.resource.data.score is int
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= request.resource.data.totalQuestions
+        && request.resource.data.percentage is number
+        && request.resource.data.percentage >= 0
+        && request.resource.data.percentage <= 100
+        && (!('items' in request.resource.data) || (request.resource.data.items is list && request.resource.data.items.size() <= 100))
+        && (!('chapters' in request.resource.data) || (request.resource.data.chapters is list && request.resource.data.chapters.size() <= 60))
+        && request.resource.data.submittedAt is string
+        && request.resource.data.submittedAt.size() <= 64;
+    }
+
+    // Online Test Student Attempts (PII-protected: read only by owner or admin; immutable once submitted)
+    match /online_test_attempts/{attemptId} {
+      allow read: if isAuthenticated()
+        && (
+          resource.data.studentUid == request.auth.uid
+          || (request.auth.token.email != null && resource.data.studentEmail == request.auth.token.email)
+          || isAdmin()
+        );
+      allow create: if isValidOnlineTestAttempt(attemptId)
+        && (
+          (isAuthenticated() && request.resource.data.studentUid == request.auth.uid)
+          || (!isAuthenticated() && request.resource.data.studentUid == 'email_guest')
+        );
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    // Test connection doc
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+  }
+}
