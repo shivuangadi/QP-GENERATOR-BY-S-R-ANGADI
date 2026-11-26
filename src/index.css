@@ -82,4 +82,12 @@
     page-break-before: always;
     break-before: page;
   }
+
+  .mcq-options-row {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    column-gap: 12px !important;
+    row-gap: 4px !important;
+    width: 100% !important;
+  }
 }

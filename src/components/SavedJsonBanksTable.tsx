@@ -125,6 +125,8 @@ export const SavedJsonBanksTable: React.FC<SavedJsonBanksTableProps> = ({
         if (gCmp !== 0) return gCmp;
         const sCmp = a.subject.localeCompare(b.subject);
         if (sCmp !== 0) return sCmp;
+        const imgDiff = (b.uploadedImageCount || 0) - (a.uploadedImageCount || 0);
+        if (imgDiff !== 0) return imgDiff;
         return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
       });
   }, [banks, filterMode, selectedClassKey, searchTerm, groupCounts]);
@@ -283,12 +285,15 @@ export const SavedJsonBanksTable: React.FC<SavedJsonBanksTableProps> = ({
                 const prevBank = index > 0 ? visibleBanks[index - 1] : null;
                 const isNewClassGroup = prevBank && (prevBank.gradeKey || prevBank.grade) !== (bank.gradeKey || bank.grade);
 
+                const isBuiltin = bank.source === 'builtin';
                 const storageLabel =
-                  bank.source === 'firebase' && bank.alsoOnServer
-                    ? 'Firebase & Server'
-                    : bank.source === 'firebase'
-                      ? 'Firebase'
-                      : 'Server';
+                  isBuiltin
+                    ? 'Built-in (Class 6)'
+                    : bank.source === 'firebase' && bank.alsoOnServer
+                      ? 'Firebase & Server'
+                      : bank.source === 'firebase'
+                        ? 'Firebase'
+                        : 'Server';
 
                 return (
                   <tr
@@ -305,7 +310,11 @@ export const SavedJsonBanksTable: React.FC<SavedJsonBanksTableProps> = ({
                   >
                     {/* Column 1: Delete Button BEFORE Class & Subject */}
                     <td className="py-2.5 pl-4 pr-3 whitespace-nowrap align-middle">
-                      {isConfirming ? (
+                      {isBuiltin ? (
+                        <span className="text-3xs font-semibold text-slate-400">
+                          ಅಧಿಕೃತ ಮೂಲ
+                        </span>
+                      ) : isConfirming ? (
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
@@ -358,6 +367,11 @@ export const SavedJsonBanksTable: React.FC<SavedJsonBanksTableProps> = ({
                     <td className="py-2.5 px-3 align-middle min-w-[200px]">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                         <span className="font-bold text-slate-900">{bank.subject}</span>
+                        {(bank.uploadedImageCount || 0) > 0 && (
+                          <span className="text-3xs font-bold text-emerald-700 tabular-nums">
+                            · {bank.uploadedImageCount} ಚಿತ್ರಗಳು
+                          </span>
+                        )}
                         {isDuplicate && (
                           <span className="inline-flex items-center gap-1 text-3xs font-bold text-amber-800">
                             <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0" />
@@ -378,19 +392,23 @@ export const SavedJsonBanksTable: React.FC<SavedJsonBanksTableProps> = ({
 
                     {/* Column 4: Chapters */}
                     <td className="py-2.5 px-3 text-right whitespace-nowrap align-middle font-mono tabular-nums text-slate-700 font-semibold">
-                      {bank.totalChapters}
+                      {bank.totalChapters > 0 ? bank.totalChapters : '—'}
                     </td>
 
                     {/* Column 5: Questions */}
                     <td className="py-2.5 px-3 text-right whitespace-nowrap align-middle font-mono tabular-nums text-slate-900 font-bold">
-                      {bank.totalQuestions}
+                      {bank.totalQuestions > 0 ? bank.totalQuestions : '—'}
                     </td>
 
                     {/* Column 6: Storage & Date (Clean unboxed metadata) */}
                     <td className="py-2.5 px-3 whitespace-nowrap align-middle text-2xs text-slate-500 tabular-nums">
                       <span>{storageLabel}</span>
-                      <span aria-hidden="true"> · </span>
-                      <span>{formatSavedDate(bank.updatedAt)}</span>
+                      {!isBuiltin && (
+                        <>
+                          <span aria-hidden="true"> · </span>
+                          <span>{formatSavedDate(bank.updatedAt)}</span>
+                        </>
+                      )}
                     </td>
 
                     {/* Column 7: Open Action */}

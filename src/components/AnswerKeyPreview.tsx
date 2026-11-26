@@ -8,6 +8,7 @@ import React from 'react';
 import { GeneratedPaper } from '../types/questionBank.ts';
 import { Printer, CheckCircle, FileCheck, HelpCircle } from 'lucide-react';
 import { MathText } from './MathText.tsx';
+import { ResilientQuestionImage } from './ResilientQuestionImage.tsx';
 
 interface AnswerKeyPreviewProps {
   paper: GeneratedPaper;
@@ -111,10 +112,9 @@ export const AnswerKeyPreview: React.FC<AnswerKeyPreviewProps> = ({ paper }) => 
                               ಪ್ರಶ್ನೆ ಚಿತ್ರ (Question Diagram):
                             </span>
                           )}
-                          <img
+                          <ResilientQuestionImage
                             src={q.imageUrl}
                             alt={q.diagramDescription || 'ಪ್ರಶ್ನೆ ಚಿತ್ರ'}
-                            referrerPolicy="no-referrer"
                             className={`${q.answerImageUrl ? 'max-h-28' : 'max-h-36'} rounded border border-slate-200 object-contain bg-white p-0.5`}
                           />
                         </div>
@@ -151,10 +151,9 @@ export const AnswerKeyPreview: React.FC<AnswerKeyPreviewProps> = ({ paper }) => 
                               <span className="block text-2xs font-bold text-emerald-800 mb-1">
                                 ಉತ್ತರ ಚಿತ್ರ / ಲೇಬಲ್ ಮಾಡಿದ ಚಿತ್ರ (Answer Key Diagram):
                               </span>
-                              <img
+                              <ResilientQuestionImage
                                 src={q.answerImageUrl}
                                 alt={q.answerDiagramDescription || 'ಉತ್ತರ ಚಿತ್ರ / Labeled Answer Diagram'}
-                                referrerPolicy="no-referrer"
                                 className="max-h-48 max-w-full rounded border border-emerald-300 object-contain bg-white p-1"
                               />
                             </div>

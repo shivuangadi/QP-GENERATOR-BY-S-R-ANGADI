@@ -272,7 +272,136 @@ export function hasValidAnswer(q: QuestionItem): boolean {
 }
 
 /**
- * Filters bank questions matching a section blueprint and chapter weightage constraints
+ * Authoritative detector for Match-the-Following questions.
+ * Used to guarantee at most ONE Match question per paper and zero leaks into other sections.
+ */
+export function isMatchQuestion(
+  q: Pick<QuestionItem, 'formatCategoryId' | 'questionType' | 'items' | 'question'>
+): boolean {
+  if (q.formatCategoryId === 'match') return true;
+  if (Array.isArray(q.items) && q.items.length > 0) return true;
+  const combined = `${q.questionType || ''} ${q.question || ''}`;
+  return /(?:ಹೊಂದಿಸಿ\s*ಬರೆಯಿರಿ|ಸರಿ\s*ಹೊಂದಿಸಿ|match\s*the\s*following|ಸಹಿ\s*ಮಿಲಾನ|मिलान)/i.test(combined);
+}
+
+/**
+ * Strict format category matcher so ONLY selected question formats appear in the generated paper.
+ */
+export function matchesFormatCategory(q: QuestionItem, bpCat: string): boolean {
+  if (!bpCat || bpCat === 'all') return true;
+
+  const qCat = q.formatCategoryId;
+  const qMarks = q.marks || 1;
+  const qText = q.question || '';
+  const isMatch = isMatchQuestion(q);
+
+  if (bpCat === 'match') {
+    return isMatch;
+  }
+
+  // Non-match sections MUST NEVER pull Match-the-Following questions
+  if (isMatch) {
+    return false;
+  }
+
+  const isMcq = qCat === 'mcq' || Boolean(q.options && q.options.length >= 2);
+  const hasBlank =
+    qText.includes('_____') ||
+    qText.includes('-----') ||
+    qText.includes('ಬಿಟ್ಟ ಸ್ಥಳ') ||
+    qText.includes('ಖಾಲಿ ಜಾಗ') ||
+    /fill\s*in\s*the\s*blank/i.test(qText);
+  const isTf =
+    (qText.includes('ಸರಿ') && qText.includes('ತಪ್ಪು')) ||
+    /true\s*or\s*false/i.test(qText);
+  const isAnalogy =
+    qText.includes('::') ||
+    qText.includes('ಸಂಬಂಧ ಕಲ್ಪಿಸಿ') ||
+    /analogy/i.test(qText);
+
+  if (bpCat === 'mcq') {
+    return isMcq;
+  }
+  if (bpCat === 'fill_blank') {
+    return !isMcq && (qCat === 'fill_blank' || (qMarks === 1 && hasBlank));
+  }
+  if (bpCat === 'true_false') {
+    return !isMcq && (qCat === 'true_false' || (qMarks === 1 && isTf));
+  }
+  if (bpCat === 'analogy') {
+    return !isMcq && (qCat === 'analogy' || (qMarks === 1 && isAnalogy));
+  }
+  if (bpCat === 'one_sentence') {
+    return (
+      (qCat === 'one_sentence' || qMarks === 1) &&
+      !isMcq &&
+      !hasBlank &&
+      !isTf &&
+      !isAnalogy &&
+      qCat !== 'fill_blank' &&
+      qCat !== 'true_false' &&
+      qCat !== 'analogy' &&
+      qCat !== 'who_said' &&
+      qCat !== 'passage_pic' &&
+      qCat !== 'grammar_section'
+    );
+  }
+  if (bpCat === 'short_2m') {
+    return (
+      !isMcq &&
+      !hasBlank &&
+      !isTf &&
+      !isAnalogy &&
+      (qCat === 'short_2m' || qMarks === 2) &&
+      qCat !== 'who_said' &&
+      qCat !== 'passage_pic' &&
+      qCat !== 'grammar_section'
+    );
+  }
+  if (bpCat === 'short_3m') {
+    return (
+      !isMcq &&
+      !hasBlank &&
+      !isTf &&
+      !isAnalogy &&
+      (qCat === 'short_3m' || qMarks === 3) &&
+      qCat !== 'passage_pic' &&
+      qCat !== 'grammar_section'
+    );
+  }
+  if (bpCat === 'long_4m') {
+    return (
+      !isMcq &&
+      !hasBlank &&
+      !isTf &&
+      !isAnalogy &&
+      (qCat === 'long_4m' || qMarks >= 4) &&
+      qCat !== 'passage_pic' &&
+      qCat !== 'grammar_section'
+    );
+  }
+  if (bpCat === 'who_said') {
+    return (
+      !isMcq &&
+      (qCat === 'who_said' ||
+        qText.includes('ಯಾರು ಯಾರಿಗೆ') ||
+        qText.includes('ಸಂದರ್ಭ') ||
+        /who\s*said/i.test(qText))
+    );
+  }
+  if (bpCat === 'passage_pic') {
+    return qCat === 'passage_pic';
+  }
+  if (bpCat === 'grammar_section') {
+    return qCat === 'grammar_section';
+  }
+
+  return qCat === bpCat;
+}
+
+/**
+ * Filters bank questions matching a section blueprint and chapter weightage constraints.
+ * Strictly honors blueprint.formatCategoryId so unselected formats never leak into the paper.
  */
 export function filterQuestionsForBlueprint(
   bank: QuestionBank,
@@ -286,6 +415,7 @@ export function filterQuestionsForBlueprint(
   const useAllLOs = selectedLOs.size === 0 || selectedLOs.has('all');
 
   const selectedDiff = (blueprint.difficulty || 'all').toLowerCase();
+  const hasStrictFormat = Boolean(blueprint.formatCategoryId && blueprint.formatCategoryId !== 'all');
 
   const candidates: QuestionItem[] = [];
 
@@ -308,83 +438,23 @@ export function filterQuestionsForBlueprint(
         continue;
       }
 
-      // Check format category or marks matching strictly
-      if (blueprint.formatCategoryId && blueprint.formatCategoryId !== 'all') {
-        const bpCat = blueprint.formatCategoryId;
-        const qCat = q.formatCategoryId;
-        const qMarks = q.marks || 1;
-
-        let matchesFormat = false;
-
-        if (bpCat === 'mcq') {
-          matchesFormat = qCat === 'mcq' || Boolean(q.options && q.options.length >= 2);
-        } else if (bpCat === 'fill_blank') {
-          matchesFormat =
-            qCat === 'fill_blank' ||
-            (qMarks === 1 &&
-              (q.question.includes('_____') ||
-                q.question.includes('-----') ||
-                q.question.includes('ಬಿಟ್ಟ ಸ್ಥಳ') ||
-                q.question.includes('ಖಾಲಿ ಜಾಗ')));
-        } else if (bpCat === 'true_false') {
-          matchesFormat =
-            qCat === 'true_false' ||
-            (qMarks === 1 && q.question.includes('ಸರಿ') && q.question.includes('ತಪ್ಪು'));
-        } else if (bpCat === 'analogy') {
-          matchesFormat =
-            qCat === 'analogy' ||
-            (qMarks === 1 && (q.question.includes('::') || q.question.includes('ಸಂಬಂಧ')));
-        } else if (bpCat === 'match') {
-          matchesFormat =
-            qCat === 'match' ||
-            Boolean(q.items && q.items.length > 0) ||
-            q.question.includes('ಹೊಂದಿಸಿ') ||
-            q.question.includes('ಮಿಲಾನ');
-        } else if (bpCat === 'one_sentence') {
-          // STRICT: One sentence MUST NOT have options, must not be a fill-in-the-blank, must not be true/false, must not have match items
-          const hasBlank =
-            q.question.includes('_____') ||
-            q.question.includes('-----') ||
-            q.question.includes('ಬಿಟ್ಟ ಸ್ಥಳ') ||
-            q.question.includes('ಖಾಲಿ ಜಾಗ');
-          const isTf = q.question.includes('ಸರಿ') && q.question.includes('ತಪ್ಪು');
-          const isAnalogy = q.question.includes('::') || q.question.includes('ಸಂಬಂಧ ಕಲ್ಪಿಸಿ');
-          const hasOpts = Boolean(q.options && q.options.length > 0);
-          const hasItms = Boolean(q.items && q.items.length > 0);
-          matchesFormat =
-            (qCat === 'one_sentence' || qMarks === 1) &&
-            !hasBlank &&
-            !isTf &&
-            !isAnalogy &&
-            !hasOpts &&
-            !hasItms;
-        } else if (bpCat === 'short_2m') {
-          matchesFormat = (qCat === 'short_2m' || qMarks === 2) && qCat !== 'who_said';
-        } else if (bpCat === 'short_3m') {
-          matchesFormat = (qCat === 'short_3m' || qMarks === 3) && qCat !== 'passage_pic';
-        } else if (bpCat === 'long_4m') {
-          matchesFormat = (qCat === 'long_4m' || qMarks >= 4) && qCat !== 'match';
-        } else if (bpCat === 'who_said') {
-          matchesFormat = qCat === 'who_said' || q.question.includes('ಯಾರು ಯಾರಿಗೆ');
-        } else if (bpCat === 'passage_pic') {
-          matchesFormat = qCat === 'passage_pic';
-        } else if (bpCat === 'grammar_section') {
-          matchesFormat = qCat === 'grammar_section';
-        } else {
-          matchesFormat = qCat === bpCat;
-        }
-
-        if (!matchesFormat) {
+      // Check format category strictly
+      if (hasStrictFormat) {
+        if (!matchesFormatCategory(q, blueprint.formatCategoryId!)) {
           continue;
         }
-      } else if (
-        blueprint.questionType &&
-        blueprint.questionType !== 'all' &&
-        blueprint.questionType !== 'ಎಲ್ಲಾ ವಿಧಗಳು' &&
-        q.questionType !== blueprint.questionType &&
-        q.formatCategoryName !== blueprint.questionType
-      ) {
-        continue;
+      } else {
+        // Even in generic sections, do not pull Match-the-Following questions accidentally
+        if (isMatchQuestion(q)) continue;
+        if (
+          blueprint.questionType &&
+          blueprint.questionType !== 'all' &&
+          blueprint.questionType !== 'ಎಲ್ಲಾ ವಿಧಗಳು' &&
+          q.questionType !== blueprint.questionType &&
+          q.formatCategoryName !== blueprint.questionType
+        ) {
+          continue;
+        }
       }
 
       // Check learning outcome
@@ -401,9 +471,12 @@ export function filterQuestionsForBlueprint(
     }
   }
 
-  // Fallback: If strict format left too few candidates, include other verified answer questions
+  // Fallback: If LO/difficulty filters left too few candidates, relax ONLY LO/difficulty
+  // while STILL strictly enforcing the selected formatCategoryId (never leaking unselected formats!)
   if (candidates.length < blueprint.questionCount) {
-    const isMcqSection = blueprint.formatCategoryId === 'mcq' || blueprint.questionType?.includes('ಆಯ್ಕೆ');
+    const targetMark = blueprint.marksPerQuestion || 1;
+    const fallbackPool: QuestionItem[] = [];
+
     for (const chapter of bank.chapters) {
       if (!useAllChapters && !selectedChapterIds.has(chapter.chapterId)) {
         continue;
@@ -415,13 +488,27 @@ export function filterQuestionsForBlueprint(
         if (!q.question || q.question.trim().length < 4) continue;
         if (!hasValidAnswer(q)) continue;
 
-        const isQMcq = Boolean(q.options && q.options.length > 0) || q.formatCategoryId === 'mcq';
-        if (isMcqSection && !isQMcq) continue;
-        if (!isMcqSection && isQMcq && (blueprint.marksPerQuestion || 1) > 1) continue;
+        if (hasStrictFormat) {
+          if (!matchesFormatCategory(q, blueprint.formatCategoryId!)) continue;
+        } else {
+          if (isMatchQuestion(q)) continue;
+        }
 
-        candidates.push(q);
+        fallbackPool.push(q);
       }
     }
+
+    fallbackPool.sort((a, b) => Math.abs((a.marks || 1) - targetMark) - Math.abs((b.marks || 1) - targetMark));
+    candidates.push(...fallbackPool);
+  }
+
+  // For Match-the-Following, strongly prioritize true multi-pair match tables (items.length >= 2)
+  if (blueprint.formatCategoryId === 'match') {
+    candidates.sort((a, b) => {
+      const aScore = Array.isArray(a.items) && a.items.length >= 2 ? 2 : Array.isArray(a.items) && a.items.length === 1 ? 1 : 0;
+      const bScore = Array.isArray(b.items) && b.items.length >= 2 ? 2 : Array.isArray(b.items) && b.items.length === 1 ? 1 : 0;
+      return bScore - aScore;
+    });
   }
 
   return candidates;
@@ -489,95 +576,21 @@ function shuffle<T>(array: T[]): T[] {
 }
 
 /**
- * Builds sections automatically from selected Question Formats and target marks/counts
- * Following Chapter Weightage from the Blueprint, guaranteeing EXACT total marks
- * and allowing AT MOST 1 "Match the Following" question.
+ * Builds sections automatically from selected Question Formats and target marks/counts.
+ * Strictly uses ONLY the user's selected formats (never injects unselected formats)
+ * and guarantees AT MOST 1 "Match the Following" question per paper.
  */
 export function buildBlueprintsFromSelectedFormats(
   bank: QuestionBank,
   selectedFormatIds: string[],
   selectedChapterIds: string[],
   targetTotalMarks: number,
-  targetQuestionCount: number
+  targetQuestionCount: number,
+  excludeQuestionIds: Set<string> = new Set()
 ): SectionBlueprint[] {
   // If no formats selected, fall back to official blueprint structure
   if (selectedFormatIds.length === 0) {
     return buildSectionsFromBlueprint(bank, selectedChapterIds, targetTotalMarks, targetQuestionCount);
-  }
-
-  // 1. Separate Match the following (at most 1 question, 4 marks)
-  const includesMatch = selectedFormatIds.includes('match') && targetTotalMarks >= 20;
-  const matchCount = includesMatch ? 1 : 0;
-  const matchMarks = matchCount * 4;
-
-  let remainingMarks = Math.max(0, targetTotalMarks - matchMarks);
-  let remainingCount = Math.max(1, targetQuestionCount - matchCount);
-
-  // Group selected non-match formats by mark tiers
-  const tier1Formats = STANDARD_QUESTION_FORMATS.filter(
-    f => f.id !== 'match' && f.marks === 1 && selectedFormatIds.includes(f.id)
-  );
-  const tier2Formats = STANDARD_QUESTION_FORMATS.filter(
-    f => f.marks === 2 && selectedFormatIds.includes(f.id)
-  );
-  const tier3Formats = STANDARD_QUESTION_FORMATS.filter(
-    f => f.marks === 3 && selectedFormatIds.includes(f.id)
-  );
-  const tier4Formats = STANDARD_QUESTION_FORMATS.filter(
-    f => f.id !== 'match' && f.marks >= 4 && selectedFormatIds.includes(f.id)
-  );
-
-  // Fallbacks if user didn't select certain tiers
-  const has1M = tier1Formats.length > 0;
-  const has2M = tier2Formats.length > 0;
-  const has3M = tier3Formats.length > 0;
-  const has4M = tier4Formats.length > 0;
-
-  // 2. Solve exact integer distribution: q1 + q2 + q3 + q4 = remainingCount and 1*q1 + 2*q2 + 3*q3 + 4*q4 = remainingMarks
-  let bestAllocation = { q1: remainingCount, q2: 0, q3: 0, q4: 0 };
-  let minCost = Infinity;
-
-  const diff = remainingMarks - remainingCount;
-  const maxQ4 = has4M ? Math.floor(diff / 3) : 0;
-
-  for (let q4 = 0; q4 <= maxQ4; q4++) {
-    const maxQ3 = has3M ? Math.floor((diff - 3 * q4) / 2) : 0;
-    for (let q3 = 0; q3 <= maxQ3; q3++) {
-      const q2 = has2M ? diff - 3 * q4 - 2 * q3 : 0;
-      if (q2 < 0) continue;
-      const q1 = remainingCount - q2 - q3 - q4;
-      if (q1 < 0) continue;
-
-      if (!has1M && q1 > 0) continue;
-
-      // Verify exact marks
-      const totalM = q1 * 1 + q2 * 2 + q3 * 3 + q4 * 4;
-      if (totalM === remainingMarks) {
-        // Ideal pedagogical distribution cost
-        const cost =
-          Math.abs(q1 / remainingCount - 0.38) +
-          Math.abs((q2 * 2) / remainingMarks - 0.25) +
-          Math.abs((q3 * 3) / remainingMarks - 0.15) +
-          Math.abs((q4 * 4) / remainingMarks - 0.22);
-
-        if (cost < minCost) {
-          minCost = cost;
-          bestAllocation = { q1, q2, q3, q4 };
-        }
-      }
-    }
-  }
-
-  // If strict exact solver found no solution with user's restricted tiers,
-  // solve across standard tiers to strictly guarantee exact target marks and question count
-  if (minCost === Infinity) {
-    const solved = solveExactQuestionTypes(remainingMarks, remainingCount);
-    bestAllocation = {
-      q1: solved.mcq + solved.vsa,
-      q2: solved.sa,
-      q3: solved.la1,
-      q4: solved.la2,
-    };
   }
 
   const sCode = deduceSubjectCode(
@@ -587,19 +600,246 @@ export function buildBlueprintsFromSelectedFormats(
       ? bank.metadata.subject
       : ''
   );
+
+  // Count both total available questions AND fresh (unused) questions per selected format in selected chapters
+  const selectedChSet = new Set(selectedChapterIds || []);
+  const useAllChs = selectedChSet.size === 0;
+  const availableCountByFormat = new Map<string, number>();
+  const freshCountByFormat = new Map<string, number>();
+
+  for (const ch of bank.chapters) {
+    if (!useAllChs && !selectedChSet.has(ch.chapterId)) continue;
+    for (const q of ch.questions) {
+      if (!q.question || q.question.trim().length < 4 || !hasValidAnswer(q)) continue;
+      const isFresh = !excludeQuestionIds.has(q.id);
+      for (const fmtId of selectedFormatIds) {
+        if (matchesFormatCategory(q, fmtId)) {
+          availableCountByFormat.set(fmtId, (availableCountByFormat.get(fmtId) || 0) + 1);
+          if (isFresh) {
+            freshCountByFormat.set(fmtId, (freshCountByFormat.get(fmtId) || 0) + 1);
+          }
+        }
+      }
+    }
+  }
+
+  // Keep only selected formats that have >= 1 matching question (if none match, fall back to selectedFormatIds as-is)
+  const effectiveSelectedIds = selectedFormatIds.filter(
+    id => (availableCountByFormat.get(id) || 0) > 0
+  );
+  const activeFormatIds = effectiveSelectedIds.length > 0 ? effectiveSelectedIds : selectedFormatIds;
+
+  // 1. Separate Match the following (STRICTLY AT MOST 1 question per paper, 4 marks)
+  // On Regenerate, if no fresh unused match question remains and other formats are selected, skip match so it won't repeat!
+  const hasNonMatchFormats = activeFormatIds.some(id => id !== 'match');
+  const freshMatchCount = freshCountByFormat.get('match') || 0;
+  const canUseFreshMatch = excludeQuestionIds.size === 0 || freshMatchCount > 0 || !hasNonMatchFormats;
+  const includesMatch =
+    activeFormatIds.includes('match') &&
+    canUseFreshMatch &&
+    targetTotalMarks >= 4 &&
+    (!hasNonMatchFormats || targetTotalMarks >= 10);
+  const matchCount = includesMatch ? 1 : 0;
+  const matchMarks = matchCount * 4;
+
+  // If ONLY 'match' is selected, return strictly 1 Match the Following section (max 1 question)
+  if (!hasNonMatchFormats && matchCount === 1) {
+    const matchFmt = STANDARD_QUESTION_FORMATS.find(f => f.id === 'match')!;
+    const localized = getLocalizedSectionHeading('match', 'I', sCode, 4, matchFmt.name);
+    return [
+      {
+        id: `sec_match_0_${Date.now()}`,
+        sectionRoman: 'I',
+        title: localized.title,
+        instructionText: localized.instructionText,
+        questionType: matchFmt.name,
+        formatCategoryId: 'match',
+        selectedChapterIds,
+        selectedLearningOutcomes: ['all'],
+        difficulty: 'all',
+        marksPerQuestion: 4,
+        questionCount: 1,
+      },
+    ];
+  }
+
+  const remainingMarks = Math.max(0, targetTotalMarks - matchMarks);
+  const remainingCount = Math.max(1, targetQuestionCount - matchCount);
+
+  // Group ONLY the user's selected non-match formats by mark tiers
+  const tier1Formats = STANDARD_QUESTION_FORMATS.filter(
+    f => f.id !== 'match' && f.marks === 1 && activeFormatIds.includes(f.id)
+  );
+  const tier2Formats = STANDARD_QUESTION_FORMATS.filter(
+    f => f.marks === 2 && activeFormatIds.includes(f.id)
+  );
+  const tier3Formats = STANDARD_QUESTION_FORMATS.filter(
+    f => f.marks === 3 && activeFormatIds.includes(f.id)
+  );
+  const tier4Formats = STANDARD_QUESTION_FORMATS.filter(
+    f => f.id !== 'match' && f.marks >= 4 && activeFormatIds.includes(f.id)
+  );
+
+  const has1M = tier1Formats.length > 0;
+  const has2M = tier2Formats.length > 0;
+  const has3M = tier3Formats.length > 0;
+  const has4M = tier4Formats.length > 0;
+
+  // 2. Solve exact integer distribution STRICTLY using ONLY selected tiers
+  let bestAllocation = { q1: 0, q2: 0, q3: 0, q4: 0 };
+  let minCost = Infinity;
+
+  const diff = remainingMarks - remainingCount;
+  const maxQ4 = has4M && diff >= 0 ? Math.min(remainingCount, Math.floor(diff / 3)) : 0;
+
+  for (let q4 = 0; q4 <= maxQ4; q4++) {
+    const maxQ3 = has3M && diff >= 3 * q4 ? Math.min(remainingCount - q4, Math.floor((diff - 3 * q4) / 2)) : 0;
+    for (let q3 = 0; q3 <= maxQ3; q3++) {
+      const q2 = has2M ? diff - 3 * q4 - 2 * q3 : 0;
+      if (q2 < 0) continue;
+      const q1 = remainingCount - q2 - q3 - q4;
+      if (q1 < 0) continue;
+      if (!has1M && q1 > 0) continue;
+
+      const totalM = q1 * 1 + q2 * 2 + q3 * 3 + q4 * 4;
+      if (totalM === remainingMarks) {
+        const denomM = Math.max(1, remainingMarks);
+        const denomQ = Math.max(1, remainingCount);
+        const cost =
+          Math.abs(q1 / denomQ - 0.38) +
+          Math.abs((q2 * 2) / denomM - 0.25) +
+          Math.abs((q3 * 3) / denomM - 0.15) +
+          Math.abs((q4 * 4) / denomM - 0.22);
+
+        if (cost < minCost) {
+          minCost = cost;
+          bestAllocation = { q1, q2, q3, q4 };
+        }
+      }
+    }
+  }
+
+  // If no exact (remainingMarks, remainingCount) exists with ONLY the selected tiers,
+  // find the closest integer allocation STRICTLY within ONLY the selected tiers
+  // (NEVER inject unselected question formats!)
+  if (minCost === Infinity) {
+    let bestApproxCost = Infinity;
+    const maxSearchQ = Math.max(remainingCount, remainingMarks, 1);
+    const maxT4 = has4M ? Math.min(maxSearchQ, Math.ceil(remainingMarks / 4) + 1) : 0;
+    const maxT3 = has3M ? Math.min(maxSearchQ, Math.ceil(remainingMarks / 3) + 1) : 0;
+    const maxT2 = has2M ? Math.min(maxSearchQ, Math.ceil(remainingMarks / 2) + 1) : 0;
+
+    // Prioritize matching remainingCount across the selected tiers, then matching remainingMarks
+    for (let q4 = 0; q4 <= maxT4; q4++) {
+      for (let q3 = 0; q3 <= maxT3; q3++) {
+        for (let q2 = 0; q2 <= maxT2; q2++) {
+          const usedSoFar = q2 + q3 + q4;
+          const q1Options = has1M
+            ? Array.from(
+                new Set([
+                  Math.max(0, remainingCount - usedSoFar),
+                  Math.max(0, remainingMarks - (q2 * 2 + q3 * 3 + q4 * 4)),
+                ])
+              )
+            : [0];
+
+          for (const q1 of q1Options) {
+            const totalQ = q1 + q2 + q3 + q4;
+            if (totalQ <= 0) continue;
+            const totalM = q1 * 1 + q2 * 2 + q3 * 3 + q4 * 4;
+
+            // Strongly prefer using every selected tier at least once if possible
+            const missingSelectedTiers =
+              (has1M && q1 === 0 ? 1 : 0) +
+              (has2M && q2 === 0 ? 1 : 0) +
+              (has3M && q3 === 0 ? 1 : 0) +
+              (has4M && q4 === 0 ? 1 : 0);
+
+            const approxCost =
+              Math.abs(totalM - remainingMarks) * 3 +
+              Math.abs(totalQ - remainingCount) * 2 +
+              missingSelectedTiers * 1.5;
+
+            if (approxCost < bestApproxCost) {
+              bestApproxCost = approxCost;
+              bestAllocation = { q1, q2, q3, q4 };
+            }
+          }
+        }
+      }
+    }
+
+    // Ultimate guard: if still all zeros, assign remainingCount to the first selected tier
+    if (bestAllocation.q1 + bestAllocation.q2 + bestAllocation.q3 + bestAllocation.q4 === 0) {
+      if (has1M) bestAllocation.q1 = remainingCount;
+      else if (has2M) bestAllocation.q2 = remainingCount;
+      else if (has3M) bestAllocation.q3 = remainingCount;
+      else if (has4M) bestAllocation.q4 = remainingCount;
+    }
+  }
+
   const blueprints: SectionBlueprint[] = [];
   let sectionIndex = 0;
 
-  // Helper to distribute tier count among selected formats in that tier
-  const allocateTierFormats = (formats: typeof STANDARD_QUESTION_FORMATS, totalCount: number, marks: number) => {
+  // Helper to distribute tier count strictly among the selected formats in that tier,
+  // prioritizing formats that actually have FRESH unused questions on Regenerate!
+  const allocateTierFormats = (
+    formats: typeof STANDARD_QUESTION_FORMATS,
+    totalCount: number,
+    marks: number
+  ) => {
     if (formats.length === 0 || totalCount <= 0) return;
-    let rem = totalCount;
-    formats.forEach((fmt, idx) => {
-      if (rem <= 0) return;
-      const isLast = idx === formats.length - 1;
-      const count = isLast ? rem : Math.max(1, Math.floor(totalCount / formats.length));
-      rem -= count;
 
+    const countsByFmt = new Map<string, number>();
+    formats.forEach(f => countsByFmt.set(f.id, 0));
+
+    // Pass 1: Distribute up to each format's available FRESH question capacity (prevents repeating exhausted formats!)
+    let rem = totalCount;
+    const freshOrder = shuffle(
+      formats.filter(f => (freshCountByFormat.get(f.id) || 0) > 0)
+    );
+    if (freshOrder.length > 0) {
+      // Round-robin across fresh formats respecting each format's fresh capacity
+      let progressed = true;
+      while (rem > 0 && progressed) {
+        progressed = false;
+        for (const fmt of freshOrder) {
+          if (rem <= 0) break;
+          const cap = freshCountByFormat.get(fmt.id) || 0;
+          const cur = countsByFmt.get(fmt.id) || 0;
+          if (cur < cap) {
+            countsByFmt.set(fmt.id, cur + 1);
+            rem -= 1;
+            progressed = true;
+          }
+        }
+      }
+    }
+
+    // Pass 2: If fresh questions in this tier were fewer than totalCount, distribute remainder up to total available capacity
+    if (rem > 0) {
+      const availOrder = shuffle(
+        formats.filter(f => (availableCountByFormat.get(f.id) || 0) > 0)
+      );
+      let progressed = true;
+      while (rem > 0 && progressed) {
+        progressed = false;
+        for (const fmt of availOrder) {
+          if (rem <= 0) break;
+          const cap = availableCountByFormat.get(fmt.id) || 0;
+          const cur = countsByFmt.get(fmt.id) || 0;
+          if (cur < cap) {
+            countsByFmt.set(fmt.id, cur + 1);
+            rem -= 1;
+            progressed = true;
+          }
+        }
+      }
+    }
+
+    // Pass 3: Emit sections in standard canonical order
+    formats.forEach(fmt => {
+      const count = countsByFmt.get(fmt.id) || 0;
       if (count > 0) {
         const roman = ROMAN_NUMERALS[sectionIndex] || `${sectionIndex + 1}`;
         const localized = getLocalizedSectionHeading(fmt.id, roman, sCode, marks, fmt.name);
@@ -621,28 +861,24 @@ export function buildBlueprintsFromSelectedFormats(
     });
   };
 
-  // Add 1M formats
-  if (bestAllocation.q1 > 0) {
-    const fmts = tier1Formats.length > 0 ? tier1Formats : STANDARD_QUESTION_FORMATS.filter(f => f.marks === 1);
-    allocateTierFormats(fmts, bestAllocation.q1, 1);
+  // Add ONLY selected 1M formats
+  if (bestAllocation.q1 > 0 && tier1Formats.length > 0) {
+    allocateTierFormats(tier1Formats, bestAllocation.q1, 1);
   }
 
-  // Add 2M formats
-  if (bestAllocation.q2 > 0) {
-    const fmts = tier2Formats.length > 0 ? tier2Formats : STANDARD_QUESTION_FORMATS.filter(f => f.marks === 2);
-    allocateTierFormats(fmts, bestAllocation.q2, 2);
+  // Add ONLY selected 2M formats
+  if (bestAllocation.q2 > 0 && tier2Formats.length > 0) {
+    allocateTierFormats(tier2Formats, bestAllocation.q2, 2);
   }
 
-  // Add 3M formats
-  if (bestAllocation.q3 > 0) {
-    const fmts = tier3Formats.length > 0 ? tier3Formats : STANDARD_QUESTION_FORMATS.filter(f => f.marks === 3);
-    allocateTierFormats(fmts, bestAllocation.q3, 3);
+  // Add ONLY selected 3M formats
+  if (bestAllocation.q3 > 0 && tier3Formats.length > 0) {
+    allocateTierFormats(tier3Formats, bestAllocation.q3, 3);
   }
 
-  // Add 4M non-match formats
-  if (bestAllocation.q4 > 0) {
-    const fmts = tier4Formats.length > 0 ? tier4Formats : STANDARD_QUESTION_FORMATS.filter(f => f.id !== 'match' && f.marks === 4);
-    allocateTierFormats(fmts, bestAllocation.q4, 4);
+  // Add ONLY selected 4M non-match formats
+  if (bestAllocation.q4 > 0 && tier4Formats.length > 0) {
+    allocateTierFormats(tier4Formats, bestAllocation.q4, 4);
   }
 
   // Add STRICTLY ONE Match the following question (if selected)
@@ -670,22 +906,39 @@ export function buildBlueprintsFromSelectedFormats(
 }
 
 /**
- * Generates the complete Question Paper with unique non-duplicate questions
- * Ensuring chapter weightage distribution and 100% verified answers
+ * Generates the complete Question Paper with unique non-duplicate questions:
+ * - Strictly enforces selected question formats (never leaks unselected formats)
+ * - Strictly limits Match-the-Following to AT MOST 1 question per paper
+ * - On Regenerate ("ಪುನಃ ರಚಿಸಿ"), prioritizes 100% fresh unseen questions (excludeQuestionIds)
+ *   so zero questions from the previous paper repeat whenever fresh questions exist in the bank.
  */
 export function generateQuestionPaper(
   bank: QuestionBank,
   header: PaperHeader,
-  blueprints: SectionBlueprint[]
+  blueprints: SectionBlueprint[],
+  excludeQuestionIds: Set<string> = new Set(),
+  currentPaperQuestionIds: Set<string> = new Set(),
+  currentPaperQuestionTexts: Set<string> = new Set(),
+  questionUsageCounts: Map<string, number> = new Map()
 ): GeneratedPaper {
-  // Use blueprints directly without reducing question counts
-  const validBlueprints = blueprints;
+  // Clamp Match-the-Following across blueprints so at most ONE match section with questionCount === 1 exists
+  let seenMatchSection = false;
+  const validBlueprints: SectionBlueprint[] = [];
+  for (const bp of blueprints) {
+    if (bp.formatCategoryId === 'match') {
+      if (seenMatchSection) continue;
+      seenMatchSection = true;
+      validBlueprints.push({ ...bp, questionCount: Math.min(1, Math.max(1, bp.questionCount)) });
+    } else {
+      validBlueprints.push(bp);
+    }
+  }
 
   // 1. Calculate blueprint chapter targets to enforce chapter weightages
   const allSelectedChIds = Array.from(
-    new Set(blueprints.flatMap(bp => bp.selectedChapterIds || []))
+    new Set(validBlueprints.flatMap(bp => bp.selectedChapterIds || []))
   );
-  const totalRequestedQ = blueprints.reduce((sum, b) => sum + b.questionCount, 0);
+  const totalRequestedQ = validBlueprints.reduce((sum, b) => sum + b.questionCount, 0);
   const targetMaxMarks = header.maxMarks || 40;
 
   const officialBp = generateOfficialBlueprint(
@@ -701,94 +954,152 @@ export function generateQuestionPaper(
     remainingChapterCounts[ch.chapterId] = Math.max(1, ch.questionsCount);
   }
 
+  const normalizeQText = (text: string) =>
+    String(text || '')
+      .replace(/^[0-9೦-೯]+[\.\)\-:\s]+/, '')
+      .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
   const globalUsedQuestionIds = new Set<string>();
+  const globalUsedQuestionTexts = new Set<string>();
+  let matchIncludedInPaper = false;
   const chaptersRepresented = new Set<string>();
   const generatedSections: GeneratedSection[] = [];
   let currentDisplayNumber = 1;
 
   for (const bp of validBlueprints) {
-    const matchingQuestions = filterQuestionsForBlueprint(bank, bp, globalUsedQuestionIds);
+    const isMatchSection = bp.formatCategoryId === 'match';
+    if (isMatchSection && matchIncludedInPaper) {
+      continue;
+    }
 
-    // Group available questions by chapter
-    const questionsByChapter = new Map<string, QuestionItem[]>();
-    for (const q of matchingQuestions) {
-      const chId = q.chapterId || 'unknown';
-      if (!questionsByChapter.has(chId)) {
-        questionsByChapter.set(chId, []);
+    const sectionTargetCount = isMatchSection ? 1 : bp.questionCount;
+    const allMatching = filterQuestionsForBlueprint(bank, bp, globalUsedQuestionIds).filter(q => {
+      if (!isMatchSection && isMatchQuestion(q)) return false;
+      const normText = normalizeQText(q.question);
+      if (normText && globalUsedQuestionTexts.has(normText)) return false;
+      return true;
+    });
+
+    // Partition candidates into strict freshness tiers so Regenerate NEVER repeats previous questions:
+    // Tier 1: 100% brand-new (never shown before: usageCount === 0, not in excludeIds, not in currentPaperIds/Texts)
+    // Tier 2: Older previously shown (not in currentPaperIds/Texts), grouped by ascending usageCount
+    // Tier 3: Last resort from currentPaper (ONLY if selected chapters physically have fewer unique questions than needed)
+    const tier1: QuestionItem[] = [];
+    const tier2: QuestionItem[] = [];
+    const tier3: QuestionItem[] = [];
+
+    for (const q of allMatching) {
+      const normText = normalizeQText(q.question);
+      const inCurrent =
+        currentPaperQuestionIds.has(q.id) ||
+        (normText.length >= 6 && currentPaperQuestionTexts.has(normText));
+      const usageCount = questionUsageCounts.get(q.id) || 0;
+      const inExcluded = excludeQuestionIds.has(q.id) || usageCount > 0;
+
+      if (!inCurrent && !inExcluded) {
+        tier1.push(q);
+      } else if (!inCurrent) {
+        tier2.push(q);
+      } else {
+        tier3.push(q);
       }
-      questionsByChapter.get(chId)!.push(q);
     }
 
-    // Shuffle within each chapter for fresh sets
-    for (const [chId, qList] of questionsByChapter.entries()) {
-      questionsByChapter.set(chId, shuffle(qList));
-    }
+    // Sort Tier 2 and Tier 3 by ascending usageCount (with random shuffle within same usage count)
+    const sortByLeastUsed = (arr: QuestionItem[]) => {
+      const shuffled = shuffle(arr);
+      shuffled.sort((a, b) => (questionUsageCounts.get(a.id) || 0) - (questionUsageCounts.get(b.id) || 0));
+      return shuffled;
+    };
+
+    const orderedTier2 = sortByLeastUsed(tier2);
+    const orderedTier3 = sortByLeastUsed(tier3);
 
     const selected: QuestionItem[] = [];
-    let needed = bp.questionCount;
+    let needed = sectionTargetCount;
 
-    // Pick questions prioritizing chapters with 0 representations first, then remaining quota
-    while (needed > 0) {
-      const eligibleChs = Array.from(questionsByChapter.keys()).filter(
-        chId => (questionsByChapter.get(chId)?.length || 0) > 0
-      );
+    const pickFromPool = (pool: QuestionItem[], preserveOrder = false) => {
+      if (needed <= 0 || pool.length === 0) return;
 
-      if (eligibleChs.length === 0) break;
+      // Group pool by chapter
+      const questionsByChapter = new Map<string, QuestionItem[]>();
+      for (const q of pool) {
+        if (globalUsedQuestionIds.has(q.id)) continue;
+        const normText = normalizeQText(q.question);
+        if (normText && globalUsedQuestionTexts.has(normText)) continue;
+        if (!isMatchSection && isMatchQuestion(q)) continue;
 
-      // Prioritize chapters with NO questions picked yet, then higher quota
-      eligibleChs.sort((a, b) => {
-        const notRepA = !chaptersRepresented.has(a) ? 1 : 0;
-        const notRepB = !chaptersRepresented.has(b) ? 1 : 0;
-        if (notRepA !== notRepB) return notRepB - notRepA;
-        const remA = remainingChapterCounts[a] !== undefined ? remainingChapterCounts[a] : 0;
-        const remB = remainingChapterCounts[b] !== undefined ? remainingChapterCounts[b] : 0;
-        return remB - remA;
-      });
-
-      const chosenChId = eligibleChs[0];
-      const qList = questionsByChapter.get(chosenChId)!;
-      const q = qList.shift()!;
-      selected.push(q);
-      globalUsedQuestionIds.add(q.id);
-      chaptersRepresented.add(chosenChId);
-
-      if (remainingChapterCounts[chosenChId] !== undefined) {
-        remainingChapterCounts[chosenChId] = Math.max(0, remainingChapterCounts[chosenChId] - 1);
-      }
-      needed--;
-    }
-
-    // If still need more questions for this section, pick from unused verified questions strictly matching format
-    if (needed > 0) {
-      const isMcqSection = bp.formatCategoryId === 'mcq' || bp.questionType?.includes('ಆಯ್ಕೆ');
-      for (const ch of bank.chapters) {
-        if (allSelectedChIds.length > 0 && !allSelectedChIds.includes(ch.chapterId)) continue;
-        for (const q of shuffle(ch.questions)) {
-          if (globalUsedQuestionIds.has(q.id)) continue;
-          if (!hasValidAnswer(q) || !q.question || q.question.trim().length < 4) continue;
-          const isQMcq = Boolean(q.options && q.options.length > 0) || q.formatCategoryId === 'mcq';
-          if (isMcqSection && !isQMcq) continue;
-          if (!isMcqSection && isQMcq && (bp.marksPerQuestion || 1) > 1) continue;
-
-          // Strict format isolation in fallback
-          if (bp.formatCategoryId === 'one_sentence') {
-            const hasBlank = q.question.includes('_____') || q.question.includes('-----') || q.question.includes('ಬಿಟ್ಟ ಸ್ಥಳ') || q.question.includes('ಖಾಲಿ');
-            if (hasBlank || isQMcq || Boolean(q.items && q.items.length > 0)) continue;
-          } else if (bp.formatCategoryId === 'fill_blank') {
-            const hasBlank = q.question.includes('_____') || q.question.includes('-----') || q.question.includes('ಬಿಟ್ಟ ಸ್ಥಳ') || q.question.includes('ಖಾಲಿ');
-            if (!hasBlank && q.formatCategoryId !== 'fill_blank') continue;
-          } else if (bp.formatCategoryId === 'match') {
-            if (!q.items || q.items.length === 0) continue;
-          }
-
-          selected.push(q);
-          globalUsedQuestionIds.add(q.id);
-          chaptersRepresented.add(ch.chapterId);
-          needed--;
-          if (needed === 0) break;
+        const chId = q.chapterId || 'unknown';
+        if (!questionsByChapter.has(chId)) {
+          questionsByChapter.set(chId, []);
         }
-        if (needed === 0) break;
+        questionsByChapter.get(chId)!.push(q);
       }
+
+      // Shuffle within each chapter (preserving multi-row match table priority or least-used order)
+      for (const [chId, qList] of questionsByChapter.entries()) {
+        if (isMatchSection) {
+          const multiRow = preserveOrder
+            ? qList.filter(q => Array.isArray(q.items) && q.items.length >= 2)
+            : shuffle(qList.filter(q => Array.isArray(q.items) && q.items.length >= 2));
+          const otherMatch = preserveOrder
+            ? qList.filter(q => !Array.isArray(q.items) || q.items.length < 2)
+            : shuffle(qList.filter(q => !Array.isArray(q.items) || q.items.length < 2));
+          questionsByChapter.set(chId, [...multiRow, ...otherMatch]);
+        } else if (!preserveOrder) {
+          questionsByChapter.set(chId, shuffle(qList));
+        }
+      }
+
+      while (needed > 0) {
+        const eligibleChs = Array.from(questionsByChapter.keys()).filter(
+          chId => (questionsByChapter.get(chId)?.length || 0) > 0
+        );
+        if (eligibleChs.length === 0) break;
+
+        const shuffledEligible = shuffle(eligibleChs);
+        shuffledEligible.sort((a, b) => {
+          const notRepA = !chaptersRepresented.has(a) ? 1 : 0;
+          const notRepB = !chaptersRepresented.has(b) ? 1 : 0;
+          if (notRepA !== notRepB) return notRepB - notRepA;
+          const remA = remainingChapterCounts[a] !== undefined ? remainingChapterCounts[a] : 0;
+          const remB = remainingChapterCounts[b] !== undefined ? remainingChapterCounts[b] : 0;
+          return remB - remA;
+        });
+
+        const chosenChId = shuffledEligible[0];
+        const qList = questionsByChapter.get(chosenChId)!;
+        const q = qList.shift()!;
+
+        if (globalUsedQuestionIds.has(q.id)) continue;
+        const normText = normalizeQText(q.question);
+        if (normText && globalUsedQuestionTexts.has(normText)) continue;
+
+        selected.push(q);
+        globalUsedQuestionIds.add(q.id);
+        if (normText) globalUsedQuestionTexts.add(normText);
+        if (isMatchSection || isMatchQuestion(q)) {
+          matchIncludedInPaper = true;
+        }
+        chaptersRepresented.add(chosenChId);
+
+        if (remainingChapterCounts[chosenChId] !== undefined) {
+          remainingChapterCounts[chosenChId] = Math.max(0, remainingChapterCounts[chosenChId] - 1);
+        }
+        needed--;
+      }
+    };
+
+    // Fill strictly Tier 1 (brand new) -> Tier 2 (least-used non-current) -> Tier 3 (last resort)
+    pickFromPool(tier1, false);
+    if (needed > 0) pickFromPool(orderedTier2, true);
+    if (needed > 0) pickFromPool(orderedTier3, true);
+
+    if (selected.length === 0) {
+      continue;
     }
 
     const generatedItems: GeneratedQuestionItem[] = selected.map(q => {
@@ -822,10 +1133,26 @@ export function generateQuestionPaper(
     });
 
     generatedSections.push({
-      blueprint: { ...bp },
+      blueprint: {
+        ...bp,
+        questionCount: generatedItems.length,
+      },
       questions: generatedItems,
     });
   }
+
+  // Re-number sectionRoman sequentially after dropping any empty sections
+  generatedSections.forEach((sec, idx) => {
+    const newRoman = ROMAN_NUMERALS[idx] || `${idx + 1}`;
+    const oldRoman = sec.blueprint.sectionRoman;
+    sec.blueprint.sectionRoman = newRoman;
+    if (oldRoman && oldRoman !== newRoman && sec.blueprint.title) {
+      sec.blueprint.title = sec.blueprint.title.replace(
+        new RegExp(`(ವಿಭಾಗ|Section|खण्ड)\\s*-\\s*${oldRoman}\\b`),
+        `$1 - ${newRoman}`
+      );
+    }
+  });
 
   let totalQuestions = 0;
   let totalMarks = 0;

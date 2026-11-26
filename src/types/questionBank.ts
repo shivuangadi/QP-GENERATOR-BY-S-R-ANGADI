@@ -132,6 +132,7 @@ export interface IndexEntry {
   academicYear?: string;
   totalChapters?: number;
   totalQuestions?: number;
+  uploadedImageCount?: number;
   isUserGenerated?: boolean;
   createdAt?: string;
 }

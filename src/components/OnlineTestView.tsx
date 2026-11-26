@@ -42,6 +42,7 @@ import {
   canonicalGradeLabel,
   extractGradeKey,
 } from '../services/dataLoader.ts';
+import { ResilientQuestionImage } from './ResilientQuestionImage.tsx';
 import {
   auth,
   signInStudentWithGoogle,
@@ -1337,9 +1338,9 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
           </div>
 
           {/* Optional Question Diagram Image */}
-          {isSafeImageSrc(currentQuestion.imageUrl) && (
+          {isSafeImageSrc(currentQuestion.imageUrl) && currentQuestion.imageUrl && (
             <div className="my-2 flex justify-center">
-              <img
+              <ResilientQuestionImage
                 src={currentQuestion.imageUrl}
                 alt={`Question ${currentIdx + 1} diagram`}
                 className="max-h-64 w-auto rounded-xl border border-slate-200 bg-white p-2 object-contain"
@@ -1744,9 +1745,9 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
                     <MathText text={item.question} />
                   </div>
 
-                  {isSafeImageSrc(item.imageUrl) && (
+                  {isSafeImageSrc(item.imageUrl) && item.imageUrl && (
                     <div className="my-1">
-                      <img
+                      <ResilientQuestionImage
                         src={item.imageUrl}
                         alt={`Question ${originalIndex} diagram`}
                         className="max-h-48 w-auto rounded-lg border border-slate-200 p-1.5 bg-white object-contain"
@@ -1793,9 +1794,9 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
                     </div>
                   )}
 
-                  {isSafeImageSrc(item.answerImageUrl) && (
+                  {isSafeImageSrc(item.answerImageUrl) && item.answerImageUrl && (
                     <div className="my-1">
-                      <img
+                      <ResilientQuestionImage
                         src={item.answerImageUrl}
                         alt={`Answer ${originalIndex} diagram`}
                         className="max-h-48 w-auto rounded-lg border border-slate-200 p-1.5 bg-white object-contain"

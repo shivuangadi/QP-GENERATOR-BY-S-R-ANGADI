@@ -75,6 +75,7 @@ import { DiagramAuditPanel } from './DiagramAuditPanel.tsx';
 import { QuestionImageModal, QuestionImageUpdate } from './QuestionImageModal.tsx';
 import { QuestionEditModal, QuestionTextUpdate } from './QuestionEditModal.tsx';
 import { SavedJsonBanksTable } from './SavedJsonBanksTable.tsx';
+import { ResilientQuestionImage } from './ResilientQuestionImage.tsx';
 
 interface QuestionBankExplorerProps {
   bank: QuestionBank;
@@ -1748,10 +1749,9 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
                       </div>
                     </div>
                     {q.imageUrl ? (
-                      <img
+                      <ResilientQuestionImage
                         src={q.imageUrl}
                         alt={q.diagramDescription || 'ಪ್ರಶ್ನೆ ಚಿತ್ರ'}
-                        referrerPolicy="no-referrer"
                         className="max-h-44 max-w-full rounded-lg border border-slate-200 object-contain bg-white p-1"
                       />
                     ) : (
@@ -1833,10 +1833,9 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
                         </div>
                       </div>
                       {q.answerImageUrl ? (
-                        <img
+                        <ResilientQuestionImage
                           src={q.answerImageUrl}
                           alt={q.answerDiagramDescription || 'ಉತ್ತರ ಚಿತ್ರ'}
-                          referrerPolicy="no-referrer"
                           className="max-h-44 max-w-full rounded-lg border border-emerald-300 object-contain bg-white p-1"
                         />
                       ) : (

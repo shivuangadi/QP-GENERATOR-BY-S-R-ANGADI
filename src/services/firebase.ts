@@ -1009,3 +1009,99 @@ export async function getStudentOnlineTestAttemptsFromFirebase(): Promise<Online
   }
 }
 
+export const ADMIN_EMAIL = 'shivu.angadi@gmail.com';
+
+export function isVerifiedAdminUser(user: User | null | undefined): boolean {
+  if (!user || !user.email) return false;
+  return user.email.trim().toLowerCase() === ADMIN_EMAIL && Boolean(user.emailVerified);
+}
+
+export interface SchoolRegistrationRecord {
+  id: string;
+  ownerUid: string;
+  schoolName: string;
+  teacherName: string;
+  email: string;
+  taluk?: string;
+  district?: string;
+  diseCode?: string;
+  medium?: string;
+  role: 'teacher' | 'admin';
+  registeredAt: string;
+  updatedAt?: string;
+}
+
+/**
+ * Save or update a School Registration profile in Firebase Firestore (`school_registrations/{id}`).
+ */
+export async function saveSchoolRegistrationToFirebase(
+  input: Omit<SchoolRegistrationRecord, 'id' | 'ownerUid' | 'role' | 'registeredAt' | 'updatedAt'> & {
+    id?: string;
+  }
+): Promise<SchoolRegistrationRecord> {
+  const currentUser = auth.currentUser;
+  const isAdmin = isVerifiedAdminUser(currentUser);
+  const ownerUid = currentUser?.uid || 'school_guest';
+  const normalizedEmail = String(input.email || '').trim().toLowerCase().slice(0, 160);
+  const nowIso = new Date().toISOString();
+
+  const regId = currentUser
+    ? `uid_${currentUser.uid}`.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 120)
+    : `sch_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`.slice(0, 120);
+
+  const payload: SchoolRegistrationRecord = {
+    id: regId,
+    ownerUid,
+    schoolName: String(input.schoolName || '').trim().slice(0, 180),
+    teacherName: String(input.teacherName || '').trim().slice(0, 120),
+    email: normalizedEmail,
+    taluk: String(input.taluk || '').trim().slice(0, 100),
+    district: String(input.district || '').trim().slice(0, 100),
+    diseCode: String(input.diseCode || '').trim().slice(0, 32),
+    medium: String(input.medium || 'ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)').trim().slice(0, 80),
+    role: isAdmin ? 'admin' : 'teacher',
+    registeredAt: nowIso,
+    updatedAt: nowIso,
+  };
+
+  try {
+    await setDoc(doc(db, 'school_registrations', regId), payload, { merge: true });
+  } catch (error) {
+    console.warn(`Could not save school_registrations/${regId} to Firestore:`, error);
+  }
+
+  return payload;
+}
+
+/**
+ * Fetch an authenticated user's saved School Registration profile from Firestore.
+ */
+export async function getMySchoolRegistrationFromFirebase(): Promise<SchoolRegistrationRecord | null> {
+  const currentUser = auth.currentUser;
+  if (!currentUser) return null;
+
+  const regId = `uid_${currentUser.uid}`.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 120);
+  try {
+    const snap = await getDoc(doc(db, 'school_registrations', regId));
+    if (snap.exists()) {
+      return snap.data() as SchoolRegistrationRecord;
+    }
+    if (currentUser.email) {
+      const q = query(
+        collection(db, 'school_registrations'),
+        where('email', '==', currentUser.email.toLowerCase()),
+        limit(1)
+      );
+      const qSnap = await getDocs(q);
+      if (!qSnap.empty) {
+        return qSnap.docs[0].data() as SchoolRegistrationRecord;
+      }
+    }
+    return null;
+  } catch (error) {
+    console.warn('Could not fetch school registration from Firestore:', error);
+    return null;
+  }
+}
+
+

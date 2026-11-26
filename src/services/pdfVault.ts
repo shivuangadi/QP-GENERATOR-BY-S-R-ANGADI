@@ -24,6 +24,8 @@ import {
   deduceSubjectCode,
   loadQuestionBankByPath,
   ensureUniqueQuestionIds,
+  countBankUploadedImages,
+  BUILTIN_CLASS6_INDEX_FILES,
 } from './dataLoader.ts';
 
 export interface SavedPdfEntry extends UploadedPdfRecord {
@@ -481,6 +483,7 @@ export interface SavedBankSummary {
   medium: string;
   totalChapters: number;
   totalQuestions: number;
+  uploadedImageCount?: number;
   source: 'firebase' | 'server' | 'builtin';
   path: string;
   filename?: string;
@@ -514,6 +517,7 @@ export async function listAllSavedQuestionBanks(): Promise<SavedBankSummary[]> {
         bank.metadata.subject
       );
       const totalQ = bank.chapters.reduce((sum, ch) => sum + (ch.questions?.length || 0), 0);
+      const uploadedImgCount = countBankUploadedImages(bank);
       byId.set(id, {
         id,
         title: String(bank.metadata.title || `${canonicalGradeLabel(gKey)} - ${normalizeSubjectName(bank.metadata.subject)}`),
@@ -524,6 +528,7 @@ export async function listAllSavedQuestionBanks(): Promise<SavedBankSummary[]> {
         medium: bank.metadata.medium || 'ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)',
         totalChapters: bank.chapters.length,
         totalQuestions: totalQ,
+        uploadedImageCount: uploadedImgCount,
         source: 'firebase',
         path: `firebase://${id}`,
         updatedAt: String((bank.metadata as any).updatedAt || (bank.metadata as any).createdAt || ''),
@@ -543,6 +548,9 @@ export async function listAllSavedQuestionBanks(): Promise<SavedBankSummary[]> {
         existing.alsoOnServer = true;
         existing.serverPath = f.path;
         existing.filename = f.filename || existing.filename;
+        if ((f.uploadedImageCount || 0) > (existing.uploadedImageCount || 0)) {
+          existing.uploadedImageCount = f.uploadedImageCount;
+        }
         continue;
       }
       const gKey = extractGradeKey(f.gradeKey || f.grade);
@@ -557,6 +565,7 @@ export async function listAllSavedQuestionBanks(): Promise<SavedBankSummary[]> {
         medium: f.medium || 'ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)',
         totalChapters: f.totalChapters || 0,
         totalQuestions: f.totalQuestions || 0,
+        uploadedImageCount: f.uploadedImageCount || 0,
         source: 'server',
         path: f.path,
         filename: f.filename,
@@ -566,12 +575,46 @@ export async function listAllSavedQuestionBanks(): Promise<SavedBankSummary[]> {
     }
   }
 
+  // Also include all built-in Class 6 JSON files whenever not yet overridden by a Firebase/Server entry
+  // so Admin can open any Class 6 subject directly to select/upload diagram images
+  const existingClassSubjectKeys = new Set<string>();
+  byId.forEach(item => {
+    existingClassSubjectKeys.add(`${item.gradeKey}::${item.subjectCode}`);
+  });
+
+  for (const bf of BUILTIN_CLASS6_INDEX_FILES) {
+    const gKey = extractGradeKey(bf.gradeKey || bf.grade);
+    const sCode = deduceSubjectCode(bf.subjectCode, bf.subject);
+    if (byId.has(bf.id) || existingClassSubjectKeys.has(`${gKey}::${sCode}`)) {
+      continue;
+    }
+    const fileName = bf.path.split('/').pop() || `${bf.id}.json`;
+    byId.set(bf.id, {
+      id: bf.id,
+      title: `${canonicalGradeLabel(gKey)} - ${normalizeSubjectName(bf.subject)} (ಅಧಿಕೃತ ಮೂಲ JSON)`,
+      grade: canonicalGradeLabel(gKey),
+      gradeKey: gKey,
+      subject: normalizeSubjectName(bf.subject),
+      subjectCode: sCode,
+      medium: bf.medium || 'ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)',
+      totalChapters: bf.totalChapters || 0,
+      totalQuestions: bf.totalQuestions || 0,
+      uploadedImageCount: 0,
+      source: 'builtin',
+      path: bf.path,
+      filename: fileName,
+      updatedAt: '',
+    });
+  }
+
   return Array.from(byId.values()).sort((a, b) => {
     const numA = parseInt(a.gradeKey, 10);
     const numB = parseInt(b.gradeKey, 10);
     if (!isNaN(numA) && !isNaN(numB) && numA !== numB) return numA - numB;
     const subCmp = a.subject.localeCompare(b.subject);
     if (subCmp !== 0) return subCmp;
+    const imgDiff = (b.uploadedImageCount || 0) - (a.uploadedImageCount || 0);
+    if (imgDiff !== 0) return imgDiff;
     return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
   });
 }

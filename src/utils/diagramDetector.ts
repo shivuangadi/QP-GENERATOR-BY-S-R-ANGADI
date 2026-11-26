@@ -95,15 +95,25 @@ const DRAW_OR_LABEL_PATTERNS: Array<{ regex: RegExp; label: string }> = [
   },
 ];
 
-// Broad secondary mention of "ಚಿತ್ರ" / "ಆಕೃತಿ" / "diagram" / "figure" / "picture" / "चित्र"
+// Non-diagram compound words that contain substrings like "ಚಿತ್ರ", "ಆಕೃತಿ", "ನಕ್ಷೆ", "figure", "picture"
+// Stripping these prevents hundreds of ordinary text questions from falsely appearing as "ಚಿತ್ರ ಬಾಕಿ"!
+const FALSE_POSITIVE_COMPOUND_REGEX =
+  /(ವಿಚಿತ್ರ|ಚಲನಚಿತ್ರ|ಚಿತ್ರದುರ್ಗ|ಚಿತ್ರಣ|ಚಿತ್ರಕಲೆ|ಚಿತ್ರಕಾರ|ಚಿತ್ರಗುಪ್ತ|ಚಿತ್ರಪಟ|ಭಾವಚಿತ್ರ|ಸಚಿತ್ರ|ಚಿತ್ರಸಂತೆ|ಚಿತ್ರಹಿಂಸೆ|ನೀಲನಕ್ಷೆ|ನಕ್ಷತ್ರ|ಪ್ರಕೃತಿ|ವಿಕೃತಿ|ಸಂಸ್ಕೃತಿ|ಆಕೃತಿಗೊಳಿಸ|ಚಿತ್ರಿಸು|ಚಿತ್ರಿಸಿ|\bfigure\s+out\b|\bfigures?\s+of\s+speech\b|\bsignificant\s+figures?\b|\bpicture\s+of\s+(?:health|innocence|calm)\b)/gi;
+
+// Broad secondary mention of standalone "ಚಿತ್ರ" / "ಆಕೃತಿ" / "ನಕ್ಷೆ" / "ಭೂಪಟ" / "ಗ್ರಾಫ್" / "diagram"
 const GENERAL_IMAGE_MENTION_REGEX =
-  /(ಚಿತ್ರ|ಆಕೃತಿ|ನಕ್ಷೆ|ಭೂಪಟ|ಗ್ರಾಫ್|चित्र|आकृति|मानचित्र|\bdiagram\b|\bfigure\b|\bpicture\b|\bgraph\b|\bmap\b)/i;
+  /(?:^|[\s,.;:()'"“”‘’\-–])(ಚಿತ್ರ(?:ವನ್ನು|ದಲ್ಲಿ|ದ|ಕ್ಕೆ|ಗಳ|ಗಳು)?|ಆಕೃತಿ(?:ಯನ್ನು|ಯಲ್ಲಿ|ಯ|ಗಳ)?|ನಕ್ಷೆ(?:ಯನ್ನು|ಯಲ್ಲಿ|ಯ)?|ಭೂಪಟ(?:ವನ್ನು|ದಲ್ಲಿ|ದ)?|ಗ್ರಾಫ್|चित्र|आकृति|मानचित्र|\bdiagram\b|\bfigure\b|\bgraph\b|\bmap\b)(?=$|[\s,.;:?()'"“”‘’\-–])/i;
 
 /**
  * Checks whether a question already has at least one uploaded or SVG image attached.
  */
 export function hasUploadedImage(q: QuestionItem): boolean {
-  return Boolean(q.imageUrl || q.diagramSvg || q.answerImageUrl || q.answerDiagramSvg);
+  return Boolean(
+    (typeof q.imageUrl === 'string' && q.imageUrl.trim().length > 0) ||
+      (typeof q.diagramSvg === 'string' && q.diagramSvg.trim().length > 0) ||
+      (typeof q.answerImageUrl === 'string' && q.answerImageUrl.trim().length > 0) ||
+      (typeof q.answerDiagramSvg === 'string' && q.answerDiagramSvg.trim().length > 0)
+  );
 }
 
 /**
@@ -111,8 +121,14 @@ export function hasUploadedImage(q: QuestionItem): boolean {
  * and whether it is pending upload.
  */
 export function detectImageRequirement(q: QuestionItem): QuestionImageRequirement {
-  const hasQuestionImage = Boolean(q.imageUrl || q.diagramSvg);
-  const hasAnswerImage = Boolean(q.answerImageUrl || q.answerDiagramSvg);
+  const hasQuestionImage = Boolean(
+    (typeof q.imageUrl === 'string' && q.imageUrl.trim().length > 0) ||
+      (typeof q.diagramSvg === 'string' && q.diagramSvg.trim().length > 0)
+  );
+  const hasAnswerImage = Boolean(
+    (typeof q.answerImageUrl === 'string' && q.answerImageUrl.trim().length > 0) ||
+      (typeof q.answerDiagramSvg === 'string' && q.answerDiagramSvg.trim().length > 0)
+  );
   const hasImage = hasQuestionImage || hasAnswerImage;
 
   // User explicitly dismissed this question as "No image needed" (unless they later uploaded an image)
@@ -130,10 +146,12 @@ export function detectImageRequirement(q: QuestionItem): QuestionImageRequiremen
   }
 
   const qText = String(q.question || '');
+  const cleanedQText = qText.replace(FALSE_POSITIVE_COMPOUND_REGEX, ' ');
   const aText = String(q.answer || '');
+  const cleanedAText = aText.replace(FALSE_POSITIVE_COMPOUND_REGEX, ' ');
   const qType = String(q.questionType || '');
   const optsText = Array.isArray(q.options) ? q.options.join(' ') : '';
-  const combinedQuestion = `${qText} ${optsText}`;
+  const combinedQuestion = `${cleanedQText} ${optsText.replace(FALSE_POSITIVE_COMPOUND_REGEX, ' ')}`;
 
   let matchedQuestionCue: string | null = null;
   for (const p of QUESTION_IMAGE_PATTERNS) {
@@ -159,12 +177,12 @@ export function detectImageRequirement(q: QuestionItem): QuestionImageRequiremen
 
   const typeIndicatesPicture =
     q.formatCategoryId === 'passage_pic' &&
-    /(ಚಿತ್ರ|picture|चित्र|diagram|image)/i.test(`${qType} ${qText}`);
+    /(ಚಿತ್ರ|picture|चित्र|diagram|image)/i.test(`${qType} ${cleanedQText}`);
 
-  const generalMentionInQ = GENERAL_IMAGE_MENTION_REGEX.test(qText);
+  const generalMentionInQ = GENERAL_IMAGE_MENTION_REGEX.test(cleanedQText);
   const answerMentionsDiagram =
     /(ಚಿತ್ರದಲ್ಲಿ|ಚಿತ್ರವನ್ನು|ಮೇಲಿನ\s*ಚಿತ್ರ|ಕೆಳಗಿನ\s*ಚಿತ್ರ|ಅಂದವಾದ\s*ಚಿತ್ರ|diagram\s+shown|figure\s+shown|चित्र\s*में)/i.test(
-      aText
+      cleanedAText
     );
 
   const needsImage = Boolean(

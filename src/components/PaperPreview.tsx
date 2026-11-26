@@ -14,6 +14,7 @@ import {
 import { getAlternativeQuestions } from '../services/paperGenerator.ts';
 import { ReplaceQuestionModal } from './ReplaceQuestionModal.tsx';
 import { MathText } from './MathText.tsx';
+import { ResilientQuestionImage } from './ResilientQuestionImage.tsx';
 import {
   Printer,
   RotateCcw,
@@ -269,6 +270,103 @@ export const PaperPreview: React.FC<PaperPreviewProps> = ({
     return /ಚಿತ್ರ|ಆಕೃತಿ|ನಕ್ಷೆ|ರೇಖಾಚಿತ್ರ|ಪಟ|ಡಯಾಗ್ರಾಂ|diagram|figure|graph|chart/i.test(q.question);
   };
 
+  // Extract stem and clean single-line MCQ options (handles both structured q.options and inline multi-line options)
+  const extractMcqDisplay = (q: GeneratedQuestionItem): { stem: string; options: string[] } => {
+    if (Array.isArray(q.options) && q.options.length > 0) {
+      const cleaned = q.options
+        .map(opt => String(opt || '').replace(/\s*\n\s*/g, ' ').trim())
+        .filter(Boolean);
+      return { stem: q.question, options: cleaned };
+    }
+
+    const lines = String(q.question || '')
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+    if (lines.length >= 5) {
+      const optPattern = /^\s*(?:\(?[ಅಆಇಈA-Da-d]\)[\.\-:]?|\([ಅಆಇಈA-Da-d]\)|[ಅಆಇಈA-Da-d][\.\)])\s*\S/;
+      const lastFour = lines.slice(-4);
+      if (lastFour.every(l => optPattern.test(l))) {
+        return {
+          stem: lines.slice(0, -4).join('\n'),
+          options: lastFour,
+        };
+      }
+    }
+
+    return { stem: q.question, options: [] };
+  };
+
+  // Deduplicate Match-the-Following prompt so Part A never appears twice (once as plain text and again in the A/B table)
+  const getCleanMatchDisplay = (
+    q: GeneratedQuestionItem
+  ): { isMatchTable: boolean; cleanPrompt: string; cleanItems: Array<{ left: string; right: string }> } => {
+    const rawItems = Array.isArray(q.items)
+      ? q.items
+          .map(it => ({
+            left: String(it?.left || '').trim(),
+            right: String(it?.right || '').trim(),
+          }))
+          .filter(it => it.left.length > 0 || it.right.length > 0)
+      : [];
+
+    if (rawItems.length === 0) {
+      return { isMatchTable: false, cleanPrompt: q.question, cleanItems: [] };
+    }
+
+    const norm = (s: string) =>
+      s
+        .replace(/^[0-9೦-೯a-zA-Zಅಆಇಈ]+[\.\)\-:\s]+/, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+
+    const itemTexts = new Set<string>();
+    for (const it of rawItems) {
+      if (it.left) {
+        itemTexts.add(it.left.toLowerCase());
+        itemTexts.add(norm(it.left));
+      }
+      if (it.right) {
+        itemTexts.add(it.right.toLowerCase());
+        itemTexts.add(norm(it.right));
+      }
+    }
+
+    // Filter out lines from q.question that repeat Part A / Part B headers or any table item
+    const rawLines = String(q.question || '')
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+
+    const headerOrListPattern =
+      /^(?:['"‘’]?(?:ಅ|ಆ|a|b|ಎ|ಬಿ)['"‘’]?\s*(?:ಭಾಗ|ಪಟ್ಟಿ|column|part)|(?:ಭಾಗ|ಪಟ್ಟಿ|column|part)\s*[-–:]?\s*['"‘’]?(?:ಅ|ಆ|a|b|ಎ|ಬಿ)['"‘’]?|[0-9೦-೯]+[\.\)]\s*|[a-dA-Dಅಆಇಈ][\.\)]\s*)/i;
+
+    const keptLines = rawLines.filter(line => {
+      const low = line.toLowerCase();
+      const nLow = norm(line);
+      if (itemTexts.has(low) || itemTexts.has(nLow)) return false;
+      // Drop lines that contain one of the left/right item strings
+      for (const it of rawItems) {
+        const nl = norm(it.left);
+        if (nl.length >= 3 && nLow.includes(nl)) return false;
+      }
+      if (headerOrListPattern.test(line)) return false;
+      return true;
+    });
+
+    const isEnglishPaper =
+      /english/i.test(paper.header.subject || '') ||
+      (/^[A-Za-z0-9\s.,:;\-()'"!?]+$/.test(q.question || '') && (q.question || '').trim().length > 0);
+
+    const fallbackPrompt = isEnglishPaper
+      ? 'Match the following:'
+      : 'ಕೆಳಗಿನವುಗಳನ್ನು ಹೊಂದಿಸಿ ಬರೆಯಿರಿ:';
+
+    const cleanPrompt = keptLines.length > 0 ? keptLines[0] : fallbackPrompt;
+    return { isMatchTable: true, cleanPrompt, cleanItems: rawItems };
+  };
+
   return (
     <div className="space-y-6">
       {/* Action Toolbar */}
@@ -391,14 +489,14 @@ export const PaperPreview: React.FC<PaperPreviewProps> = ({
         </div>
 
         {/* Right: Regenerate & Print buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {onBackToSetup && (
             <button
               type="button"
               onClick={onBackToSetup}
-              className="px-3.5 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors flex items-center gap-1.5"
+              className="px-3.5 py-1.5 text-xs font-bold text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
             >
-              <span>← ಸೆಟಪ್‌ಗೆ ಹಿಂತಿರುಗಿ (Back to Setup)</span>
+              <span>ಸೆಟಪ್‌ಗೆ ಹಿಂತಿರುಗಿ</span>
             </button>
           )}
 
@@ -406,20 +504,20 @@ export const PaperPreview: React.FC<PaperPreviewProps> = ({
             type="button"
             onClick={onResetToGenerated}
             title="ಮೂಲ ರಚಿತ ಆವೃತ್ತಿಗೆ ಹಿಂತಿರುಗಿ"
-            className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-1.5"
+            className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-950 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>ಮರುಹೊಂದಿಸಿ (Reset)</span>
+            <span>ಮರುಹೊಂದಿಸಿ</span>
           </button>
 
           <button
             type="button"
             onClick={onRegenerate}
             title="ಹೊಸ ಸಂಯೋಜನೆಯೊಂದಿಗೆ ಪುನಃ ರಚಿಸಿ"
-            className="px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors flex items-center gap-1.5"
+            className="px-3 py-1.5 text-xs font-semibold text-sky-900 hover:text-sky-950 bg-sky-100 hover:bg-sky-200 border border-sky-200 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>ಪುನಃ ರಚಿಸಿ (Regenerate)</span>
+            <span>ಪುನಃ ರಚಿಸಿ</span>
           </button>
 
           <button
@@ -427,7 +525,7 @@ export const PaperPreview: React.FC<PaperPreviewProps> = ({
             onClick={handleSaveToFirebase}
             disabled={isSavingToFirebase}
             title="ಪ್ರಶ್ನೆ ಪತ್ರಿಕೆಯನ್ನು Firebase ಕ್ಲೌಡ್ ಡೇಟಾಬೇಸ್‌ಗೆ ಉಳಿಸಿ"
-            className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-xs ${
+            className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer ${
               firebaseSaveSuccess
                 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                 : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'
@@ -436,12 +534,12 @@ export const PaperPreview: React.FC<PaperPreviewProps> = ({
             {firebaseSaveSuccess ? (
               <>
                 <Check className="w-3.5 h-3.5 text-emerald-600" />
-                <span>ಉಳಿಸಲಾಗಿದೆ! (Saved)</span>
+                <span>ಉಳಿಸಲಾಗಿದೆ!</span>
               </>
             ) : (
               <>
                 <Cloud className="w-3.5 h-3.5 text-amber-600" />
-                <span>{isSavingToFirebase ? 'ಉಳಿಸಲಾಗುತ್ತಿದೆ...' : '🔥 Firebase ಗೆ ಉಳಿಸಿ'}</span>
+                <span>{isSavingToFirebase ? 'ಉಳಿಸಲಾಗುತ್ತಿದೆ...' : 'ಕ್ಲೌಡ್‌ಗೆ ಉಳಿಸಿ'}</span>
               </>
             )}
           </button>
@@ -449,7 +547,7 @@ export const PaperPreview: React.FC<PaperPreviewProps> = ({
           <button
             type="button"
             onClick={() => window.print()}
-            className="px-4 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-xs flex items-center gap-1.5"
+            className="px-4 py-1.5 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             <span>ಮುದ್ರಣ / PDF</span>
@@ -459,7 +557,7 @@ export const PaperPreview: React.FC<PaperPreviewProps> = ({
       </div>
 
       {/* A4 Paper Canvas */}
-      <div className="printable-document bg-white border border-slate-300 shadow-lg mx-auto max-w-[210mm] min-h-[297mm] p-8 sm:p-12 text-slate-900 font-kannada relative">
+      <div className="printable-document bg-white border border-emerald-200 shadow-lg mx-auto max-w-[210mm] min-h-[297mm] p-4 sm:p-8 md:p-12 text-slate-900 font-kannada relative rounded-xl sm:rounded-none">
         
         {/* Paper Header */}
         <div className="text-center pb-3 border-b-2 border-slate-900 mb-4 space-y-1">
@@ -542,82 +640,21 @@ export const PaperPreview: React.FC<PaperPreviewProps> = ({
                   {section.questions.map((q, qIdx) => {
                     const isEditing = editingQuestionUid === q.uid;
                     const lineCount = getDefaultLineCount(q);
+                    const matchDisplay = getCleanMatchDisplay(q);
+                    const { stem: displayStem, options: displayOptions } = matchDisplay.isMatchTable
+                      ? { stem: matchDisplay.cleanPrompt, options: [] as string[] }
+                      : extractMcqDisplay(q);
 
                     return (
                       <div
                         key={q.uid}
-                        className={`question-block group relative rounded transition-all ${
+                        className={`question-block relative rounded-lg transition-all ${
                           q.pageBreakBefore ? 'page-break-always pt-4 border-t-2 border-indigo-200' : ''
                         }`}
                       >
-                        {/* Hover Quick Action Ribbon (Hidden when printing) */}
-                        <div className="no-print absolute -top-3 right-0 hidden group-hover:flex items-center gap-1 bg-white border border-slate-300 rounded-md shadow-xs px-1.5 py-0.5 z-10 text-2xs">
-                          {/* In-place edit */}
-                          <button
-                            type="button"
-                            onClick={() => setEditingQuestionUid(isEditing ? null : q.uid)}
-                            title="ಪ್ರಶ್ನೆ ಪಠ್ಯ ಸಂಪಾದಿಸಿ"
-                            className="p-1 hover:text-indigo-600 rounded"
-                          >
-                            <Edit3 className="w-3 h-3" />
-                          </button>
-
-                          {/* Swap question */}
-                          <button
-                            type="button"
-                            onClick={() => handleOpenReplaceModal(sIdx, q)}
-                            title="ಪ್ರಶ್ನೆ ಬದಲಾಯಿಸಿ (Swap)"
-                            className="p-1 hover:text-indigo-600 rounded"
-                          >
-                            <RefreshCw className="w-3 h-3" />
-                          </button>
-
-                          {/* Toggle Page break */}
-                          <button
-                            type="button"
-                            onClick={() => handleTogglePageBreak(sIdx, qIdx)}
-                            title={q.pageBreakBefore ? 'ಪುಟ ವಿಭಜನೆ ತೆಗೆಯಿರಿ' : 'ಇಲ್ಲಿಂದ ಮುಂದಿನ ಪುಟಕ್ಕೆ ಹಾಕಿ'}
-                            className={`p-1 rounded ${q.pageBreakBefore ? 'text-indigo-600 font-bold' : 'hover:text-indigo-600'}`}
-                          >
-                            <Scissors className="w-3 h-3" />
-                          </button>
-
-                          {/* Move Up */}
-                          <button
-                            type="button"
-                            disabled={qIdx === 0}
-                            onClick={() => handleMoveQuestion(sIdx, qIdx, 'up')}
-                            title="ಮೇಲಕ್ಕೆ ಚಲಿಸಿ"
-                            className="p-1 disabled:opacity-20 hover:text-indigo-600 rounded"
-                          >
-                            <ArrowUp className="w-3 h-3" />
-                          </button>
-
-                          {/* Move Down */}
-                          <button
-                            type="button"
-                            disabled={qIdx === section.questions.length - 1}
-                            onClick={() => handleMoveQuestion(sIdx, qIdx, 'down')}
-                            title="ಕೆಳಕ್ಕೆ ಚಲಿಸಿ"
-                            className="p-1 disabled:opacity-20 hover:text-indigo-600 rounded"
-                          >
-                            <ArrowDown className="w-3 h-3" />
-                          </button>
-
-                          {/* Delete */}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveQuestion(sIdx, qIdx)}
-                            title="ಪ್ರಶ್ನೆ ಅಳಿಸಿ"
-                            className="p-1 text-rose-500 hover:text-rose-700 rounded"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-
                         {/* Page break marker in preview */}
                         {q.pageBreakBefore && (
-                          <div className="no-print text-2xs text-indigo-500 font-mono mb-2 flex items-center gap-1.5">
+                          <div className="no-print text-2xs text-indigo-600 font-mono mb-2 flex items-center gap-1.5">
                             <Scissors className="w-3 h-3" />
                             <span>--- ಮುದ್ರಣ ಪುಟ ವಿಭಜನೆ (PAGE BREAK) ---</span>
                           </div>
@@ -625,10 +662,10 @@ export const PaperPreview: React.FC<PaperPreviewProps> = ({
 
                         {/* Question Content */}
                         <div className="flex items-start justify-between gap-4">
-                          <div className="flex items-start gap-2 flex-1">
+                          <div className="flex items-start gap-2 flex-1 min-w-0">
                             <span className="font-bold shrink-0">{q.displayNumber}.</span>
                             
-                            <div className="flex-1">
+                            <div className="flex-1 min-w-0">
                               {isEditing ? (
                                 <textarea
                                   value={q.question}
@@ -638,17 +675,16 @@ export const PaperPreview: React.FC<PaperPreviewProps> = ({
                                 />
                               ) : (
                                 <div className={`font-medium ${fontSizeClass} whitespace-pre-line text-slate-900`}>
-                                  <MathText text={q.question} />
+                                  <MathText text={displayStem} />
                                 </div>
                               )}
 
                               {/* Question Diagram / Image Display */}
                               {q.imageUrl && (
                                 <div className="my-2.5 inline-block max-w-sm">
-                                  <img
+                                  <ResilientQuestionImage
                                     src={q.imageUrl}
                                     alt={q.diagramDescription || 'ಪ್ರಶ್ನೆ ಚಿತ್ರ / Diagram'}
-                                    referrerPolicy="no-referrer"
                                     className="max-h-56 max-w-full rounded border border-slate-300 object-contain bg-white p-1"
                                   />
                                 </div>
@@ -661,32 +697,35 @@ export const PaperPreview: React.FC<PaperPreviewProps> = ({
                                 />
                               )}
 
-                              {/* MCQ Options Display: 4 options in a single row */}
-                              {q.options && q.options.length > 0 && (
-                                <div className="grid grid-cols-4 gap-2 sm:gap-4 mt-2 pl-3 w-full">
-                                  {q.options.map((opt, oIdx) => (
-                                    <div key={oIdx} className={`${fontSizeClass} text-slate-800 break-words leading-snug`}>
+                              {/* MCQ Options Display: Always 4 options in a single horizontal line (mobile, desktop & print) */}
+                              {displayOptions.length > 0 && (
+                                <div className="mcq-options-row grid grid-cols-4 gap-x-2 sm:gap-x-4 gap-y-1 mt-1.5 pl-1 sm:pl-2 w-full items-start">
+                                  {displayOptions.map((opt, oIdx) => (
+                                    <div
+                                      key={oIdx}
+                                      className={`${fontSizeClass} text-slate-800 break-words leading-snug min-w-0`}
+                                    >
                                       <MathText text={opt} />
                                     </div>
                                   ))}
                                 </div>
                               )}
 
-                              {/* Match the following items table */}
-                              {q.items && q.items.length > 0 && (
-                                <div className="mt-2.5 max-w-md border border-slate-300 rounded-lg overflow-hidden text-xs">
+                              {/* Match the following items table (single clean A/B table, zero duplicate Part A above) */}
+                              {matchDisplay.isMatchTable && matchDisplay.cleanItems.length > 0 && (
+                                <div className="mt-2 max-w-lg border border-slate-300 rounded-lg overflow-hidden text-xs">
                                   <table className="w-full border-collapse">
                                     <thead>
-                                      <tr className="bg-slate-100 border-b border-slate-300 text-slate-700 font-bold">
-                                        <th className="py-1 px-3 text-left w-1/2">ಭಾಗ - 'ಅ'</th>
-                                        <th className="py-1 px-3 text-left w-1/2">ಭಾಗ - 'ಆ'</th>
+                                      <tr className="bg-slate-100 border-b border-slate-300 text-slate-800 font-bold">
+                                        <th className="py-1.5 px-3 text-left w-1/2 border-r border-slate-300">ಭಾಗ - 'ಅ'</th>
+                                        <th className="py-1.5 px-3 text-left w-1/2">ಭಾಗ - 'ಆ'</th>
                                       </tr>
                                     </thead>
                                     <tbody>
-                                      {q.items.map((item, itmIdx) => (
+                                      {matchDisplay.cleanItems.map((item, itmIdx) => (
                                         <tr key={itmIdx} className="border-b border-slate-200 last:border-b-0">
-                                          <td className="py-1 px-3 text-slate-800"><MathText text={item.left} /></td>
-                                          <td className="py-1 px-3 text-slate-800"><MathText text={item.right} /></td>
+                                          <td className="py-1.5 px-3 text-slate-900 border-r border-slate-200"><MathText text={item.left} /></td>
+                                          <td className="py-1.5 px-3 text-slate-900"><MathText text={item.right} /></td>
                                         </tr>
                                       ))}
                                     </tbody>
@@ -718,27 +757,106 @@ export const PaperPreview: React.FC<PaperPreviewProps> = ({
                                 </div>
                               )}
 
-                              {/* Answer Lines Controls (Hidden on print) */}
-                              <div className="no-print mt-2 flex items-center gap-2 text-2xs text-slate-500">
-                                <span className="font-semibold text-slate-600">ಲೈನ್‌ಗಳು: {lineCount}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => setCustomLineCounts(prev => ({ ...prev, [q.uid]: lineCount + 1 }))}
-                                  className="px-2 py-0.5 bg-slate-100 hover:bg-indigo-50 text-indigo-700 font-bold border border-slate-300 rounded hover:border-indigo-300 transition-colors cursor-pointer"
-                                  title="ಈ ಪ್ರಶ್ನೆಗೆ 1 ಲೈನ್ ಸೇರಿಸಿ"
-                                >
-                                  + ಲೈನ್ ಸೇರಿಸಿ
-                                </button>
-                                {lineCount > 0 && (
+                              {/* Always-Visible Touch-Friendly Question Controls (Mobile & Desktop, Hidden on print) */}
+                              <div className="no-print mt-2.5 pt-2 border-t border-dashed border-slate-200 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  {/* Primary Prominent Swap Button — Always visible on Mobile & Desktop */}
                                   <button
                                     type="button"
-                                    onClick={() => setCustomLineCounts(prev => ({ ...prev, [q.uid]: Math.max(0, lineCount - 1) }))}
-                                    className="px-2 py-0.5 bg-slate-100 hover:bg-rose-50 text-rose-700 font-bold border border-slate-300 rounded hover:border-rose-300 transition-colors cursor-pointer"
-                                    title="ಈ ಪ್ರಶ್ನೆಯಿಂದ 1 ಲೈನ್ ತೆಗೆಯಿರಿ"
+                                    onClick={() => handleOpenReplaceModal(sIdx, q)}
+                                    title="ಈ ಪ್ರಶ್ನೆಯನ್ನು ಬದಲಾಯಿಸಿ (Swap Question)"
+                                    className="min-h-[32px] px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-lg transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
                                   >
-                                    - ಲೈನ್ ತೆಗೆಯಿರಿ
+                                    <RefreshCw className="w-3.5 h-3.5 shrink-0" />
+                                    <span>ಪ್ರಶ್ನೆ ಬದಲಾಯಿಸಿ</span>
                                   </button>
-                                )}
+
+                                  {/* Edit text inline */}
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingQuestionUid(isEditing ? null : q.uid)}
+                                    title="ಪ್ರಶ್ನೆ ಪಠ್ಯ ಸಂಪಾದಿಸಿ"
+                                    className={`min-h-[32px] px-2.5 py-1 font-bold rounded-lg border transition-colors inline-flex items-center gap-1 cursor-pointer ${
+                                      isEditing
+                                        ? 'bg-emerald-600 text-white border-emerald-600'
+                                        : 'bg-sky-50 hover:bg-sky-100 text-sky-900 border-sky-200'
+                                    }`}
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5 shrink-0" />
+                                    <span>{isEditing ? 'ಮುಗಿಸಿ' : 'ಸಂಪಾದಿಸಿ'}</span>
+                                  </button>
+
+                                  {/* Move Up / Down */}
+                                  <button
+                                    type="button"
+                                    disabled={qIdx === 0}
+                                    onClick={() => handleMoveQuestion(sIdx, qIdx, 'up')}
+                                    title="ಮೇಲಕ್ಕೆ ಚಲಿಸಿ"
+                                    className="min-h-[32px] px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg disabled:opacity-30 cursor-pointer"
+                                    aria-label="Move Up"
+                                  >
+                                    <ArrowUp className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={qIdx === section.questions.length - 1}
+                                    onClick={() => handleMoveQuestion(sIdx, qIdx, 'down')}
+                                    title="ಕೆಳಕ್ಕೆ ಚಲಿಸಿ"
+                                    className="min-h-[32px] px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg disabled:opacity-30 cursor-pointer"
+                                    aria-label="Move Down"
+                                  >
+                                    <ArrowDown className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  {/* Toggle Page Break */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleTogglePageBreak(sIdx, qIdx)}
+                                    title={q.pageBreakBefore ? 'ಪುಟ ವಿಭಜನೆ ತೆಗೆಯಿರಿ' : 'ಇಲ್ಲಿಂದ ಮುಂದಿನ ಪುಟಕ್ಕೆ ಹಾಕಿ'}
+                                    className={`min-h-[32px] px-2 py-1 font-semibold rounded-lg border transition-colors inline-flex items-center gap-1 cursor-pointer ${
+                                      q.pageBreakBefore
+                                        ? 'bg-amber-100 text-amber-900 border-amber-300'
+                                        : 'bg-white hover:bg-amber-50 text-slate-700 border-slate-200'
+                                    }`}
+                                  >
+                                    <Scissors className="w-3.5 h-3.5 shrink-0" />
+                                    <span className="hidden sm:inline">ಪುಟ</span>
+                                  </button>
+
+                                  {/* Delete */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveQuestion(sIdx, qIdx)}
+                                    title="ಪ್ರಶ್ನೆ ಅಳಿಸಿ"
+                                    className="min-h-[32px] px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg transition-colors cursor-pointer"
+                                    aria-label="Delete Question"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+
+                                {/* Dotted Answer Lines Controls */}
+                                <div className="flex items-center gap-1.5 text-slate-600">
+                                  <span className="font-semibold tabular-nums">ಲೈನ್: {lineCount}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setCustomLineCounts(prev => ({ ...prev, [q.uid]: lineCount + 1 }))}
+                                    className="min-h-[30px] px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold border border-emerald-200 rounded-lg transition-colors cursor-pointer"
+                                    title="ಈ ಪ್ರಶ್ನೆಗೆ 1 ಲೈನ್ ಸೇರಿಸಿ"
+                                  >
+                                    + ಲೈನ್
+                                  </button>
+                                  {lineCount > 0 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setCustomLineCounts(prev => ({ ...prev, [q.uid]: Math.max(0, lineCount - 1) }))}
+                                      className="min-h-[30px] px-2 py-0.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 rounded-lg transition-colors cursor-pointer"
+                                      title="ಈ ಪ್ರಶ್ನೆಯಿಂದ 1 ಲೈನ್ ತೆಗೆಯಿರಿ"
+                                    >
+                                      - ಲೈನ್
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>

@@ -1,8 +1,8 @@
 /**
  * Karnataka DSERT 5-Stage Blueprint Engine
  * Recreates the authentic 5-stage blueprint matrix with full interconnectivity and exact tallying across all 5 steps.
- * Step 5 features 4 Objectives (ಜ್ಞಾನ, ತಿಳುವಳಿಕೆ, ಅನ್ವಯ, ಕೌಶಲ), each with 3 sub-columns:
- * ಸುಲಭ (Easy), ಸಾಧಾರಣ (Average), and ಕಠಿಣ (Difficult).
+ * Step 5 features 4 Objectives (ಜ್ಞಾನ, ತಿಳುವಳಿಕೆ, ಅನ್ವಯ, ಕೌಶಲ), each with 3 Question Type sub-columns
+ * matching Step 2: ವಸ್ತುನಿಷ್ಠ/ಕಿರು ಉತ್ತರ (short_objective), ದೀರ್ಘ ಉತ್ತರ (long), and ಪ್ರಬಂಧ ಮಾದರಿ (essay).
  * Author: M I Nilaji / S R Angadi
  */
 
@@ -63,22 +63,22 @@ export interface MasterGridRow {
   chapterId: string;
   chapterNumber?: number;
   chapterName: string;
-  // ಜ್ಞಾನ (Knowledge): ಸುಲಭ, ಸಾಧಾರಣ, ಕಠಿಣ
-  knowledgeEasy: ObjectiveDiffCell | null;
-  knowledgeAvg: ObjectiveDiffCell | null;
-  knowledgeDiff: ObjectiveDiffCell | null;
-  // ತಿಳುವಳಿಕೆ (Understanding): ಸುಲಭ, ಸಾಧಾರಣ, ಕಠಿಣ
-  understandingEasy: ObjectiveDiffCell | null;
-  understandingAvg: ObjectiveDiffCell | null;
-  understandingDiff: ObjectiveDiffCell | null;
-  // ಅನ್ವಯ (Application): ಸುಲಭ, ಸಾಧಾರಣ, ಕಠಿಣ
-  applicationEasy: ObjectiveDiffCell | null;
-  applicationAvg: ObjectiveDiffCell | null;
-  applicationDiff: ObjectiveDiffCell | null;
-  // ಕೌಶಲ (Skill): ಸುಲಭ, ಸಾಧಾರಣ, ಕಠಿಣ
-  skillEasy: ObjectiveDiffCell | null;
-  skillAvg: ObjectiveDiffCell | null;
-  skillDiff: ObjectiveDiffCell | null;
+  // ಜ್ಞಾನ (Knowledge): ವಸ್ತುನಿಷ್ಠ/ಕಿರು, ದೀರ್ಘ, ಪ್ರಬಂಧ
+  knowledgeShort: ObjectiveDiffCell | null;
+  knowledgeLong: ObjectiveDiffCell | null;
+  knowledgeEssay: ObjectiveDiffCell | null;
+  // ತಿಳುವಳಿಕೆ (Understanding): ವಸ್ತುನಿಷ್ಠ/ಕಿರು, ದೀರ್ಘ, ಪ್ರಬಂಧ
+  understandingShort: ObjectiveDiffCell | null;
+  understandingLong: ObjectiveDiffCell | null;
+  understandingEssay: ObjectiveDiffCell | null;
+  // ಅನ್ವಯ (Application): ವಸ್ತುನಿಷ್ಠ/ಕಿರು, ದೀರ್ಘ, ಪ್ರಬಂಧ
+  applicationShort: ObjectiveDiffCell | null;
+  applicationLong: ObjectiveDiffCell | null;
+  applicationEssay: ObjectiveDiffCell | null;
+  // ಕೌಶಲ (Skill): ವಸ್ತುನಿಷ್ಠ/ಕಿರು, ದೀರ್ಘ, ಪ್ರಬಂಧ
+  skillShort: ObjectiveDiffCell | null;
+  skillLong: ObjectiveDiffCell | null;
+  skillEssay: ObjectiveDiffCell | null;
   // Totals for this chapter
   totalMarks: number;
   totalQuestions: number;
@@ -582,30 +582,30 @@ export function solvePairedQMMatrix(
 }
 
 const MASTER_CELL_KEYS: Array<keyof MasterGridRow> = [
-  'knowledgeEasy',
-  'knowledgeAvg',
-  'knowledgeDiff',
-  'understandingEasy',
-  'understandingAvg',
-  'understandingDiff',
-  'applicationEasy',
-  'applicationAvg',
-  'applicationDiff',
-  'skillEasy',
-  'skillAvg',
-  'skillDiff',
+  'knowledgeShort',
+  'knowledgeLong',
+  'knowledgeEssay',
+  'understandingShort',
+  'understandingLong',
+  'understandingEssay',
+  'applicationShort',
+  'applicationLong',
+  'applicationEssay',
+  'skillShort',
+  'skillLong',
+  'skillEssay',
 ];
 
 /**
  * Builds a 100% mathematically synchronized Step 5 Master 12-Column Grid whose:
  * - Every chapter row sums strictly to Step 4 (Chapters) [both Q and M]
  * - Every 3-column objective group sums strictly to Step 1 (Objectives) [both Q and M]
- * - Every 4-column difficulty group sums strictly to Step 3 (Difficulty) [both Q and M]
+ * - Every 4-column question-type group (ವಸ್ತುನಿಷ್ಠ/ಕಿರು, ದೀರ್ಘ, ಪ್ರಬಂಧ) sums strictly to Step 2 [both Q and M]
  * - Grand total sums strictly to Step 2 & Document Header [both Q and M]
  */
 export function buildSynchronizedMasterGrid(
   step1Objectives: ObjectiveWeightage[],
-  step3Difficulty: DifficultyWeightage[],
+  step2QuestionTypes: QuestionTypeWeightage[],
   step4Chapters: ChapterWeightage[],
   existingGrid?: MasterGridRow[]
 ): MasterGridRow[] {
@@ -634,13 +634,13 @@ export function buildSynchronizedMasterGrid(
     (id, idx) => step1Objectives.find(o => o.id === id) || step1Objectives[idx] || { marks: 0, questionsCount: 0 }
   );
 
-  // Ordered difficulty targets: easy, avg, diff
-  const diffOrder = ['easy', 'avg', 'diff'];
-  const diffItems = diffOrder.map(
-    (id, idx) => step3Difficulty.find(d => d.id === id) || step3Difficulty[idx] || { marks: 0, questionsCount: 0 }
+  // Ordered Step 2 question-type targets: short_objective, long, essay
+  const qTypeOrder: Step2CategoryId[] = ['short_objective', 'long', 'essay'];
+  const qTypeItems = qTypeOrder.map(
+    (id, idx) => step2QuestionTypes.find(t => t.id === id) || step2QuestionTypes[idx] || { marks: 0, questionsCount: 0 }
   );
 
-  // Fast path: if existingGrid already tallies 100% with Step 1, Step 3, and Step 4, keep it untouched
+  // Fast path: if existingGrid already tallies 100% with Step 1, Step 2, and Step 4, keep it untouched
   if (existingGrid && existingGrid.length === C) {
     const matchedRows = step4Chapters.map(ch => findExistingRow(ch));
     if (matchedRows.every(Boolean)) {
@@ -675,11 +675,11 @@ export function buildSynchronizedMasterGrid(
       const objMatch = objItems.every(
         (o, idx) => oQ[idx] === (o.questionsCount || 0) && oM[idx] === (o.marks || 0)
       );
-      const diffMatch = diffItems.every(
-        (d, idx) => dQ[idx] === (d.questionsCount || 0) && dM[idx] === (d.marks || 0)
+      const qTypeMatch = qTypeItems.every(
+        (t, idx) => dQ[idx] === (t.questionsCount || 0) && dM[idx] === (t.marks || 0)
       );
 
-      if (rowsMatch && objMatch && diffMatch) {
+      if (rowsMatch && objMatch && qTypeMatch) {
         return rows.map((row, idx) => ({
           ...row,
           chapterId: step4Chapters[idx].chapterId,
@@ -737,7 +737,7 @@ export function buildSynchronizedMasterGrid(
   };
 
   const { mArr: oM, qArr: oQ } = harmonizeMarginals(objItems);
-  const { mArr: dM, qArr: dQ } = harmonizeMarginals(diffItems);
+  const { mArr: dM, qArr: dQ } = harmonizeMarginals(qTypeItems);
   const { mArr: chM, qArr: chQ } = harmonizeMarginals(step4Chapters);
 
   // Stage 5A: Exact 4 x 3 (Objectives x Difficulties) column totals
@@ -801,10 +801,11 @@ export function buildSynchronizedMasterGrid(
 }
 
 /**
- * Classifies any question into one of the 3 permanent Blueprint Step 2 categories:
- * 1. short_objective -> ವಸ್ತುನಿಷ್ಠ / ಕಿರು ಉತ್ತರ (1 ಅಂಕದ ಪ್ರಶ್ನೆಗಳು: MCQ, ಒಂದು ಪದ/ವಾಕ್ಯ, ಹೊಂದಿಸಿ, ಬಿಟ್ಟ ಸ್ಥಳ)
+ * Classifies any question into one of the 3 permanent Blueprint Step 2 & Step 5 categories
+ * strictly based on marks:
+ * 1. short_objective -> ವಸ್ತುನಿಷ್ಠ / ಕಿರು ಉತ್ತರ (1 ಅಂಕದ ಪ್ರಶ್ನೆಗಳು)
  * 2. long            -> ದೀರ್ಘ ಉತ್ತರ (2 ಮತ್ತು 3 ಅಂಕದ ಪ್ರಶ್ನೆಗಳು)
- * 3. essay           -> ಪ್ರಬಂಧ ಮಾದರಿ ಉತ್ತರ (4+ ಅಂಕದ ಪ್ರಶ್ನೆಗಳು)
+ * 3. essay           -> ಪ್ರಬಂಧ ಮಾದರಿ ಉತ್ತರ (4 ಮತ್ತು ಅದಕ್ಕಿಂತ ಹೆಚ್ಚಿನ ಅಂಕದ ಪ್ರಶ್ನೆಗಳು)
  */
 export function classifyQuestionToStep2Category(q: {
   formatCategoryId?: string;
@@ -813,32 +814,13 @@ export function classifyQuestionToStep2Category(q: {
   options?: unknown[];
   items?: unknown[];
 }): Step2CategoryId {
-  const cat = String(q.formatCategoryId || '').toLowerCase();
-  const qType = String(q.questionType || '').toLowerCase();
-  const marks = Number(q.marks) || 1;
+  const rawMarks = Number(q.marks);
+  const marks = Number.isFinite(rawMarks) && rawMarks > 0 ? rawMarks : 1;
 
-  // 1. ವಸ್ತುನಿಷ್ಠ / ಕಿರು ಉತ್ತರ (1 ಅಂಕದ ಪ್ರಶ್ನೆಗಳು, MCQ, ಹೊಂದಿಸಿ ಬರೆಯಿರಿ, ಬಿಟ್ಟ ಸ್ಥಳ, ಒಂದು ಪದ/ವಾಕ್ಯ)
-  const isObjectiveOrShort =
-    cat === 'mcq' ||
-    cat === 'match' ||
-    cat === 'fill_blank' ||
-    cat === 'one_sentence' ||
-    cat === 'one_word' ||
-    cat === 'vsa' ||
-    cat === 'true_false' ||
-    cat === 'analogy' ||
-    (Array.isArray(q.options) && q.options.length > 0) ||
-    (Array.isArray(q.items) && q.items.length > 0) ||
-    /(?:mcq|multiple\s*choice|objective|ವಸ್ತು\s*ನಿಷ್ಠ|ಬಹು\s*ಆಯ್ಕೆ|ಆರಿಸಿ\s*ಬರೆಯಿರಿ|ಹೊಂದಿಸಿ|match|ಬಿಟ್ಟ\s*ಸ್ಥಳ|fill\s*in|ಒಂದು\s*ವಾಕ್ಯ|ಒಂದು\s*ಪದ|one\s*sentence|one\s*word|true\s*or\s*false|ಸರಿ.*ತಪ್ಪು|ಅತಿ\s*ಕಿರು)/i.test(
-      qType
-    );
-  if (isObjectiveOrShort || marks <= 1) return 'short_objective';
-
-  // 2. ದೀರ್ಘ ಉತ್ತರ (2 ಮತ್ತು 3 ಅಂಕದ ಪ್ರಶ್ನೆಗಳು)
-  if (marks === 2 || marks === 3) return 'long';
-
-  // 3. ಪ್ರಬಂಧ ಮಾದರಿ ಉತ್ತರ (4+ ಅಂಕದ ಪ್ರಶ್ನೆಗಳು)
-  return 'essay';
+  // Strictly mark-authoritative classification so 2M/3M ALWAYS go to ದೀರ್ಘ and 4M+ ALWAYS go to ಪ್ರಬಂಧ
+  if (marks >= 4) return 'essay';
+  if (marks >= 2) return 'long';
+  return 'short_objective';
 }
 
 /**
@@ -855,7 +837,7 @@ export function getPermanentStep2Categories(): Array<{
     {
       id: 'short_objective',
       name: 'ವಸ್ತುನಿಷ್ಠ / ಕಿರು ಉತ್ತರ',
-      subtitle: '1 ಅಂಕದ ಪ್ರಶ್ನೆಗಳು (MCQ, ಒಂದು ಪದ/ವಾಕ್ಯ, ಹೊಂದಿಸಿ, ಬಿಟ್ಟ ಸ್ಥಳ)',
+      subtitle: '1 ಅಂಕದ ಪ್ರಶ್ನೆಗಳು (MCQ, ಒಂದು ಪದ/ವಾಕ್ಯ, ಬಿಟ್ಟ ಸ್ಥಳ, ಸರಿ-ತಪ್ಪು)',
       defaultPercentage: 30,
       defaultMarksPerQuestion: 1,
     },
@@ -869,7 +851,7 @@ export function getPermanentStep2Categories(): Array<{
     {
       id: 'essay',
       name: 'ಪ್ರಬಂಧ ಮಾದರಿ ಉತ್ತರ',
-      subtitle: '4 ಅಂಕದ ಪ್ರಶ್ನೆಗಳು',
+      subtitle: '4 ಅಂಕದ ಪ್ರಶ್ನೆಗಳು (ಪ್ರಬಂಧ, ವಿವರಣೆ, ಹೊಂದಿಸಿ ಬರೆಯಿರಿ)',
       defaultPercentage: 20,
       defaultMarksPerQuestion: 4,
     },
@@ -955,6 +937,103 @@ export function buildStep2FromPercentages(
 }
 
 /**
+ * Builds the 3 permanent Step 2 rows strictly honoring an exact (totalMarks, targetQuestions) target.
+ * - When targetQuestions >= totalMarks (e.g. 10 marks, 10 questions), allocates 100% to 1-mark
+ *   ವಸ್ತುನಿಷ್ಠ / ಕಿರು ಉತ್ತರ (short_objective) so all 10 questions are 1 mark each!
+ * - Otherwise uses default percentages if they hit targetQuestions, or falls back to the exact integer solver.
+ */
+export function buildStep2ForTarget(
+  totalMarks: number,
+  targetQuestions: number,
+  percentages: Partial<Record<Step2CategoryId, number>> = DEFAULT_STEP2_PERCENTAGES
+): QuestionTypeWeightage[] {
+  const safeMarks = Math.max(1, Math.round(totalMarks));
+  const safeQ = Math.max(1, Math.min(safeMarks, Math.round(targetQuestions)));
+  const cats = getPermanentStep2Categories();
+
+  // Exact 1-mark-per-question case (e.g. 10 marks, 10 questions)
+  if (safeQ >= safeMarks) {
+    return [
+      {
+        id: 'short_objective',
+        name: cats[0].name,
+        subtitle: cats[0].subtitle,
+        percentage: 100,
+        marks: safeMarks,
+        questionsCount: safeMarks,
+        marksPerQuestion: 1,
+      },
+      {
+        id: 'long',
+        name: cats[1].name,
+        subtitle: cats[1].subtitle,
+        percentage: 0,
+        marks: 0,
+        questionsCount: 0,
+        marksPerQuestion: 2,
+      },
+      {
+        id: 'essay',
+        name: cats[2].name,
+        subtitle: cats[2].subtitle,
+        percentage: 0,
+        marks: 0,
+        questionsCount: 0,
+        marksPerQuestion: 4,
+      },
+    ];
+  }
+
+  // First try default percentages with preferredTotalQuestions
+  const pctBased = buildStep2FromPercentages(safeMarks, percentages, safeQ);
+  const pctTotalQ = pctBased.reduce((s, x) => s + x.questionsCount, 0);
+  const pctTotalM = pctBased.reduce((s, x) => s + x.marks, 0);
+  if (pctTotalQ === safeQ && pctTotalM === safeMarks) {
+    return pctBased;
+  }
+
+  // Otherwise solve exact integer distribution matching (safeMarks, safeQ)
+  const solved = solveExactQuestionTypes(safeMarks, safeQ);
+  const qShort = solved.mcq + solved.vsa;
+  const mShort = qShort * 1;
+  const qLong = solved.sa + solved.la1;
+  const mLong = solved.sa * 2 + solved.la1 * 3;
+  const qEssay = solved.la2;
+  const mEssay = solved.la2 * 4;
+
+  const rows: QuestionTypeWeightage[] = [
+    {
+      id: 'short_objective',
+      name: cats[0].name,
+      subtitle: cats[0].subtitle,
+      percentage: Math.round((mShort / safeMarks) * 100),
+      marks: mShort,
+      questionsCount: qShort,
+      marksPerQuestion: 1,
+    },
+    {
+      id: 'long',
+      name: cats[1].name,
+      subtitle: cats[1].subtitle,
+      percentage: Math.round((mLong / safeMarks) * 100),
+      marks: mLong,
+      questionsCount: qLong,
+      marksPerQuestion: qLong > 0 ? Math.max(2, Math.round(mLong / qLong)) : 2,
+    },
+    {
+      id: 'essay',
+      name: cats[2].name,
+      subtitle: cats[2].subtitle,
+      percentage: Math.round((mEssay / safeMarks) * 100),
+      marks: mEssay,
+      questionsCount: qEssay,
+      marksPerQuestion: 4,
+    },
+  ];
+  return normalizeStepPercentages(rows, safeMarks);
+}
+
+/**
  * Balances percentages across an array of weightages so that the sum is strictly 100%
  * and never assigns non-zero percentage to a 0-mark row due to discrete rounding.
  */
@@ -994,6 +1073,8 @@ export function normalizeStepPercentages<T extends { marks: number; percentage: 
  * Suggests the standard Karnataka DSERT recommended question count based on total marks
  */
 export function getRecommendedQuestionCount(targetMarks: number): number {
+  if (targetMarks <= 10) return Math.max(1, Math.round(targetMarks));
+  if (targetMarks <= 15) return Math.min(targetMarks, 10);
   if (targetMarks <= 20) return 12;
   if (targetMarks <= 25) return 16;
   if (targetMarks <= 35) return 20;
@@ -1012,27 +1093,34 @@ export function solveExactQuestionTypes(
   targetMarks: number,
   targetQuestions: number
 ): { mcq: number; vsa: number; sa: number; la1: number; la2: number } {
-  const diff = targetMarks - targetQuestions;
-  let best = {
-    q1: Math.round(targetQuestions * 0.4),
-    q2: Math.round(targetQuestions * 0.25),
-    q3: Math.round(targetQuestions * 0.15),
-    q4: Math.round(targetQuestions * 0.2),
-  };
+  const safeMarks = Math.max(1, Math.round(targetMarks));
+  const safeQuestions = Math.max(1, Math.min(safeMarks, Math.round(targetQuestions)));
+  const diff = safeMarks - safeQuestions;
+
+  // All 1-mark questions (e.g. 10 marks, 10 questions -> 10 one-mark questions!)
+  if (diff <= 0) {
+    const mcq = Math.ceil(safeMarks / 2);
+    const vsa = safeMarks - mcq;
+    return { mcq, vsa, sa: 0, la1: 0, la2: 0 };
+  }
+
+  let best: { q1: number; q2: number; q3: number; q4: number } | null = null;
   let minCost = Infinity;
 
-  const maxQ4 = Math.floor(diff / 3);
-  for (let q4 = Math.max(1, Math.floor(targetQuestions * 0.1)); q4 <= maxQ4; q4++) {
-    const maxQ3 = Math.floor((diff - 3 * q4) / 2);
-    for (let q3 = Math.max(1, Math.floor(targetQuestions * 0.08)); q3 <= maxQ3; q3++) {
+  const maxQ4 = Math.min(safeQuestions, Math.floor(diff / 3));
+  for (let q4 = 0; q4 <= maxQ4; q4++) {
+    const maxQ3 = Math.min(safeQuestions - q4, Math.floor((diff - 3 * q4) / 2));
+    for (let q3 = 0; q3 <= maxQ3; q3++) {
       const q2 = diff - 3 * q4 - 2 * q3;
-      const q1 = targetQuestions - q2 - q3 - q4;
-      if (q1 >= 2 && q2 >= 1) {
+      const q1 = safeQuestions - q2 - q3 - q4;
+      if (q1 >= 0 && q2 >= 0 && q1 + q2 + q3 + q4 === safeQuestions) {
         const cost =
-          Math.abs((q1 * 1) / targetMarks - 0.3) +
-          Math.abs((q2 * 2 + q3 * 3) / targetMarks - 0.5) +
-          Math.abs((q4 * 4) / targetMarks - 0.2) +
-          Math.abs((q2 * 2) / targetMarks - 0.25) * 0.2;
+          Math.abs((q1 * 1) / safeMarks - 0.3) +
+          Math.abs((q2 * 2 + q3 * 3) / safeMarks - 0.5) +
+          Math.abs((q4 * 4) / safeMarks - 0.2) +
+          Math.abs((q2 * 2) / safeMarks - 0.25) * 0.2 +
+          (safeMarks >= 25 && q4 === 0 ? 0.4 : 0) +
+          (safeMarks >= 20 && q1 === 0 ? 0.5 : 0);
 
         if (cost < minCost) {
           minCost = cost;
@@ -1042,15 +1130,27 @@ export function solveExactQuestionTypes(
     }
   }
 
-  const mcq = Math.max(2, Math.min(best.q1 - 1, Math.round(best.q1 * 0.35)));
-  const vsa = Math.max(1, best.q1 - mcq);
+  if (!best) {
+    // Mathematical fallback for extreme diff > 3 * safeQuestions
+    const q4 = Math.min(safeQuestions, Math.floor(safeMarks / 4));
+    const remM = safeMarks - q4 * 4;
+    const remQ = safeQuestions - q4;
+    best = { q1: Math.max(0, remQ), q2: 0, q3: 0, q4: Math.max(0, q4) };
+    if (remM > remQ && remQ > 0) {
+      best.q2 = Math.min(remQ, remM - remQ);
+      best.q1 = remQ - best.q2;
+    }
+  }
+
+  const mcq = best.q1 <= 1 ? best.q1 : Math.max(1, Math.min(best.q1 - 1, Math.round(best.q1 * 0.45)));
+  const vsa = Math.max(0, best.q1 - mcq);
 
   return {
     mcq,
     vsa,
-    sa: Math.max(1, best.q2),
-    la1: Math.max(1, best.q3),
-    la2: Math.max(1, best.q4),
+    sa: Math.max(0, best.q2),
+    la1: Math.max(0, best.q3),
+    la2: Math.max(0, best.q4),
   };
 }
 
@@ -1125,19 +1225,27 @@ export function generateOfficialBlueprint(
         return 'diff';
       };
 
-      // 2. Build Step 5 rows by Chapter
+      // 2. Build Step 5 rows by Chapter x (Objective x Step 2 Question Type: short_objective, long, essay)
+      // AND independently tally Step 3 Difficulty from the actual paper questions
+      const qTypeKeys: Step2CategoryId[] = ['short_objective', 'long', 'essay'];
+      const diffTallies: Record<DiffKey, { q: number; m: number }> = {
+        easy: { q: 0, m: 0 },
+        avg: { q: 0, m: 0 },
+        diff: { q: 0, m: 0 },
+      };
+
       const chMap = new Map<string, {
         chapterName: string;
         chapterNumber: number;
-        grid: Record<`${ObjKey}_${DiffKey}`, { count: number; totalMarks: number; questionIds: string[] }>;
+        grid: Record<`${ObjKey}_${Step2CategoryId}`, { count: number; totalMarks: number; questionIds: string[] }>;
       }>();
 
       // Initialize all active chapters
       activeChapters.forEach((ch, idx) => {
         const gridObj: any = {};
         (['know', 'und', 'app', 'skill'] as ObjKey[]).forEach(o => {
-          (['easy', 'avg', 'diff'] as DiffKey[]).forEach(d => {
-            gridObj[`${o}_${d}`] = { count: 0, totalMarks: 0, questionIds: [] };
+          qTypeKeys.forEach(qt => {
+            gridObj[`${o}_${qt}`] = { count: 0, totalMarks: 0, questionIds: [] };
           });
         });
         chMap.set(ch.chapterName, {
@@ -1147,14 +1255,14 @@ export function generateOfficialBlueprint(
         });
       });
 
-      // Populate from questions
+      // Populate from actual paper questions
       allPaperQuestions.forEach((q, idx) => {
         const chName = q.chapterName || activeChapters[0]?.chapterName || 'ಸಾಮಾನ್ಯ';
         if (!chMap.has(chName)) {
           const gridObj: any = {};
           (['know', 'und', 'app', 'skill'] as ObjKey[]).forEach(o => {
-            (['easy', 'avg', 'diff'] as DiffKey[]).forEach(d => {
-              gridObj[`${o}_${d}`] = { count: 0, totalMarks: 0, questionIds: [] };
+            qTypeKeys.forEach(qt => {
+              gridObj[`${o}_${qt}`] = { count: 0, totalMarks: 0, questionIds: [] };
             });
           });
           chMap.set(chName, {
@@ -1167,11 +1275,16 @@ export function generateOfficialBlueprint(
         const entry = chMap.get(chName)!;
         const obj = getObjective(q, idx);
         const diff = getDifficulty(q, idx);
-        const cell = entry.grid[`${obj}_${diff}`];
+        const qType = classifyQuestionToStep2Category(q);
+
+        const cell = entry.grid[`${obj}_${qType}`];
         cell.count += 1;
         cell.totalMarks += q.marks;
         const qId = q.bankQuestionId || q.uid || (q as any).id || `q_${idx}`;
         cell.questionIds.push(qId);
+
+        diffTallies[diff].q += 1;
+        diffTallies[diff].m += q.marks;
 
         // Tag back onto question for consistency across views
         q.objective = obj;
@@ -1179,12 +1292,12 @@ export function generateOfficialBlueprint(
         q.difficulty = diff === 'easy' ? 'ಸುಲಭ' : diff === 'diff' ? 'ಕಠಿಣ' : 'ಸಾಧಾರಣ';
       });
 
-      // Build MasterGridRows
+      // Build MasterGridRows (Objectives x Step 2 Question Types)
       const step5MasterGrid: MasterGridRow[] = Array.from(chMap.entries()).map(([chName, item]) => {
-        const mkCell = (k: `${ObjKey}_${DiffKey}`): ObjectiveDiffCell | null => {
+        const mkCell = (k: `${ObjKey}_${Step2CategoryId}`): ObjectiveDiffCell | null => {
           const c = item.grid[k];
           if (c.count === 0) return null;
-          const avgMarks = Math.round(c.totalMarks / c.count);
+          const avgMarks = Math.max(1, Math.round(c.totalMarks / c.count));
           return {
             questionsCount: c.count,
             marksPerQuestion: avgMarks,
@@ -1195,25 +1308,24 @@ export function generateOfficialBlueprint(
 
         const totalQ = Object.values(item.grid).reduce((s, c) => s + c.count, 0);
         const totalM = Object.values(item.grid).reduce((s, c) => s + c.totalMarks, 0);
-
         const chObj = activeChapters.find(c => c.chapterName === chName);
 
         return {
           chapterId: chObj?.chapterId || `ch_${item.chapterNumber}`,
           chapterNumber: item.chapterNumber,
           chapterName: chName,
-          knowledgeEasy: mkCell('know_easy'),
-          knowledgeAvg: mkCell('know_avg'),
-          knowledgeDiff: mkCell('know_diff'),
-          understandingEasy: mkCell('und_easy'),
-          understandingAvg: mkCell('und_avg'),
-          understandingDiff: mkCell('und_diff'),
-          applicationEasy: mkCell('app_easy'),
-          applicationAvg: mkCell('app_avg'),
-          applicationDiff: mkCell('app_diff'),
-          skillEasy: mkCell('skill_easy'),
-          skillAvg: mkCell('skill_avg'),
-          skillDiff: mkCell('skill_diff'),
+          knowledgeShort: mkCell('know_short_objective'),
+          knowledgeLong: mkCell('know_long'),
+          knowledgeEssay: mkCell('know_essay'),
+          understandingShort: mkCell('und_short_objective'),
+          understandingLong: mkCell('und_long'),
+          understandingEssay: mkCell('und_essay'),
+          applicationShort: mkCell('app_short_objective'),
+          applicationLong: mkCell('app_long'),
+          applicationEssay: mkCell('app_essay'),
+          skillShort: mkCell('skill_short_objective'),
+          skillLong: mkCell('skill_long'),
+          skillEssay: mkCell('skill_essay'),
           totalQuestions: totalQ,
           totalMarks: totalM,
         };
@@ -1232,7 +1344,7 @@ export function generateOfficialBlueprint(
         percentage: paperTotalMarks > 0 ? Math.round((row.totalMarks / paperTotalMarks) * 100) : 0,
       }));
 
-      // Step 1 Objectives - Exactly Tallying with Step 5 column sums
+      // Step 1 Objectives - Strictly Tallying with Step 5 objective column groups
       const sumGrid = (filterPrefix: string) => {
         let q = 0;
         let m = 0;
@@ -1283,13 +1395,13 @@ export function generateOfficialBlueprint(
         },
       ];
 
-      // Step 3 Difficulty - Exactly Tallying with Step 5 sub-columns
-      const sumDiff = (diffSuffix: string) => {
+      // Step 2 Question Types - Strictly Tallying 100% with Step 5 sub-columns (Short, Long, Essay)
+      const sumQType = (suffix: 'Short' | 'Long' | 'Essay') => {
         let q = 0;
         let m = 0;
         step5MasterGrid.forEach(row => {
           Object.entries(row).forEach(([k, cell]) => {
-            if (k.endsWith(diffSuffix) && cell && typeof cell === 'object' && 'questionsCount' in cell) {
+            if (k.endsWith(suffix) && cell && typeof cell === 'object' && 'questionsCount' in cell) {
               q += (cell as ObjectiveDiffCell).questionsCount;
               m += (cell as ObjectiveDiffCell).totalMarks;
             }
@@ -1298,84 +1410,69 @@ export function generateOfficialBlueprint(
         return { q, m };
       };
 
-      const easyTally = sumDiff('Easy');
-      const avgTally = sumDiff('Avg');
-      const diffTally = sumDiff('Diff');
+      const shortTally = sumQType('Short');
+      const longTally = sumQType('Long');
+      const essayTally = sumQType('Essay');
+      const permanentCats = getPermanentStep2Categories();
 
+      const step2QuestionTypes: QuestionTypeWeightage[] = [
+        {
+          id: 'short_objective',
+          name: permanentCats[0].name,
+          subtitle: permanentCats[0].subtitle,
+          percentage: paperTotalMarks > 0 ? Math.round((shortTally.m / paperTotalMarks) * 100) : 0,
+          marks: shortTally.m,
+          questionsCount: shortTally.q,
+          marksPerQuestion: shortTally.q > 0 ? Math.max(1, Math.round(shortTally.m / shortTally.q)) : 1,
+        },
+        {
+          id: 'long',
+          name: permanentCats[1].name,
+          subtitle: permanentCats[1].subtitle,
+          percentage: paperTotalMarks > 0 ? Math.round((longTally.m / paperTotalMarks) * 100) : 0,
+          marks: longTally.m,
+          questionsCount: longTally.q,
+          marksPerQuestion: longTally.q > 0 ? Math.max(2, Math.round(longTally.m / longTally.q)) : 2,
+        },
+        {
+          id: 'essay',
+          name: permanentCats[2].name,
+          subtitle: permanentCats[2].subtitle,
+          percentage: paperTotalMarks > 0 ? Math.round((essayTally.m / paperTotalMarks) * 100) : 0,
+          marks: essayTally.m,
+          questionsCount: essayTally.q,
+          marksPerQuestion: essayTally.q > 0 ? Math.max(4, Math.round(essayTally.m / essayTally.q)) : 4,
+        },
+      ];
+
+      // Step 3 Difficulty - Tallied from the exact paper questions
       const step3Difficulty: DifficultyWeightage[] = [
         {
           id: 'easy',
           name: 'ಸುಲಭ (Easy)',
-          marks: easyTally.m,
-          percentage: paperTotalMarks > 0 ? Math.round((easyTally.m / paperTotalMarks) * 100) : 30,
-          questionsCount: easyTally.q,
+          marks: diffTallies.easy.m,
+          percentage: paperTotalMarks > 0 ? Math.round((diffTallies.easy.m / paperTotalMarks) * 100) : 30,
+          questionsCount: diffTallies.easy.q,
         },
         {
           id: 'avg',
           name: 'ಸಾಧಾರಣ (Avg)',
-          marks: avgTally.m,
-          percentage: paperTotalMarks > 0 ? Math.round((avgTally.m / paperTotalMarks) * 100) : 50,
-          questionsCount: avgTally.q,
+          marks: diffTallies.avg.m,
+          percentage: paperTotalMarks > 0 ? Math.round((diffTallies.avg.m / paperTotalMarks) * 100) : 50,
+          questionsCount: diffTallies.avg.q,
         },
         {
           id: 'diff',
           name: 'ಕಠಿಣ (Diff)',
-          marks: diffTally.m,
-          percentage: paperTotalMarks > 0 ? Math.round((diffTally.m / paperTotalMarks) * 100) : 20,
-          questionsCount: diffTally.q,
+          marks: diffTallies.diff.m,
+          percentage: paperTotalMarks > 0 ? Math.round((diffTallies.diff.m / paperTotalMarks) * 100) : 20,
+          questionsCount: diffTallies.diff.q,
         },
       ];
 
-      // Step 2 Question Types - Permanently 3 fixed mark-based categories with default 30% / 50% / 20%
-      const step2QuestionTypes: QuestionTypeWeightage[] = buildStep2FromPercentages(
-        paperTotalMarks,
-        DEFAULT_STEP2_PERCENTAGES,
-        paperTotalQ
-      );
-
-      const syncedTotalQ =
-        step2QuestionTypes.reduce((s, x) => s + x.questionsCount, 0) || paperTotalQ;
-
-      // Harmonize Steps 1, 3, 4, and 5 if Step 2's 30/50/20 question count differs from raw paperTotalQ
-      let finalStep5MasterGrid = step5MasterGrid;
-      if (syncedTotalQ !== paperTotalQ) {
-        const s1Q = apportionBoundedQuestions(
-          step1Objectives.map(o => o.marks),
-          syncedTotalQ,
-          step1Objectives.map(o => o.questionsCount)
-        );
-        step1Objectives.forEach((o, idx) => {
-          o.questionsCount = s1Q[idx];
-        });
-
-        const s3Q = apportionBoundedQuestions(
-          step3Difficulty.map(d => d.marks),
-          syncedTotalQ,
-          step3Difficulty.map(d => d.questionsCount || 0)
-        );
-        step3Difficulty.forEach((d, idx) => {
-          d.questionsCount = s3Q[idx];
-        });
-
-        const s4Q = apportionBoundedQuestions(
-          step4Chapters.map(c => c.marks),
-          syncedTotalQ,
-          step4Chapters.map(c => c.questionsCount)
-        );
-        step4Chapters.forEach((c, idx) => {
-          c.questionsCount = s4Q[idx];
-        });
-
-        finalStep5MasterGrid = buildSynchronizedMasterGrid(
-          step1Objectives,
-          step3Difficulty,
-          step4Chapters,
-          step5MasterGrid
-        );
-      }
-
-      // Strict 100% balancing across all steps so percentages strictly sum to 100% and never exceed 100%
+      // Strict 100% balancing across all steps so percentages strictly sum to 100%
       normalizeStepPercentages(step1Objectives, paperTotalMarks);
+      normalizeStepPercentages(step2QuestionTypes, paperTotalMarks);
       normalizeStepPercentages(step3Difficulty, paperTotalMarks);
       normalizeStepPercentages(step4Chapters, paperTotalMarks);
 
@@ -1384,22 +1481,22 @@ export function generateOfficialBlueprint(
         grade: bank.metadata.grade,
         subject: bank.metadata.subject,
         totalMarks: paperTotalMarks,
-        totalQuestions: syncedTotalQ,
+        totalQuestions: paperTotalQ,
         step1Objectives,
         step2QuestionTypes,
         step3Difficulty,
         step4Chapters,
-        step5MasterGrid: finalStep5MasterGrid,
+        step5MasterGrid,
       };
     }
   }
 
   // BASELINE BLUEPRINT GENERATION (When paper is not yet generated)
-  // Step 2 drives the authoritative (targetMarks, syncedBaselineTotalQ) under default 30% / 50% / 20%
-  const step2QuestionTypes: QuestionTypeWeightage[] = buildStep2FromPercentages(
+  // Step 2 strictly honors exact (targetMarks, targetQuestions) — e.g., 10 marks / 10 questions => 10 x 1-mark questions!
+  const step2QuestionTypes: QuestionTypeWeightage[] = buildStep2ForTarget(
     targetMarks,
-    DEFAULT_STEP2_PERCENTAGES,
-    targetQuestions
+    targetQuestions,
+    DEFAULT_STEP2_PERCENTAGES
   );
   const syncedBaselineTotalQ =
     step2QuestionTypes.reduce((s, x) => s + x.questionsCount, 0) || targetQuestions;
@@ -1466,13 +1563,14 @@ export function generateOfficialBlueprint(
   }));
 
   normalizeStepPercentages(step1Objectives, targetMarks);
+  normalizeStepPercentages(step2QuestionTypes, targetMarks);
   normalizeStepPercentages(step3Difficulty, targetMarks);
   normalizeStepPercentages(step4Chapters, targetMarks);
 
-  // Step 5 Master 12-Column Grid — 100% mathematically synchronized with Steps 1, 2, 3, and 4
+  // Step 5 Master 12-Column Grid — 100% mathematically synchronized with Steps 1, 2 (Question Types), and 4
   const step5MasterGrid: MasterGridRow[] = buildSynchronizedMasterGrid(
     step1Objectives,
-    step3Difficulty,
+    step2QuestionTypes,
     step4Chapters
   );
 

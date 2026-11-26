@@ -1070,6 +1070,22 @@ function syncUserBanks(): { files: any[] } {
         const subject = meta.subject || filename.replace('.json', '');
         const subjectCode = deduceServerSubjectCode(meta.subjectCode, subject);
 
+        const uploadedImageCount = content.chapters.reduce(
+          (sum: number, c: any) =>
+            sum +
+            (Array.isArray(c.questions)
+              ? c.questions.filter((q: any) =>
+                  Boolean(
+                    (typeof q?.imageUrl === 'string' && q.imageUrl.trim()) ||
+                      (typeof q?.diagramSvg === 'string' && q.diagramSvg.trim()) ||
+                      (typeof q?.answerImageUrl === 'string' && q.answerImageUrl.trim()) ||
+                      (typeof q?.answerDiagramSvg === 'string' && q.answerDiagramSvg.trim())
+                  )
+                ).length
+              : 0),
+          0
+        );
+
         const id = meta.id || `bank_${filename.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_]/g, '_')}`;
         entries.push({
           id,
@@ -1086,6 +1102,7 @@ function syncUserBanks(): { files: any[] } {
             (sum: number, c: any) => sum + (c.questions?.length || 0),
             0
           ),
+          uploadedImageCount,
           isUserGenerated: true,
           createdAt: meta.updatedAt || meta.createdAt || new Date().toISOString(),
         });

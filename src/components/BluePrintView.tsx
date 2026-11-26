@@ -1,10 +1,10 @@
 /**
  * Official Karnataka DSERT 5-Stage Blueprint View
  * Recreates the exact 5-stage blueprint matrix with:
- * 1. Step 5 Master Grid: 4 Objectives (ಜ್ಞಾನ, ತಿಳುವಳಿಕೆ, ಅನ್ವಯ, ಕೌಶಲ), each with 3 sub-columns (ಸುಲಭ, ಸಾಧಾರಣ, ಕಠಿಣ).
+ * 1. Step 5 Master Grid: 4 Objectives (ಜ್ಞಾನ, ತಿಳುವಳಿಕೆ, ಅನ್ವಯ, ಕೌಶಲ), each with 3 Step-2 Question Type sub-columns (ವ.ನಿ/ಕಿರು, ದೀರ್ಘ, ಪ್ರಬಂಧ).
  * 2. Standard Karnataka notation: Q(M) e.g. 2(2) = 2 questions of 2 marks. If 0, '-' is shown.
  * 3. Step 4: Editable percentage (%) with automatic marks and questions recalculation (capped at 100%).
- * 4. Exact tallies between Step 1, Step 3, Step 4, and Step 5 columns/rows.
+ * 4. Exact tallies between Step 1, Step 2, Step 4, and Step 5 columns/rows.
  * 5. Drill-down inspection showing ONLY questions used in the question paper, with instant same-mark swapping.
  * Author: M I Nilaji / S R Angadi
  */
@@ -18,6 +18,7 @@ import {
   apportionExactIntegers,
   apportionBoundedQuestions,
   buildStep2FromPercentages,
+  buildStep2ForTarget,
   buildSynchronizedMasterGrid,
   classifyQuestionToStep2Category,
   computeStep2QuestionCountForMarks,
@@ -307,84 +308,98 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
     [blueprint.step3Difficulty]
   );
 
-  // Initial synchronized Step 2 (default 30% / 50% / 20%)
-  const initialStep2 = useMemo(
+  // Initial synchronized Step 2 directly from blueprint.step2QuestionTypes (strictly honoring 10M/10Q = 10 x 1M!)
+  const getInitialStep2Base = React.useCallback(
     () =>
-      buildStep2FromPercentages(
-        blueprint.totalMarks || 40,
-        DEFAULT_STEP2_PERCENTAGES,
-        blueprint.totalQuestions
-      ),
-    [blueprint.totalMarks, blueprint.totalQuestions]
+      blueprint.step2QuestionTypes && blueprint.step2QuestionTypes.length === 3
+        ? blueprint.step2QuestionTypes.map(t => ({ ...t }))
+        : buildStep2ForTarget(
+            blueprint.totalMarks || 40,
+            blueprint.totalQuestions || 24,
+            DEFAULT_STEP2_PERCENTAGES
+          ),
+    [blueprint.step2QuestionTypes, blueprint.totalMarks, blueprint.totalQuestions]
   );
+
+  const initialStep2 = useMemo(() => getInitialStep2Base(), [getInitialStep2Base]);
 
   const initialTotalMarks = blueprint.totalMarks || 40;
   const initialTotalQuestions =
     initialStep2.reduce((s, x) => s + x.questionsCount, 0) || blueprint.totalQuestions || 24;
 
-  // Step 2: Editable 3 Permanent Question Types (Default 30% / 50% / 20%)
+  const isAlreadyAligned = (
+    items: Array<{ marks: number; questionsCount?: number }>,
+    targetM: number,
+    targetQ: number
+  ) =>
+    items.length > 0 &&
+    items.reduce((s, x) => s + (x.marks || 0), 0) === targetM &&
+    items.reduce((s, x) => s + (x.questionsCount || 0), 0) === targetQ;
+
+  // Step 2: Editable 3 Permanent Question Types (Synced 100% with actual paper & Stage 5)
   const [step2Items, setStep2Items] = useState(() => initialStep2);
 
-  // Step 1: Editable Objectives State (synchronized with Step 2 & Step 5)
-  const [step1Items, setStep1Items] = useState(() =>
-    buildSyncedStep1(
-      blueprint.step1Objectives.map(o => ({ ...o })),
-      initialTotalMarks,
-      initialTotalQuestions,
-      false
-    )
-  );
+  // Step 1: Editable Objectives State (preserve exact paper tallies when already aligned)
+  const [step1Items, setStep1Items] = useState(() => {
+    const raw = blueprint.step1Objectives.map(o => ({ ...o }));
+    return isAlreadyAligned(raw, initialTotalMarks, initialTotalQuestions)
+      ? raw
+      : buildSyncedStep1(raw, initialTotalMarks, initialTotalQuestions, false);
+  });
 
-  // Step 3: Difficulty Levels State (synchronized with Step 2 & Step 5)
-  const [step3Items, setStep3Items] = useState(() =>
-    buildSyncedStep3(getInitialStep3Base(), initialTotalMarks, initialTotalQuestions, false)
-  );
+  // Step 3: Difficulty Levels State (preserve exact paper tallies when already aligned)
+  const [step3Items, setStep3Items] = useState(() => {
+    const raw = getInitialStep3Base();
+    return isAlreadyAligned(raw, initialTotalMarks, initialTotalQuestions)
+      ? raw
+      : buildSyncedStep3(raw, initialTotalMarks, initialTotalQuestions, false);
+  });
 
-  // Step 4: Editable Chapter Weightage State (synchronized with Step 2 & Step 5)
-  const [step4Items, setStep4Items] = useState(() =>
-    buildSyncedStep4(
-      blueprint.step4Chapters.map(c => ({ ...c })),
-      initialTotalMarks,
-      initialTotalQuestions,
-      false
-    )
-  );
+  // Step 4: Editable Chapter Weightage State (preserve exact paper tallies when already aligned)
+  const [step4Items, setStep4Items] = useState(() => {
+    const raw = blueprint.step4Chapters.map(c => ({ ...c }));
+    return isAlreadyAligned(raw, initialTotalMarks, initialTotalQuestions)
+      ? raw
+      : buildSyncedStep4(raw, initialTotalMarks, initialTotalQuestions, false);
+  });
 
   // Reset all 5 stages in lock-step whenever the underlying blueprint changes
   React.useEffect(() => {
-    const nextStep2 = buildStep2FromPercentages(
-      blueprint.totalMarks || 40,
-      DEFAULT_STEP2_PERCENTAGES,
-      blueprint.totalQuestions
-    );
+    const nextStep2 = getInitialStep2Base();
     const nextM = blueprint.totalMarks || 40;
     const nextQ =
       nextStep2.reduce((s, x) => s + x.questionsCount, 0) || blueprint.totalQuestions || 24;
 
     setStep2Items(nextStep2);
+
+    const rawStep1 = blueprint.step1Objectives.map(o => ({ ...o }));
     setStep1Items(
-      buildSyncedStep1(
-        blueprint.step1Objectives.map(o => ({ ...o })),
-        nextM,
-        nextQ,
-        false
-      )
+      isAlreadyAligned(rawStep1, nextM, nextQ)
+        ? rawStep1
+        : buildSyncedStep1(rawStep1, nextM, nextQ, false)
     );
-    setStep3Items(buildSyncedStep3(getInitialStep3Base(), nextM, nextQ, false));
+
+    const rawStep3 = getInitialStep3Base();
+    setStep3Items(
+      isAlreadyAligned(rawStep3, nextM, nextQ)
+        ? rawStep3
+        : buildSyncedStep3(rawStep3, nextM, nextQ, false)
+    );
+
+    const rawStep4 = blueprint.step4Chapters.map(c => ({ ...c }));
     setStep4Items(
-      buildSyncedStep4(
-        blueprint.step4Chapters.map(c => ({ ...c })),
-        nextM,
-        nextQ,
-        false
-      )
+      isAlreadyAligned(rawStep4, nextM, nextQ)
+        ? rawStep4
+        : buildSyncedStep4(rawStep4, nextM, nextQ, false)
     );
   }, [
     blueprint.totalMarks,
     blueprint.totalQuestions,
     blueprint.step1Objectives,
+    blueprint.step2QuestionTypes,
     blueprint.step3Difficulty,
     blueprint.step4Chapters,
+    getInitialStep2Base,
     getInitialStep3Base,
     buildSyncedStep1,
     buildSyncedStep3,
@@ -1032,18 +1047,17 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
     setSearchQuery('');
   };
 
-  // 5. Handler: Click a specific cell in Step 5 Master Grid
+  // 5. Handler: Click a specific cell in Step 5 Master Grid (Objective x Step 2 Question Type)
   const handleMasterCellClick = (
     cell: ObjectiveDiffCell | null,
     chapterId: string,
     chapterName: string,
     objName: string,
     objKey: 'know' | 'und' | 'app' | 'skill',
-    diffName: string,
-    diffKey: 'easy' | 'avg' | 'diff'
+    qTypeName: string,
+    qTypeKey: Step2CategoryId
   ) => {
     let matched: any[] = [];
-    const targetDiffStr = diffKey === 'easy' ? 'Easy' : diffKey === 'diff' ? 'Difficult' : 'Medium';
 
     // Tier 1: Direct question IDs in cell
     if (cell && cell.questionIds && cell.questionIds.length > 0) {
@@ -1053,21 +1067,21 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
       );
     }
 
-    // Tier 2: Paper questions by fuzzy chapter + objective + diff
+    // Tier 2: Paper questions by fuzzy chapter + objective + Step 2 question type
     if (matched.length === 0 && usedPaperQuestions.length > 0) {
       matched = usedPaperQuestions.filter(q => {
         const isCh = isChMatch(q.chapterName, chapterName) || (q as any).chapterId === chapterId;
         if (!isCh) return false;
         if (getQuestionObjective(q) !== objKey) return false;
-        return matchesDifficulty(q.difficulty, targetDiffStr, q.marks);
+        return classifyQuestionToStep2Category(q) === qTypeKey;
       });
     }
 
-    // Tier 3: Paper questions by fuzzy chapter + objective
+    // Tier 3: Paper questions by fuzzy chapter + Step 2 question type
     if (matched.length === 0 && usedPaperQuestions.length > 0) {
       matched = usedPaperQuestions.filter(q => {
         const isCh = isChMatch(q.chapterName, chapterName) || (q as any).chapterId === chapterId;
-        return isCh && getQuestionObjective(q) === objKey;
+        return isCh && classifyQuestionToStep2Category(q) === qTypeKey;
       });
     }
 
@@ -1078,21 +1092,21 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
       });
     }
 
-    // Tier 5: Bank questions by fuzzy chapter + objective + diff
+    // Tier 5: Bank questions by fuzzy chapter + objective + Step 2 question type
     if (matched.length === 0 && allBankQuestions.length > 0) {
       matched = allBankQuestions.filter(q => {
         const isCh = isChMatch(q.chapterName, chapterName) || q.chapterId === chapterId;
         if (!isCh) return false;
         if (getQuestionObjective(q) !== objKey) return false;
-        return matchesDifficulty(q.difficulty, targetDiffStr, q.marks);
+        return classifyQuestionToStep2Category(q) === qTypeKey;
       });
     }
 
-    // Tier 6: Bank questions by fuzzy chapter + objective
+    // Tier 6: Bank questions by fuzzy chapter + Step 2 question type
     if (matched.length === 0 && allBankQuestions.length > 0) {
       matched = allBankQuestions.filter(q => {
         const isCh = isChMatch(q.chapterName, chapterName) || q.chapterId === chapterId;
-        return isCh && getQuestionObjective(q) === objKey;
+        return isCh && classifyQuestionToStep2Category(q) === qTypeKey;
       });
     }
 
@@ -1103,9 +1117,9 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
       });
     }
 
-    // Tier 8: Bank questions by matching objective across bank
+    // Tier 8: Bank questions by matching Step 2 question type across bank
     if (matched.length === 0 && allBankQuestions.length > 0) {
-      matched = allBankQuestions.filter(q => getQuestionObjective(q) === objKey);
+      matched = allBankQuestions.filter(q => classifyQuestionToStep2Category(q) === qTypeKey);
     }
 
     // Tier 9: Sample fallback questions from bank so it's NEVER empty
@@ -1116,7 +1130,7 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
     const questions = matched.map(q => toQuestionItem(q, chapterId));
 
     setDrillDown({
-      title: `${chapterName} · ${objName} [${diffName}]`,
+      title: `${chapterName} · ${objName} [${qTypeName}]`,
       subtitle: `ನೀಲನಕಾಶೆಯ ಈ ಕೋಶದ ಪ್ರಶ್ನೆಗಳು (${questions.length} ಪ್ರಶ್ನೆಗಳು · ${cell?.totalMarks || questions.reduce((s, x) => s + x.marks, 0)} ಅಂಕ)`,
       badge: `${questions.length} ಪ್ರಶ್ನೆಗಳು`,
       questions,
@@ -1137,18 +1151,6 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
     });
   }, [drillDown, searchQuery]);
 
-  // Calculate dynamic marks from percentage: (MaxMarks * pct) / 100
-  const calcMarksFromPct = (pct: number, maxMarks: number) => {
-    const val = (maxMarks * pct) / 100;
-    return Number.isInteger(val) ? val : parseFloat(val.toFixed(1));
-  };
-
-  // Calculate dynamic questions from percentage: Math.round((TotalQuestions * pct) / 100)
-  const calcQFromPct = (pct: number, totalQ: number) => {
-    const val = (totalQ * pct) / 100;
-    return Math.max(1, Math.round(val));
-  };
-
   // Cell Renderer with standard Karnataka DSERT notation: Q(M) where Q = questions, M = total marks in cell. If 0, '-'
   const renderCell = (
     cell: ObjectiveDiffCell | null,
@@ -1156,8 +1158,8 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
     chapterName: string,
     objName: string,
     objKey: 'know' | 'und' | 'app' | 'skill',
-    diffName: string,
-    diffKey: 'easy' | 'avg' | 'diff'
+    qTypeName: string,
+    qTypeKey: Step2CategoryId
   ) => {
     if (!cell || cell.questionsCount <= 0) {
       return <span className="text-slate-300">-</span>;
@@ -1166,9 +1168,9 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
       <span
         onClick={e => {
           e.stopPropagation();
-          handleMasterCellClick(cell, chapterId, chapterName, objName, objKey, diffName, diffKey);
+          handleMasterCellClick(cell, chapterId, chapterName, objName, objKey, qTypeName, qTypeKey);
         }}
-        className="font-bold text-slate-900 cursor-pointer hover:bg-indigo-100 hover:text-indigo-900 px-1 py-0.5 rounded transition-colors inline-block"
+        className="font-bold text-slate-900 cursor-pointer hover:bg-emerald-100 hover:text-emerald-950 px-1 py-0.5 rounded transition-colors inline-block tabular-nums"
         title={`ಕ್ಲಿಕ್ ಮಾಡಿ: ${cell.questionsCount} ಪ್ರಶ್ನೆಗಳು · ಒಟ್ಟು ${cell.totalMarks} ಅಂಕ`}
       >
         {cell.questionsCount}({cell.totalMarks})
@@ -1176,56 +1178,61 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
     );
   };
 
-  // Synchronized Step 5 Master Grid strictly coordinating with Step 1, Step 2, Step 3, and Step 4
+  // Synchronized Step 5 Master Grid strictly coordinating with Step 1 (Objectives), Step 2 (Question Types), and Step 4 (Chapters)
   const synchronizedMasterGrid = useMemo(
     () =>
       buildSynchronizedMasterGrid(
         step1Items,
-        step3Items,
+        step2Items,
         step4Items,
         blueprint.step5MasterGrid
       ),
-    [step1Items, step3Items, step4Items, blueprint.step5MasterGrid]
+    [step1Items, step2Items, step4Items, blueprint.step5MasterGrid]
   );
 
-  // Compute Step 5 vertical column totals
+  // Compute Step 5 vertical column totals (12 Objective x Question-Type columns + Step 2 cross-check totals)
   const columnTotals = useMemo(() => {
     const totals: Record<string, { q: number; m: number }> = {
-      know_easy: { q: 0, m: 0 },
-      know_avg: { q: 0, m: 0 },
-      know_diff: { q: 0, m: 0 },
-      und_easy: { q: 0, m: 0 },
-      und_avg: { q: 0, m: 0 },
-      und_diff: { q: 0, m: 0 },
-      app_easy: { q: 0, m: 0 },
-      app_avg: { q: 0, m: 0 },
-      app_diff: { q: 0, m: 0 },
-      skill_easy: { q: 0, m: 0 },
-      skill_avg: { q: 0, m: 0 },
-      skill_diff: { q: 0, m: 0 },
+      know_short: { q: 0, m: 0 },
+      know_long: { q: 0, m: 0 },
+      know_essay: { q: 0, m: 0 },
+      und_short: { q: 0, m: 0 },
+      und_long: { q: 0, m: 0 },
+      und_essay: { q: 0, m: 0 },
+      app_short: { q: 0, m: 0 },
+      app_long: { q: 0, m: 0 },
+      app_essay: { q: 0, m: 0 },
+      skill_short: { q: 0, m: 0 },
+      skill_long: { q: 0, m: 0 },
+      skill_essay: { q: 0, m: 0 },
+      total_short: { q: 0, m: 0 },
+      total_long: { q: 0, m: 0 },
+      total_essay: { q: 0, m: 0 },
       grand_q: { q: 0, m: 0 },
       grand_m: { q: 0, m: 0 },
     };
 
     synchronizedMasterGrid.forEach(row => {
-      const add = (key: string, cell: ObjectiveDiffCell | null) => {
+      const add = (key: string, groupKey: 'total_short' | 'total_long' | 'total_essay', cell: ObjectiveDiffCell | null) => {
         if (cell) {
           totals[key].q += cell.questionsCount;
           totals[key].m += cell.totalMarks;
+          totals[groupKey].q += cell.questionsCount;
+          totals[groupKey].m += cell.totalMarks;
         }
       };
-      add('know_easy', row.knowledgeEasy);
-      add('know_avg', row.knowledgeAvg);
-      add('know_diff', row.knowledgeDiff);
-      add('und_easy', row.understandingEasy);
-      add('und_avg', row.understandingAvg);
-      add('und_diff', row.understandingDiff);
-      add('app_easy', row.applicationEasy);
-      add('app_avg', row.applicationAvg);
-      add('app_diff', row.applicationDiff);
-      add('skill_easy', row.skillEasy);
-      add('skill_avg', row.skillAvg);
-      add('skill_diff', row.skillDiff);
+      add('know_short', 'total_short', row.knowledgeShort);
+      add('know_long', 'total_long', row.knowledgeLong);
+      add('know_essay', 'total_essay', row.knowledgeEssay);
+      add('und_short', 'total_short', row.understandingShort);
+      add('und_long', 'total_long', row.understandingLong);
+      add('und_essay', 'total_essay', row.understandingEssay);
+      add('app_short', 'total_short', row.applicationShort);
+      add('app_long', 'total_long', row.applicationLong);
+      add('app_essay', 'total_essay', row.applicationEssay);
+      add('skill_short', 'total_short', row.skillShort);
+      add('skill_long', 'total_long', row.skillLong);
+      add('skill_essay', 'total_essay', row.skillEssay);
 
       totals.grand_q.q += row.totalQuestions;
       totals.grand_m.m += row.totalMarks;
@@ -1239,7 +1246,7 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
     tot: { q: number; m: number },
     colName: string,
     objKey: 'know' | 'und' | 'app' | 'skill',
-    diffKey: 'easy' | 'avg' | 'diff'
+    qTypeKey: Step2CategoryId
   ) => {
     if (!tot || tot.q <= 0) {
       return <span className="text-slate-400 font-bold">-</span>;
@@ -1247,19 +1254,18 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
     return (
       <span
         onClick={() => {
-          const targetDiffStr = diffKey === 'easy' ? 'Easy' : diffKey === 'diff' ? 'Difficult' : 'Medium';
           let matched: Array<QuestionItem | GeneratedQuestionItem> = usedPaperQuestions.filter(q => {
             if (getQuestionObjective(q) !== objKey) return false;
-            return matchesDifficulty(q.difficulty, targetDiffStr, q.marks);
+            return classifyQuestionToStep2Category(q) === qTypeKey;
           });
           if (matched.length === 0 && allBankQuestions.length > 0) {
             matched = allBankQuestions.filter(q => {
               if (getQuestionObjective(q) !== objKey) return false;
-              return matchesDifficulty(q.difficulty, targetDiffStr, q.marks);
+              return classifyQuestionToStep2Category(q) === qTypeKey;
             });
           }
           if (matched.length === 0 && allBankQuestions.length > 0) {
-            matched = allBankQuestions.filter(q => getQuestionObjective(q) === objKey);
+            matched = allBankQuestions.filter(q => classifyQuestionToStep2Category(q) === qTypeKey);
           }
           if (matched.length === 0 && allBankQuestions.length > 0) {
             matched = allBankQuestions.slice(0, 6);
@@ -1273,7 +1279,7 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
           });
           setSearchQuery('');
         }}
-        className="font-bold text-slate-900 cursor-pointer hover:bg-indigo-100 hover:text-indigo-900 px-1 py-0.5 rounded transition-colors inline-block"
+        className="font-bold text-slate-900 cursor-pointer hover:bg-emerald-100 hover:text-emerald-950 px-1 py-0.5 rounded transition-colors inline-block tabular-nums"
         title={`ಕ್ಲಿಕ್ ಮಾಡಿ: ${colName} - ${tot.q} ಪ್ರಶ್ನೆಗಳು (${tot.m} ಅಂಕ)`}
       >
         {tot.q}({tot.m})
@@ -1284,22 +1290,22 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
   return (
     <div className="space-y-6 font-kannada">
       {/* Top Action Toolbar (hidden when printing) */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs flex flex-wrap items-center justify-between gap-4 no-print">
-        <div className="flex items-center gap-2">
+      <div className="bg-gradient-to-r from-emerald-50 via-white to-sky-50 rounded-2xl border border-emerald-200 p-4 shadow-xs flex flex-wrap items-center justify-between gap-4 no-print">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={onBackToSetup}
-            className="px-3.5 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="px-3.5 py-2 text-xs font-bold text-emerald-900 bg-white hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>← ಸೆಟಪ್‌ಗೆ ಹಿಂತಿರುಗಿ (Back to Setup)</span>
+            <span>ಸೆಟಪ್‌ಗೆ ಹಿಂತಿರುಗಿ (Back to Setup)</span>
           </button>
 
           {onViewPaper && (
             <button
               type="button"
               onClick={onViewPaper}
-              className="px-3.5 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-2 text-xs font-bold text-sky-900 bg-sky-100 hover:bg-sky-200 border border-sky-300 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <Layers className="w-4 h-4" />
               <span>ಪ್ರಶ್ನೆ ಪತ್ರಿಕೆ ವೀಕ್ಷಿಸಿ (View Paper)</span>
@@ -1311,7 +1317,7 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
           <button
             type="button"
             onClick={() => window.print()}
-            className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             <span>ನೀಲನಕಾಶೆ ಮುದ್ರಿಸಿ (Print Blue Print)</span>
@@ -1320,14 +1326,14 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
       </div>
 
       {/* Interactive Helper Banner (hidden on print) */}
-      <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-indigo-950 shadow-2xs no-print">
+      <div className="p-3.5 bg-gradient-to-r from-amber-50 via-emerald-50/70 to-sky-50 border border-emerald-200 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-emerald-950 shadow-2xs no-print">
         <div className="flex items-center gap-2">
-          <span className="text-base">💡</span>
+          <Info className="w-4 h-4 text-emerald-700 shrink-0" />
           <span>
-            ಬ್ಲೂಪ್ರಿಂಟ್‌ನ ಯಾವುದೇ ಸೆಲ್ ಅಥವಾ ಸಂಖ್ಯೆಯ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿ ಪ್ರಶ್ನೆಗಳನ್ನು ವೀಕ್ಷಿಸಬಹುದು ಮತ್ತು ಸಮಾನ ಅಂಕದ ಪ್ರಶ್ನೆಯೊಂದಿಗೆ ಬದಲಾಯಿಸಬಹುದು.
+            ಬ್ಲೂಪ್ರಿಂಟ್‌ನ ಯಾವುದೇ ಕೋಶ ಅಥವಾ ಸಂಖ್ಯೆಯ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿ ಪ್ರಶ್ನೆಗಳನ್ನು ವೀಕ್ಷಿಸಬಹುದು ಮತ್ತು ಸಮಾನ ಅಂಕದ ಪ್ರಶ್ನೆಯೊಂದಿಗೆ ಬದಲಾಯಿಸಬಹುದು. ಹಂತ 2 ಮತ್ತು ಹಂತ 5 ರ ಪ್ರಶ್ನೆ ವಿಧಗಳು 100% ಸಮನ್ವಯಗೊಂಡಿವೆ.
           </span>
         </div>
-        <span className="text-2xs px-2.5 py-1 rounded-lg bg-indigo-200 text-indigo-900 font-extrabold uppercase shrink-0">
+        <span className="text-2xs px-2.5 py-1 rounded-lg bg-emerald-700 text-white font-bold shrink-0">
           ಪ್ರಶ್ನೆ ವೀಕ್ಷಿಸಲು / ಬದಲಾಯಿಸಲು ಕ್ಲಿಕ್ ಮಾಡಿ
         </span>
       </div>
@@ -1387,7 +1393,7 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
                       className="border border-slate-900 py-1 px-2 text-left font-semibold truncate max-w-[110px] group-hover:text-indigo-900 cursor-pointer"
                       title="ಕ್ಲಿಕ್ ಮಾಡಿ: ಈ ಉದ್ದಿಷ್ಟದ ಪ್ರಶ್ನೆಗಳನ್ನು ವೀಕ್ಷಿಸಿ"
                     >
-                      {item.name} 🔍
+                      {item.name}
                     </td>
                     <td className="border border-slate-900 py-0.5 px-1">
                       <CleanNumberInput
@@ -1591,7 +1597,7 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
                       className="border border-slate-900 py-1 px-2 text-left font-semibold truncate max-w-[110px] group-hover:text-indigo-900 cursor-pointer"
                       title="ಕ್ಲಿಕ್ ಮಾಡಿ: ಈ ಕ್ಲಿಷ್ಟತೆಯ ಪ್ರಶ್ನೆಗಳನ್ನು ವೀಕ್ಷಿಸಿ"
                     >
-                      {item.name} 🔍
+                      {item.name}
                     </td>
                     <td className="border border-slate-900 py-0.5 px-1">
                       <CleanNumberInput
@@ -1722,7 +1728,7 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
                       className="border border-slate-900 py-1 px-3 text-left font-semibold truncate max-w-[200px] cursor-pointer hover:text-indigo-900"
                       title="ಕ್ಲಿಕ್ ಮಾಡಿ: ಈ ಪಾಠದ ಪ್ರಶ್ನೆಗಳನ್ನು ವೀಕ್ಷಿಸಿ"
                     >
-                      {item.chapterName} 🔍
+                      {item.chapterName}
                     </td>
                     {/* Editable Percentage Input */}
                     <td className="border border-slate-900 py-0.5 px-2 bg-amber-50/30">
@@ -1773,12 +1779,15 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
           </table>
         </div>
 
-        {/* SECTION 5: ಅಧಿಕೃತ 3D ನೀಲನಕಾಶೆ ಮಾಸ್ಟರ್ ಕೋಷ್ಟಕ (4 Objectives with 3 Sub-columns: ಸುಲಭ, ಸಾಧಾರಣ, ಕಠಿಣ) */}
+        {/* SECTION 5: ಅಧಿಕೃತ 3D ನೀಲನಕಾಶೆ ಮಾಸ್ಟರ್ ಕೋಷ್ಟಕ (4 Objectives x 3 Step-2 Question Types: ವ.ನಿ/ಕಿರು, ದೀರ್ಘ, ಪ್ರಬಂಧ) */}
         <div className="pt-2 border-t-2 border-slate-900 space-y-2">
           <div className="text-center pb-1">
             <h2 className="text-xs sm:text-sm font-black tracking-wide text-slate-900 uppercase">
               ಹಂತ 5: ಅಧಿಕೃತ 3D ನೀಲನಕಾಶೆ ಮಾಸ್ಟರ್ ಕೋಷ್ಟಕ (Master Blueprint Grid)
             </h2>
+            <p className="text-[11px] font-semibold text-slate-600 mt-0.5">
+              ವ.ನಿ/ಕಿರು = ವಸ್ತುನಿಷ್ಠ / ಕಿರು ಉತ್ತರ (1 ಅಂಕ) · ದೀರ್ಘ = ದೀರ್ಘ ಉತ್ತರ (2/3 ಅಂಕ) · ಪ್ರಬಂಧ = ಪ್ರಬಂಧ ಮಾದರಿ (4 ಅಂಕ)
+            </p>
           </div>
 
           <div className="overflow-x-auto">
@@ -1804,7 +1813,7 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
                   </th>
                   {/* 2. Understanding */}
                   <th
-                    className="border border-slate-900 py-1 px-1 bg-blue-50/70"
+                    className="border border-slate-900 py-1 px-1 bg-sky-50/70"
                     colSpan={3}
                   >
                     ಗ್ರಹಿಕೆ / ತಿಳುವಳಿಕೆ
@@ -1831,24 +1840,24 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
                   </th>
                 </tr>
 
-                {/* Sub-column Headers: ಸುಲಭ, ಸಾಧಾರಣ, ಕಠಿಣ under each objective */}
-                <tr className="bg-slate-50 border-b border-slate-900 text-center font-bold text-2xs">
+                {/* Sub-column Headers: Step 2 Question Types (ವ.ನಿ/ಕಿರು, ದೀರ್ಘ, ಪ್ರಬಂಧ) under each objective */}
+                <tr className="bg-slate-50 border-b border-slate-900 text-center font-bold text-[10px]">
                   {/* Knowledge */}
-                  <th className="border border-slate-900 py-1 px-1 bg-amber-50/40">ಸುಲಭ</th>
-                  <th className="border border-slate-900 py-1 px-1 bg-amber-50/40">ಸಾಧಾರಣ</th>
-                  <th className="border border-slate-900 py-1 px-1 bg-amber-50/40">ಕಠಿಣ</th>
+                  <th className="border border-slate-900 py-1 px-1 bg-amber-50/40" title="ವಸ್ತುನಿಷ್ಠ / ಕಿರು ಉತ್ತರ (1 ಅಂಕ)">ವ.ನಿ/ಕಿರು</th>
+                  <th className="border border-slate-900 py-1 px-1 bg-amber-50/40" title="ದೀರ್ಘ ಉತ್ತರ (2/3 ಅಂಕ)">ದೀರ್ಘ</th>
+                  <th className="border border-slate-900 py-1 px-1 bg-amber-50/40" title="ಪ್ರಬಂಧ ಮಾದರಿ (4 ಅಂಕ)">ಪ್ರಬಂಧ</th>
                   {/* Understanding */}
-                  <th className="border border-slate-900 py-1 px-1 bg-blue-50/40">ಸುಲಭ</th>
-                  <th className="border border-slate-900 py-1 px-1 bg-blue-50/40">ಸಾಧಾರಣ</th>
-                  <th className="border border-slate-900 py-1 px-1 bg-blue-50/40">ಕಠಿಣ</th>
+                  <th className="border border-slate-900 py-1 px-1 bg-sky-50/40" title="ವಸ್ತುನಿಷ್ಠ / ಕಿರು ಉತ್ತರ (1 ಅಂಕ)">ವ.ನಿ/ಕಿರು</th>
+                  <th className="border border-slate-900 py-1 px-1 bg-sky-50/40" title="ದೀರ್ಘ ಉತ್ತರ (2/3 ಅಂಕ)">ದೀರ್ಘ</th>
+                  <th className="border border-slate-900 py-1 px-1 bg-sky-50/40" title="ಪ್ರಬಂಧ ಮಾದರಿ (4 ಅಂಕ)">ಪ್ರಬಂಧ</th>
                   {/* Application */}
-                  <th className="border border-slate-900 py-1 px-1 bg-emerald-50/40">ಸುಲಭ</th>
-                  <th className="border border-slate-900 py-1 px-1 bg-emerald-50/40">ಸಾಧಾರಣ</th>
-                  <th className="border border-slate-900 py-1 px-1 bg-emerald-50/40">ಕಠಿಣ</th>
+                  <th className="border border-slate-900 py-1 px-1 bg-emerald-50/40" title="ವಸ್ತುನಿಷ್ಠ / ಕಿರು ಉತ್ತರ (1 ಅಂಕ)">ವ.ನಿ/ಕಿರು</th>
+                  <th className="border border-slate-900 py-1 px-1 bg-emerald-50/40" title="ದೀರ್ಘ ಉತ್ತರ (2/3 ಅಂಕ)">ದೀರ್ಘ</th>
+                  <th className="border border-slate-900 py-1 px-1 bg-emerald-50/40" title="ಪ್ರಬಂಧ ಮಾದರಿ (4 ಅಂಕ)">ಪ್ರಬಂಧ</th>
                   {/* Skill */}
-                  <th className="border border-slate-900 py-1 px-1 bg-purple-50/40">ಸುಲಭ</th>
-                  <th className="border border-slate-900 py-1 px-1 bg-purple-50/40">ಸಾಧಾರಣ</th>
-                  <th className="border border-slate-900 py-1 px-1 bg-purple-50/40">ಕಠಿಣ</th>
+                  <th className="border border-slate-900 py-1 px-1 bg-purple-50/40" title="ವಸ್ತುನಿಷ್ಠ / ಕಿರು ಉತ್ತರ (1 ಅಂಕ)">ವ.ನಿ/ಕಿರು</th>
+                  <th className="border border-slate-900 py-1 px-1 bg-purple-50/40" title="ದೀರ್ಘ ಉತ್ತರ (2/3 ಅಂಕ)">ದೀರ್ಘ</th>
+                  <th className="border border-slate-900 py-1 px-1 bg-purple-50/40" title="ಪ್ರಬಂಧ ಮಾದರಿ (4 ಅಂಕ)">ಪ್ರಬಂಧ</th>
                 </tr>
               </thead>
               <tbody>
@@ -1857,130 +1866,142 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
                     key={row.chapterId}
                     className="text-center border-b border-slate-900 font-medium hover:bg-slate-50/60"
                   >
-                    <td className="border border-slate-900 py-1 px-1">{idx + 1}</td>
+                    <td className="border border-slate-900 py-1 px-1 tabular-nums">{idx + 1}</td>
                     <td
                       onClick={() =>
                         handleChapterClick(row.chapterId, row.chapterName, row.totalMarks)
                       }
-                      className="border border-slate-900 py-1 px-2 text-left font-semibold truncate max-w-[140px] cursor-pointer hover:bg-indigo-50 hover:text-indigo-900 transition-colors"
+                      className="border border-slate-900 py-1 px-2 text-left font-semibold truncate max-w-[140px] cursor-pointer hover:bg-emerald-50 hover:text-emerald-950 transition-colors"
                       title="ಕ್ಲಿಕ್ ಮಾಡಿ: ಈ ಪಾಠದ ಪ್ರಶ್ನೆಗಳನ್ನು ವೀಕ್ಷಿಸಿ"
                     >
                       {row.chapterName}
                     </td>
 
-                    {/* Knowledge Sub-columns: ಸುಲಭ, ಸಾಧಾರಣ, ಕಠಿಣ */}
+                    {/* Knowledge Sub-columns: ವ.ನಿ/ಕಿರು, ದೀರ್ಘ, ಪ್ರಬಂಧ */}
                     <td className="border border-slate-900 py-1 px-1">
-                      {renderCell(row.knowledgeEasy, row.chapterId, row.chapterName, 'ಜ್ಞಾನ', 'know', 'ಸುಲಭ', 'easy')}
+                      {renderCell(row.knowledgeShort, row.chapterId, row.chapterName, 'ಜ್ಞಾನ', 'know', 'ವಸ್ತುನಿಷ್ಠ/ಕಿರು ಉತ್ತರ', 'short_objective')}
                     </td>
                     <td className="border border-slate-900 py-1 px-1">
-                      {renderCell(row.knowledgeAvg, row.chapterId, row.chapterName, 'ಜ್ಞಾನ', 'know', 'ಸಾಧಾರಣ', 'avg')}
+                      {renderCell(row.knowledgeLong, row.chapterId, row.chapterName, 'ಜ್ಞಾನ', 'know', 'ದೀರ್ಘ ಉತ್ತರ', 'long')}
                     </td>
                     <td className="border border-slate-900 py-1 px-1">
-                      {renderCell(row.knowledgeDiff, row.chapterId, row.chapterName, 'ಜ್ಞಾನ', 'know', 'ಕಠಿಣ', 'diff')}
-                    </td>
-
-                    {/* Understanding Sub-columns: ಸುಲಭ, ಸಾಧಾರಣ, ಕಠಿಣ */}
-                    <td className="border border-slate-900 py-1 px-1">
-                      {renderCell(row.understandingEasy, row.chapterId, row.chapterName, 'ತಿಳುವಳಿಕೆ', 'und', 'ಸುಲಭ', 'easy')}
-                    </td>
-                    <td className="border border-slate-900 py-1 px-1">
-                      {renderCell(row.understandingAvg, row.chapterId, row.chapterName, 'ತಿಳುವಳಿಕೆ', 'und', 'ಸಾಧಾರಣ', 'avg')}
-                    </td>
-                    <td className="border border-slate-900 py-1 px-1">
-                      {renderCell(row.understandingDiff, row.chapterId, row.chapterName, 'ತಿಳುವಳಿಕೆ', 'und', 'ಕಠಿಣ', 'diff')}
+                      {renderCell(row.knowledgeEssay, row.chapterId, row.chapterName, 'ಜ್ಞಾನ', 'know', 'ಪ್ರಬಂಧ ಮಾದರಿ', 'essay')}
                     </td>
 
-                    {/* Application Sub-columns: ಸುಲಭ, ಸಾಧಾರಣ, ಕಠಿಣ */}
+                    {/* Understanding Sub-columns: ವ.ನಿ/ಕಿರು, ದೀರ್ಘ, ಪ್ರಬಂಧ */}
                     <td className="border border-slate-900 py-1 px-1">
-                      {renderCell(row.applicationEasy, row.chapterId, row.chapterName, 'ಅನ್ವಯ', 'app', 'ಸುಲಭ', 'easy')}
+                      {renderCell(row.understandingShort, row.chapterId, row.chapterName, 'ತಿಳುವಳಿಕೆ', 'und', 'ವಸ್ತುನಿಷ್ಠ/ಕಿರು ಉತ್ತರ', 'short_objective')}
                     </td>
                     <td className="border border-slate-900 py-1 px-1">
-                      {renderCell(row.applicationAvg, row.chapterId, row.chapterName, 'ಅನ್ವಯ', 'app', 'ಸಾಧಾರಣ', 'avg')}
+                      {renderCell(row.understandingLong, row.chapterId, row.chapterName, 'ತಿಳುವಳಿಕೆ', 'und', 'ದೀರ್ಘ ಉತ್ತರ', 'long')}
                     </td>
                     <td className="border border-slate-900 py-1 px-1">
-                      {renderCell(row.applicationDiff, row.chapterId, row.chapterName, 'ಅನ್ವಯ', 'app', 'ಕಠಿಣ', 'diff')}
+                      {renderCell(row.understandingEssay, row.chapterId, row.chapterName, 'ತಿಳುವಳಿಕೆ', 'und', 'ಪ್ರಬಂಧ ಮಾದರಿ', 'essay')}
                     </td>
 
-                    {/* Skill Sub-columns: ಸುಲಭ, ಸಾಧಾರಣ, ಕಠಿಣ */}
+                    {/* Application Sub-columns: ವ.ನಿ/ಕಿರು, ದೀರ್ಘ, ಪ್ರಬಂಧ */}
                     <td className="border border-slate-900 py-1 px-1">
-                      {renderCell(row.skillEasy, row.chapterId, row.chapterName, 'ಕೌಶಲ', 'skill', 'ಸುಲಭ', 'easy')}
+                      {renderCell(row.applicationShort, row.chapterId, row.chapterName, 'ಅನ್ವಯ', 'app', 'ವಸ್ತುನಿಷ್ಠ/ಕಿರು ಉತ್ತರ', 'short_objective')}
                     </td>
                     <td className="border border-slate-900 py-1 px-1">
-                      {renderCell(row.skillAvg, row.chapterId, row.chapterName, 'ಕೌಶಲ', 'skill', 'ಸಾಧಾರಣ', 'avg')}
+                      {renderCell(row.applicationLong, row.chapterId, row.chapterName, 'ಅನ್ವಯ', 'app', 'ದೀರ್ಘ ಉತ್ತರ', 'long')}
                     </td>
                     <td className="border border-slate-900 py-1 px-1">
-                      {renderCell(row.skillDiff, row.chapterId, row.chapterName, 'ಕೌಶಲ', 'skill', 'ಕಠಿಣ', 'diff')}
+                      {renderCell(row.applicationEssay, row.chapterId, row.chapterName, 'ಅನ್ವಯ', 'app', 'ಪ್ರಬಂಧ ಮಾದರಿ', 'essay')}
+                    </td>
+
+                    {/* Skill Sub-columns: ವ.ನಿ/ಕಿರು, ದೀರ್ಘ, ಪ್ರಬಂಧ */}
+                    <td className="border border-slate-900 py-1 px-1">
+                      {renderCell(row.skillShort, row.chapterId, row.chapterName, 'ಕೌಶಲ', 'skill', 'ವಸ್ತುನಿಷ್ಠ/ಕಿರು ಉತ್ತರ', 'short_objective')}
+                    </td>
+                    <td className="border border-slate-900 py-1 px-1">
+                      {renderCell(row.skillLong, row.chapterId, row.chapterName, 'ಕೌಶಲ', 'skill', 'ದೀರ್ಘ ಉತ್ತರ', 'long')}
+                    </td>
+                    <td className="border border-slate-900 py-1 px-1">
+                      {renderCell(row.skillEssay, row.chapterId, row.chapterName, 'ಕೌಶಲ', 'skill', 'ಪ್ರಬಂಧ ಮಾದರಿ', 'essay')}
                     </td>
 
                     {/* Chapter Totals */}
-                    <td className="border border-slate-900 py-1 px-1.5 font-bold text-indigo-900 bg-slate-50">
+                    <td className="border border-slate-900 py-1 px-1.5 font-bold text-indigo-900 bg-slate-50 tabular-nums">
                       {row.totalQuestions}
                     </td>
-                    <td className="border border-slate-900 py-1 px-1.5 font-black text-emerald-900 bg-slate-50">
+                    <td className="border border-slate-900 py-1 px-1.5 font-black text-emerald-900 bg-slate-50 tabular-nums">
                       {row.totalMarks}
                     </td>
                   </tr>
                 ))}
 
-                {/* ಒಟ್ಟು ಸಾಲು (Grand Total Row) - Exactly Tallying with Step 1 and Step 3 */}
+                {/* ಒಟ್ಟು ಸಾಲು (Grand Total Row) - Strictly Tallying 100% with Step 1, Step 2, and Step 4 */}
                 <tr className="bg-slate-200 border-t-2 border-slate-900 text-center font-bold">
                   <td className="border border-slate-900 py-1.5 px-1" colSpan={2}>
                     ಒಟ್ಟು (Total)
                   </td>
                   {/* Knowledge Totals */}
                   <td className="border border-slate-900 py-1 px-1">
-                    {renderTotalCell(columnTotals.know_easy, 'ಜ್ಞಾನ - ಸುಲಭ', 'know', 'easy')}
+                    {renderTotalCell(columnTotals.know_short, 'ಜ್ಞಾನ - ವಸ್ತುನಿಷ್ಠ/ಕಿರು', 'know', 'short_objective')}
                   </td>
                   <td className="border border-slate-900 py-1 px-1">
-                    {renderTotalCell(columnTotals.know_avg, 'ಜ್ಞಾನ - ಸಾಧಾರಣ', 'know', 'avg')}
+                    {renderTotalCell(columnTotals.know_long, 'ಜ್ಞಾನ - ದೀರ್ಘ ಉತ್ತರ', 'know', 'long')}
                   </td>
                   <td className="border border-slate-900 py-1 px-1">
-                    {renderTotalCell(columnTotals.know_diff, 'ಜ್ಞಾನ - ಕಠಿಣ', 'know', 'diff')}
+                    {renderTotalCell(columnTotals.know_essay, 'ಜ್ಞಾನ - ಪ್ರಬಂಧ ಮಾದರಿ', 'know', 'essay')}
                   </td>
 
                   {/* Understanding Totals */}
                   <td className="border border-slate-900 py-1 px-1">
-                    {renderTotalCell(columnTotals.und_easy, 'ತಿಳುವಳಿಕೆ - ಸುಲಭ', 'und', 'easy')}
+                    {renderTotalCell(columnTotals.und_short, 'ತಿಳುವಳಿಕೆ - ವಸ್ತುನಿಷ್ಠ/ಕಿರು', 'und', 'short_objective')}
                   </td>
                   <td className="border border-slate-900 py-1 px-1">
-                    {renderTotalCell(columnTotals.und_avg, 'ತಿಳುವಳಿಕೆ - ಸಾಧಾರಣ', 'und', 'avg')}
+                    {renderTotalCell(columnTotals.und_long, 'ತಿಳುವಳಿಕೆ - ದೀರ್ಘ ಉತ್ತರ', 'und', 'long')}
                   </td>
                   <td className="border border-slate-900 py-1 px-1">
-                    {renderTotalCell(columnTotals.und_diff, 'ತಿಳುವಳಿಕೆ - ಕಠಿಣ', 'und', 'diff')}
+                    {renderTotalCell(columnTotals.und_essay, 'ತಿಳುವಳಿಕೆ - ಪ್ರಬಂಧ ಮಾದರಿ', 'und', 'essay')}
                   </td>
 
                   {/* Application Totals */}
                   <td className="border border-slate-900 py-1 px-1">
-                    {renderTotalCell(columnTotals.app_easy, 'ಅನ್ವಯ - ಸುಲಭ', 'app', 'easy')}
+                    {renderTotalCell(columnTotals.app_short, 'ಅನ್ವಯ - ವಸ್ತುನಿಷ್ಠ/ಕಿರು', 'app', 'short_objective')}
                   </td>
                   <td className="border border-slate-900 py-1 px-1">
-                    {renderTotalCell(columnTotals.app_avg, 'ಅನ್ವಯ - ಸಾಧಾರಣ', 'app', 'avg')}
+                    {renderTotalCell(columnTotals.app_long, 'ಅನ್ವಯ - ದೀರ್ಘ ಉತ್ತರ', 'app', 'long')}
                   </td>
                   <td className="border border-slate-900 py-1 px-1">
-                    {renderTotalCell(columnTotals.app_diff, 'ಅನ್ವಯ - ಕಠಿಣ', 'app', 'diff')}
+                    {renderTotalCell(columnTotals.app_essay, 'ಅನ್ವಯ - ಪ್ರಬಂಧ ಮಾದರಿ', 'app', 'essay')}
                   </td>
 
                   {/* Skill Totals */}
                   <td className="border border-slate-900 py-1 px-1">
-                    {renderTotalCell(columnTotals.skill_easy, 'ಕೌಶಲ - ಸುಲಭ', 'skill', 'easy')}
+                    {renderTotalCell(columnTotals.skill_short, 'ಕೌಶಲ - ವಸ್ತುನಿಷ್ಠ/ಕಿರು', 'skill', 'short_objective')}
                   </td>
                   <td className="border border-slate-900 py-1 px-1">
-                    {renderTotalCell(columnTotals.skill_avg, 'ಕೌಶಲ - ಸಾಧಾರಣ', 'skill', 'avg')}
+                    {renderTotalCell(columnTotals.skill_long, 'ಕೌಶಲ - ದೀರ್ಘ ಉತ್ತರ', 'skill', 'long')}
                   </td>
                   <td className="border border-slate-900 py-1 px-1">
-                    {renderTotalCell(columnTotals.skill_diff, 'ಕೌಶಲ - ಕಠಿಣ', 'skill', 'diff')}
+                    {renderTotalCell(columnTotals.skill_essay, 'ಕೌಶಲ - ಪ್ರಬಂಧ ಮಾದರಿ', 'skill', 'essay')}
                   </td>
 
                   {/* Grand Totals (Strictly Synchronized with Steps 1, 2, 3, and 4) */}
-                  <td className="border border-slate-900 py-1.5 px-1.5 font-black text-indigo-950 text-sm">
+                  <td className="border border-slate-900 py-1.5 px-1.5 font-black text-indigo-950 text-sm tabular-nums">
                     {columnTotals.grand_q.q}
                   </td>
-                  <td className="border border-slate-900 py-1.5 px-1.5 font-black text-emerald-950 text-sm">
+                  <td className="border border-slate-900 py-1.5 px-1.5 font-black text-emerald-950 text-sm tabular-nums">
                     {columnTotals.grand_m.m}
                   </td>
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          {/* Step 2 <-> Step 5 Exact Tally Verification Strip */}
+          <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-emerald-50/70 border border-emerald-200 rounded-lg text-[11px] font-bold text-emerald-950 tabular-nums">
+            <span>ಹಂತ 2 ↔ ಹಂತ 5 ಪ್ರಶ್ನೆ ವಿಧಗಳ ಸಮನ್ವಯ ಮೊತ್ತ:</span>
+            <div className="flex flex-wrap items-center gap-3">
+              <span>ವ.ನಿ/ಕಿರು: {columnTotals.total_short.q} ಪ್ರಶ್ನೆ ({columnTotals.total_short.m} ಅಂಕ)</span>
+              <span>·</span>
+              <span>ದೀರ್ಘ: {columnTotals.total_long.q} ಪ್ರಶ್ನೆ ({columnTotals.total_long.m} ಅಂಕ)</span>
+              <span>·</span>
+              <span>ಪ್ರಬಂಧ: {columnTotals.total_essay.q} ಪ್ರಶ್ನೆ ({columnTotals.total_essay.m} ಅಂಕ)</span>
+            </div>
           </div>
         </div>
 

@@ -103,6 +103,26 @@
         "submittedAt": { "type": "string", "maxLength": 64 }
       },
       "required": ["id", "studentUid", "studentName", "studentEmail", "grade", "subject", "score", "totalQuestions", "percentage", "submittedAt"]
+    },
+    "SchoolRegistration": {
+      "title": "SchoolRegistration",
+      "description": "Registered school and teacher profile for Question Paper Generator access.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128 },
+        "schoolName": { "type": "string", "minLength": 2, "maxLength": 180 },
+        "teacherName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "email": { "type": "string", "format": "email", "maxLength": 160 },
+        "taluk": { "type": "string", "maxLength": 100 },
+        "district": { "type": "string", "maxLength": 100 },
+        "diseCode": { "type": "string", "maxLength": 32 },
+        "medium": { "type": "string", "maxLength": 80 },
+        "role": { "type": "string", "enum": ["teacher", "admin"] },
+        "registeredAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "ownerUid", "schoolName", "teacherName", "email", "role", "registeredAt"]
     }
   },
   "firestore": {
@@ -125,6 +145,10 @@
     "/online_test_attempts/{attemptId}": {
       "schema": { "$ref": "#/entities/OnlineTestAttempt" },
       "description": "Collection of student online MCQ test attempts and solved answers."
+    },
+    "/school_registrations/{registrationId}": {
+      "schema": { "$ref": "#/entities/SchoolRegistration" },
+      "description": "Collection of registered schools and teacher accounts."
     }
   }
 }

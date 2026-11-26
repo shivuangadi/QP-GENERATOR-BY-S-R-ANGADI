@@ -129,6 +129,8 @@ const FALLBACK_INDEX: BankIndex = {
   ],
 };
 
+export const BUILTIN_CLASS6_INDEX_FILES: IndexEntry[] = FALLBACK_INDEX.files;
+
 /**
  * Categorizes any question into one of the 12 standard formats shown in the UI reference
  */
@@ -1041,6 +1043,26 @@ export function normalizeQuestionBank(raw: Record<string, unknown>): QuestionBan
 }
 
 /**
+ * Counts how many questions in a QuestionBank have at least one attached image or diagram SVG
+ */
+export function countBankUploadedImages(bank: QuestionBank | null | undefined): number {
+  if (!bank || !Array.isArray(bank.chapters)) return 0;
+  return bank.chapters.reduce(
+    (sum, ch) =>
+      sum +
+      (ch.questions || []).filter(q =>
+        Boolean(
+          (typeof q.imageUrl === 'string' && q.imageUrl.trim()) ||
+            (typeof q.diagramSvg === 'string' && q.diagramSvg.trim()) ||
+            (typeof q.answerImageUrl === 'string' && q.answerImageUrl.trim()) ||
+            (typeof q.answerDiagramSvg === 'string' && q.answerDiagramSvg.trim())
+        )
+      ).length,
+    0
+  );
+}
+
+/**
  * Registers an in-memory or newly generated Question Bank
  */
 export function registerCustomBank(bank: QuestionBank, entry: IndexEntry) {
@@ -1057,7 +1079,7 @@ export function registerCustomBank(bank: QuestionBank, entry: IndexEntry) {
  * cached draft bank in browser localStorage.
  */
 export async function fetchBankIndex(): Promise<BankIndex> {
-  let combinedFiles = [...FALLBACK_INDEX.files];
+  let combinedFiles: IndexEntry[] = [...FALLBACK_INDEX.files];
 
   // 1. Fetch user-saved banks from server API or static file (with retry)
   try {
@@ -1080,6 +1102,9 @@ export async function fetchBankIndex(): Promise<BankIndex> {
   }
 
   // 2. Discover Question Banks stored in Firebase Firestore
+  //    CRITICAL: NEVER skip a Firebase bank when a server disk file shares the same `id`!
+  //    Server disk copies can be stale/older snapshots with far fewer uploaded images,
+  //    whereas Firebase Firestore holds the authoritative latest images & edits.
   try {
     const fbBanks = await getQuestionBanksFromFirebase();
     for (const fbBank of fbBanks) {
@@ -1097,6 +1122,8 @@ export async function fetchBankIndex(): Promise<BankIndex> {
         fbBank.metadata.subject
       );
 
+      const fbImageCount = countBankUploadedImages(fbBank);
+
       const entry: IndexEntry = {
         id: bId,
         path: `firebase://${bId}`,
@@ -1112,11 +1139,10 @@ export async function fetchBankIndex(): Promise<BankIndex> {
         createdAt: String(
           (fbBank.metadata as any).updatedAt || (fbBank.metadata as any).createdAt || ''
         ),
+        uploadedImageCount: fbImageCount,
       };
       registerCustomBank(fbBank, entry);
-      if (!combinedFiles.some(f => f.id === entry.id)) {
-        combinedFiles.unshift(entry);
-      }
+      combinedFiles.unshift(entry);
     }
   } catch (fbErr) {
     console.warn('Firebase question banks query skipped:', fbErr);
@@ -1144,6 +1170,7 @@ export async function fetchBankIndex(): Promise<BankIndex> {
             sanitized.metadata.subjectCode ? String(sanitized.metadata.subjectCode) : undefined,
             sanitized.metadata.subject
           );
+          const localImageCount = countBankUploadedImages(sanitized);
           const localEntry: IndexEntry = {
             id: localId,
             path: 'local://ai_json_gen_bank',
@@ -1159,11 +1186,15 @@ export async function fetchBankIndex(): Promise<BankIndex> {
             createdAt: String(
               (sanitized.metadata as any).updatedAt || (sanitized.metadata as any).createdAt || ''
             ),
+            uploadedImageCount: localImageCount,
           };
-          registerCustomBank(sanitized, localEntry);
-          if (!combinedFiles.some(f => f.id === localEntry.id)) {
-            combinedFiles.push(localEntry);
+          // Cache under local:// path only so it NEVER clobbers a richer firebase:// bank cached under localId!
+          bankCache.set(localEntry.path, sanitized);
+          const cachedById = bankCache.get(localId);
+          if (!cachedById || localImageCount > countBankUploadedImages(cachedById)) {
+            bankCache.set(localId, sanitized);
           }
+          combinedFiles.push(localEntry);
         }
       }
     } catch {
@@ -1172,8 +1203,8 @@ export async function fetchBankIndex(): Promise<BankIndex> {
   }
 
   // 4. Deduplicate strictly by (gradeKey + subject/language tier + medium bucket)
-  //    NEVER collapses distinct subjects (e.g. KAN-L1 vs ENG-SL, or custom subjects, or Kannada vs English medium)
-  //    Prefer the version with the highest question count so stale partial caches never shadow complete banks.
+  //    CRITICAL: ALWAYS preserve the bank with the MOST uploaded images (e.g., Class 9 Math with 137 images
+  //    in Firebase beats both a 35-image stale disk copy and a 3-image newer duplicate!).
   const bestBySubjectKey = new Map<string, IndexEntry>();
   for (const f of combinedFiles) {
     const gKey = extractGradeKey(f.gradeKey || f.grade);
@@ -1191,22 +1222,49 @@ export async function fetchBankIndex(): Promise<BankIndex> {
     const existing = bestBySubjectKey.get(key);
     const existingCount = existing?.totalQuestions || 0;
     const incomingCount = normalizedEntry.totalQuestions || 0;
+    const existingImages = existing?.uploadedImageCount || 0;
+    const incomingImages = normalizedEntry.uploadedImageCount || 0;
     const incomingCreatedAt = normalizedEntry.createdAt || '';
     const existingCreatedAt = existing?.createdAt || '';
     const incomingIsLocalOnly = normalizedEntry.path.startsWith('local://');
     const existingIsLocalOnly = Boolean(existing?.path.startsWith('local://'));
-    const shouldReplace =
-      !existing ||
-      (existingIsLocalOnly && !incomingIsLocalOnly && incomingCount >= existingCount) ||
-      incomingCount > existingCount ||
-      (incomingCount === existingCount &&
-        !incomingIsLocalOnly &&
-        Boolean(normalizedEntry.isUserGenerated) &&
-        !existing.isUserGenerated) ||
-      (incomingCount === existingCount &&
-        !incomingIsLocalOnly &&
-        Boolean(incomingCreatedAt) &&
-        (!existingCreatedAt || incomingCreatedAt > existingCreatedAt));
+    const incomingIsFirebase = normalizedEntry.path.startsWith('firebase://');
+    const existingIsFirebase = Boolean(existing?.path.startsWith('firebase://'));
+
+    let shouldReplace = false;
+    if (!existing) {
+      shouldReplace = true;
+    } else if (existingIsLocalOnly && !incomingIsLocalOnly && incomingImages >= existingImages) {
+      shouldReplace = true;
+    } else if (incomingImages > existingImages && (!incomingIsLocalOnly || existingImages === 0)) {
+      // Highest uploaded image count ALWAYS wins!
+      shouldReplace = true;
+    } else if (existingImages > incomingImages && (!existingIsLocalOnly || incomingImages === 0)) {
+      // Never let a lower-image bank overwrite a higher-image bank!
+      shouldReplace = false;
+    } else if (incomingIsFirebase && !existingIsFirebase && incomingCount >= Math.floor(existingCount * 0.7)) {
+      // Prefer cloud-saved edited bank over raw static/disk file when image & question counts are comparable
+      shouldReplace = true;
+    } else if (existingIsFirebase && !incomingIsFirebase && existingCount >= Math.floor(incomingCount * 0.7)) {
+      shouldReplace = false;
+    } else if (incomingCount > existingCount) {
+      shouldReplace = true;
+    } else if (
+      incomingCount === existingCount &&
+      !incomingIsLocalOnly &&
+      Boolean(normalizedEntry.isUserGenerated) &&
+      !existing.isUserGenerated
+    ) {
+      shouldReplace = true;
+    } else if (
+      incomingCount === existingCount &&
+      !incomingIsLocalOnly &&
+      Boolean(incomingCreatedAt) &&
+      (!existingCreatedAt || incomingCreatedAt > existingCreatedAt)
+    ) {
+      shouldReplace = true;
+    }
+
     if (shouldReplace) {
       bestBySubjectKey.set(key, normalizedEntry);
     }

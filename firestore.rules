@@ -141,6 +141,62 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    function isValidSchoolRegistration(regId) {
+      return isValidId(regId)
+        && regId.matches('^[a-zA-Z0-9_\\-]+$')
+        && request.resource.data.keys().hasAll([
+          'id', 'ownerUid', 'schoolName', 'teacherName', 'email', 'role', 'registeredAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'id', 'ownerUid', 'schoolName', 'teacherName', 'email', 'taluk',
+          'district', 'diseCode', 'medium', 'role', 'registeredAt', 'updatedAt'
+        ])
+        && request.resource.data.id == regId
+        && request.resource.data.ownerUid is string
+        && request.resource.data.ownerUid.size() > 0
+        && request.resource.data.ownerUid.size() <= 128
+        && request.resource.data.schoolName is string
+        && request.resource.data.schoolName.size() >= 2
+        && request.resource.data.schoolName.size() <= 180
+        && request.resource.data.teacherName is string
+        && request.resource.data.teacherName.size() >= 2
+        && request.resource.data.teacherName.size() <= 120
+        && isValidEmail(request.resource.data.email)
+        && (!('taluk' in request.resource.data) || (request.resource.data.taluk is string && request.resource.data.taluk.size() <= 100))
+        && (!('district' in request.resource.data) || (request.resource.data.district is string && request.resource.data.district.size() <= 100))
+        && (!('diseCode' in request.resource.data) || (request.resource.data.diseCode is string && request.resource.data.diseCode.size() <= 32))
+        && (!('medium' in request.resource.data) || (request.resource.data.medium is string && request.resource.data.medium.size() <= 80))
+        && request.resource.data.role in ['teacher', 'admin']
+        && request.resource.data.registeredAt is string
+        && request.resource.data.registeredAt.size() <= 64
+        && (!('updatedAt' in request.resource.data) || (request.resource.data.updatedAt is string && request.resource.data.updatedAt.size() <= 64));
+    }
+
+    // Registered Schools & Teachers (PII-protected; prevents self-promotion to admin)
+    match /school_registrations/{registrationId} {
+      allow read: if isAuthenticated()
+        && (
+          resource.data.ownerUid == request.auth.uid
+          || (request.auth.token.email != null && resource.data.email == request.auth.token.email)
+          || isAdmin()
+        );
+      allow create: if isValidSchoolRegistration(registrationId)
+        && (
+          (isAuthenticated()
+            && request.resource.data.ownerUid == request.auth.uid
+            && (request.resource.data.role == 'teacher' || isAdmin()))
+          || (!isAuthenticated()
+            && request.resource.data.ownerUid == 'school_guest'
+            && request.resource.data.role == 'teacher')
+        );
+      allow update: if isAuthenticated()
+        && isValidSchoolRegistration(registrationId)
+        && (resource.data.ownerUid == request.auth.uid || isAdmin())
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && (request.resource.data.role == resource.data.role || isAdmin());
+      allow delete: if isAdmin();
+    }
+
     // Test connection doc
     match /test/{docId} {
       allow read, write: if true;
