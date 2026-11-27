@@ -95,31 +95,46 @@ export const AnswerKeyPreview: React.FC<AnswerKeyPreviewProps> = ({ paper }) => 
                     >
                       {/* Question reference */}
                       <div className="flex items-start justify-between gap-3 text-slate-600">
-                        <div className="font-semibold text-slate-800">
+                        <div className="font-semibold text-slate-800 leading-relaxed">
                           <span>ಪ್ರಶ್ನೆ #{q.displayNumber}:</span>{' '}
-                          <span className="font-normal italic line-clamp-1"><MathText text={q.question} /></span>
+                          <span className="font-normal italic"><MathText text={q.question} /></span>
                         </div>
                         <span className="font-bold text-slate-700 tabular-nums shrink-0">
                           [{q.marks} ಅಂಕ]
                         </span>
                       </div>
 
-                      {/* Question Diagram / Image preview if present */}
-                      {q.imageUrl && (
+                      {/* Question Diagram / Dual Images Side-by-Side preview if present */}
+                      {(q.imageUrl || q.imageUrl2) && (
                         <div className="my-1.5">
-                          {q.answerImageUrl && (
+                          {(q.answerImageUrl || q.answerImageUrl2) && (
                             <span className="block text-2xs font-semibold text-slate-500 mb-1">
                               ಪ್ರಶ್ನೆ ಚಿತ್ರ (Question Diagram):
                             </span>
                           )}
-                          <ResilientQuestionImage
-                            src={q.imageUrl}
-                            alt={q.diagramDescription || 'ಪ್ರಶ್ನೆ ಚಿತ್ರ'}
-                            className={`${q.answerImageUrl ? 'max-h-28' : 'max-h-36'} rounded border border-slate-200 object-contain bg-white p-0.5`}
-                          />
+                          {q.imageUrl && q.imageUrl2 ? (
+                            <div className="grid grid-cols-2 gap-3 max-w-2xl items-center">
+                              <ResilientQuestionImage
+                                src={q.imageUrl}
+                                alt={q.diagramDescription || 'ಪ್ರಶ್ನೆ ಚಿತ್ರ 1'}
+                                className={`${q.answerImageUrl || q.answerImageUrl2 ? 'max-h-28' : 'max-h-36'} w-full rounded border border-slate-200 object-contain bg-white p-0.5`}
+                              />
+                              <ResilientQuestionImage
+                                src={q.imageUrl2}
+                                alt="ಪ್ರಶ್ನೆ ಚಿತ್ರ 2"
+                                className={`${q.answerImageUrl || q.answerImageUrl2 ? 'max-h-28' : 'max-h-36'} w-full rounded border border-slate-200 object-contain bg-white p-0.5`}
+                              />
+                            </div>
+                          ) : (
+                            <ResilientQuestionImage
+                              src={(q.imageUrl || q.imageUrl2)!}
+                              alt={q.diagramDescription || 'ಪ್ರಶ್ನೆ ಚಿತ್ರ'}
+                              className={`${q.answerImageUrl || q.answerImageUrl2 ? 'max-h-28' : 'max-h-36'} rounded border border-slate-200 object-contain bg-white p-0.5`}
+                            />
+                          )}
                         </div>
                       )}
-                      {q.diagramSvg && !q.imageUrl && (
+                      {q.diagramSvg && !q.imageUrl && !q.imageUrl2 && (
                         <div
                           className="my-1.5 max-w-xs border border-slate-200 rounded bg-white p-1"
                           dangerouslySetInnerHTML={{ __html: q.diagramSvg }}
@@ -133,7 +148,7 @@ export const AnswerKeyPreview: React.FC<AnswerKeyPreviewProps> = ({ paper }) => 
                           <div className="font-medium text-slate-900 whitespace-pre-line leading-relaxed">
                             {hasAnswer ? (
                               <MathText text={q.answer} />
-                            ) : q.answerImageUrl || q.answerDiagramSvg ? (
+                            ) : q.answerImageUrl || q.answerImageUrl2 || q.answerDiagramSvg ? (
                               <span className="text-emerald-800 font-semibold">
                                 ಕೆಳಗಿನ ಲೇಬಲ್ ಮಾಡಿದ ಉತ್ತರ ಚಿತ್ರವನ್ನು ಗಮನಿಸಿ (See labeled answer diagram below)
                               </span>
@@ -145,20 +160,35 @@ export const AnswerKeyPreview: React.FC<AnswerKeyPreviewProps> = ({ paper }) => 
                             )}
                           </div>
 
-                          {/* Separate Answer Key Diagram (e.g. labeled diagram / marked map / solved geometry) */}
-                          {q.answerImageUrl && (
+                          {/* Separate Answer Key Diagram (1 or 2 Images Side-by-Side) */}
+                          {(q.answerImageUrl || q.answerImageUrl2) && (
                             <div className="pt-1">
                               <span className="block text-2xs font-bold text-emerald-800 mb-1">
                                 ಉತ್ತರ ಚಿತ್ರ / ಲೇಬಲ್ ಮಾಡಿದ ಚಿತ್ರ (Answer Key Diagram):
                               </span>
-                              <ResilientQuestionImage
-                                src={q.answerImageUrl}
-                                alt={q.answerDiagramDescription || 'ಉತ್ತರ ಚಿತ್ರ / Labeled Answer Diagram'}
-                                className="max-h-48 max-w-full rounded border border-emerald-300 object-contain bg-white p-1"
-                              />
+                              {q.answerImageUrl && q.answerImageUrl2 ? (
+                                <div className="grid grid-cols-2 gap-3 max-w-2xl items-center">
+                                  <ResilientQuestionImage
+                                    src={q.answerImageUrl}
+                                    alt={q.answerDiagramDescription || 'ಉತ್ತರ ಚಿತ್ರ 1 / Labeled Answer Diagram 1'}
+                                    className="max-h-48 w-full rounded border border-emerald-300 object-contain bg-white p-1"
+                                  />
+                                  <ResilientQuestionImage
+                                    src={q.answerImageUrl2}
+                                    alt="ಉತ್ತರ ಚಿತ್ರ 2 / Labeled Answer Diagram 2"
+                                    className="max-h-48 w-full rounded border border-emerald-300 object-contain bg-white p-1"
+                                  />
+                                </div>
+                              ) : (
+                                <ResilientQuestionImage
+                                  src={(q.answerImageUrl || q.answerImageUrl2)!}
+                                  alt={q.answerDiagramDescription || 'ಉತ್ತರ ಚಿತ್ರ / Labeled Answer Diagram'}
+                                  className="max-h-48 max-w-full rounded border border-emerald-300 object-contain bg-white p-1"
+                                />
+                              )}
                             </div>
                           )}
-                          {q.answerDiagramSvg && !q.answerImageUrl && (
+                          {q.answerDiagramSvg && !q.answerImageUrl && !q.answerImageUrl2 && (
                             <div className="pt-1">
                               <span className="block text-2xs font-bold text-emerald-800 mb-1">
                                 ಉತ್ತರ ಚಿತ್ರ / ಲೇಬಲ್ ಮಾಡಿದ ಚಿತ್ರ (Answer Key Diagram):

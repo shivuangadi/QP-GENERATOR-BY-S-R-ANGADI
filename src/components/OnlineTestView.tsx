@@ -62,12 +62,20 @@ import {
   formatDurationMMSS,
 } from '../utils/mcqGrading.ts';
 import { MathText } from './MathText.tsx';
+import { VisualSelectionFlow, SelectionStep } from './VisualSelectionFlow.tsx';
+import {
+  BankDynamicStats,
+  SemesterSelection,
+  filterChaptersBySemester,
+  getSemesterPeriodMeta,
+  useDynamicBankStats,
+} from '../utils/bankStats.ts';
 
 interface StudentSession {
   uid: string;
   name: string;
   email: string;
-  authMethod: 'google' | 'email';
+  authMethod: 'google' | 'email' | 'guest';
 }
 
 interface OnlineTestViewProps {
@@ -76,6 +84,8 @@ interface OnlineTestViewProps {
   initialBank: QuestionBank | null;
   schoolName: string;
   onBackToSetup: () => void;
+  sharedBankStats?: Record<string, BankDynamicStats>;
+  isScanningStats?: boolean;
 }
 
 type TestStage = 'setup' | 'running' | 'result';
@@ -132,27 +142,27 @@ function getPerformanceFeedback(percentage: number): {
     return {
       titleKn: 'ಅತ್ಯುತ್ತಮ ಸಾಧನೆ!',
       titleEn: 'Outstanding Performance',
-      toneClass: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+      toneClass: 'text-emerald-800 bg-emerald-50 border-emerald-200',
     };
   }
   if (percentage >= 65) {
     return {
       titleKn: 'ತುಂಬಾ ಚೆನ್ನಾಗಿದೆ!',
       titleEn: 'Very Good Effort',
-      toneClass: 'text-indigo-700 bg-indigo-50 border-indigo-200',
+      toneClass: 'text-amber-900 bg-amber-50 border-amber-200',
     };
   }
   if (percentage >= 40) {
     return {
       titleKn: 'ಒಳ್ಳೆಯ ಪ್ರಯತ್ನ — ಇನ್ನಷ್ಟು ಅಭ್ಯಾಸ ಮಾಡಿ',
       titleEn: 'Good Attempt — Keep Practicing',
-      toneClass: 'text-amber-700 bg-amber-50 border-amber-200',
+      toneClass: 'text-orange-900 bg-orange-50 border-orange-200',
     };
   }
   return {
     titleKn: 'ಮತ್ತೆ ಅಭ್ಯಾಸ ಮಾಡಿ ಪ್ರಯತ್ನಿಸಿ',
     titleEn: 'Needs More Practice',
-    toneClass: 'text-rose-700 bg-rose-50 border-rose-200',
+    toneClass: 'text-rose-800 bg-rose-50 border-rose-200',
   };
 }
 
@@ -195,6 +205,8 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
   initialBank,
   schoolName,
   onBackToSetup,
+  sharedBankStats,
+  isScanningStats: sharedScanning,
 }) => {
   // ── Student Authentication State ──
   const [student, setStudent] = useState<StudentSession | null>(() => {
@@ -210,6 +222,9 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
   const [loginEmail, setLoginEmail] = useState<string>('');
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState<boolean>(false);
+  const [showOptionalProfileForm, setShowOptionalProfileForm] = useState<boolean>(false);
+  const [resultEmailInput, setResultEmailInput] = useState<string>('');
+  const [resultEmailError, setResultEmailError] = useState<string | null>(null);
 
   // Sync Firebase Auth user automatically if already signed in with Google
   useEffect(() => {
@@ -232,8 +247,10 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
     return () => unsub();
   }, []);
 
-  // ── Test Configuration State ──
+  // ── Test Configuration & Progressive Card Step State ──
   const [stage, setStage] = useState<TestStage>('setup');
+  const [selectionStep, setSelectionStep] = useState<SelectionStep>('semester');
+  const [selectedSemester, setSelectedSemester] = useState<SemesterSelection>('all');
   const [selectedGradeKey, setSelectedGradeKey] = useState<string>(() => {
     const initEntry = availableFiles.find(f => f.id === initialFileId);
     return extractGradeKey(initEntry?.gradeKey || initEntry?.grade || initialBank?.metadata?.grade || '6');
@@ -246,6 +263,15 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
   const [questionCount, setQuestionCount] = useState<number>(10);
   const [shuffleQuestions, setShuffleQuestions] = useState<boolean>(true);
   const [configError, setConfigError] = useState<string | null>(null);
+
+  // Dynamic bank stats fallback if not passed from App
+  const localStatsHook = useDynamicBankStats(
+    sharedBankStats ? [] : availableFiles,
+    activeBank,
+    selectedBankId
+  );
+  const effectiveStatsMap = sharedBankStats || localStatsHook.statsMap;
+  const effectiveIsScanning = sharedScanning ?? localStatsHook.isScanning;
 
   // ── Active Exam State ──
   const [testQuestions, setTestQuestions] = useState<OnlineTestMcqQuestion[]>([]);
@@ -268,11 +294,12 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
   const [pastAttempts, setPastAttempts] = useState<OnlineTestAttemptRecord[]>([]);
   const [showHistoryPanel, setShowHistoryPanel] = useState<boolean>(false);
 
-  // Load past attempts whenever student logs in
-  const refreshHistory = useCallback(async (sess: StudentSession) => {
-    const localItems = readLocalHistory(sess.email);
+  // Load past attempts (works for both guest and signed-in students)
+  const refreshHistory = useCallback(async (sess: StudentSession | null) => {
+    const historyKey = sess?.email ? sess.email : 'guest_local';
+    const localItems = readLocalHistory(historyKey);
     let cloudItems: OnlineTestAttemptRecord[] = [];
-    if (sess.authMethod === 'google' && auth.currentUser) {
+    if (sess?.authMethod === 'google' && auth.currentUser) {
       cloudItems = await getStudentOnlineTestAttemptsFromFirebase();
     }
     const mergedMap = new Map<string, OnlineTestAttemptRecord>();
@@ -288,31 +315,8 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
   }, []);
 
   useEffect(() => {
-    if (student) {
-      refreshHistory(student);
-    } else {
-      setPastAttempts([]);
-    }
+    refreshHistory(student);
   }, [student, refreshHistory]);
-
-  // Unique grades available in availableFiles
-  const gradeOptions = useMemo(() => {
-    const map = new Map<string, { key: string; label: string; count: number }>();
-    for (const f of availableFiles) {
-      const key = extractGradeKey(f.gradeKey || f.grade);
-      const prev = map.get(key);
-      if (prev) {
-        prev.count += 1;
-      } else {
-        map.set(key, {
-          key,
-          label: canonicalGradeLabel(key),
-          count: 1,
-        });
-      }
-    }
-    return Array.from(map.values()).sort((a, b) => Number(a.key) - Number(b.key));
-  }, [availableFiles]);
 
   // Subjects filtered by selectedGradeKey
   const subjectsForGrade = useMemo(() => {
@@ -366,25 +370,39 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
     };
   }, [selectedBankId, initialFileId, initialBank, availableFiles]);
 
-  // Compute strict per-chapter MCQ stats
-  const chapterStats = useMemo(() => getChapterMcqStats(activeBank), [activeBank]);
+  // Filter activeBank chapters by selected semester so counts match Subject cards 1:1
+  const semesterFilteredBank = useMemo<QuestionBank | null>(() => {
+    if (!activeBank) return null;
+    if (selectedSemester === 'all') return activeBank;
+    const filteredChapters = filterChaptersBySemester(activeBank.chapters, selectedSemester);
+    return {
+      ...activeBank,
+      chapters: filteredChapters,
+    };
+  }, [activeBank, selectedSemester]);
+
+  // Compute strict per-chapter MCQ stats for the active semester
+  const chapterStats = useMemo(
+    () => getChapterMcqStats(semesterFilteredBank),
+    [semesterFilteredBank]
+  );
 
   const chaptersWithMcqs = useMemo(
     () => chapterStats.filter(c => c.mcqCount > 0),
     [chapterStats]
   );
 
-  // Auto-select all chapters with MCQs whenever activeBank changes
+  // Auto-select all chapters with MCQs whenever activeBank or selectedSemester changes
   useEffect(() => {
     const validIds = chaptersWithMcqs.map(c => c.chapterId);
     setSelectedChapterIds(validIds);
     setConfigError(null);
-  }, [activeBank, chaptersWithMcqs]);
+  }, [semesterFilteredBank, chaptersWithMcqs]);
 
   // Pool of strict MCQs matching selected chapters
   const availableMcqPool = useMemo(
-    () => extractMcqQuestionsFromBank(activeBank, selectedChapterIds),
-    [activeBank, selectedChapterIds]
+    () => extractMcqQuestionsFromBank(semesterFilteredBank, selectedChapterIds),
+    [semesterFilteredBank, selectedChapterIds]
   );
 
   // Clamp questionCount when pool size changes
@@ -440,21 +458,22 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
     setLoginError(null);
     const trimmedName = loginName.trim();
     const trimmedEmail = loginEmail.trim().toLowerCase();
-    if (trimmedName.length < 2) {
-      setLoginError('ದಯವಿಟ್ಟು ವಿದ್ಯಾರ್ಥಿಯ ಪೂರ್ಣ ಹೆಸರನ್ನು ನಮೂದಿಸಿ.');
+    if (trimmedEmail && !EMAIL_REGEX.test(trimmedEmail)) {
+      setLoginError('ಇಮೇಲ್ ವಿಳಾಸ ನಮೂದಿಸಿದರೆ ಸರಿಯಾದ ಇಮೇಲ್ ನೀಡಿ (ಉದಾ: student@gmail.com) ಅಥವಾ ಖಾಲಿ ಬಿಡಿ.');
       return;
     }
-    if (!EMAIL_REGEX.test(trimmedEmail)) {
-      setLoginError('ದಯವಿಟ್ಟು ಸರಿಯಾದ ಇಮೇಲ್ ವಿಳಾಸವನ್ನು ನಮೂದಿಸಿ (ಉದಾ: student@gmail.com).');
+    if (!trimmedName && !trimmedEmail) {
+      setShowOptionalProfileForm(false);
       return;
     }
     const session: StudentSession = {
-      uid: 'email_guest',
-      name: trimmedName,
+      uid: trimmedEmail ? 'email_guest' : 'guest',
+      name: trimmedName || 'ವಿದ್ಯಾರ್ಥಿ',
       email: trimmedEmail,
-      authMethod: 'email',
+      authMethod: trimmedEmail ? 'email' : 'guest',
     };
     setStudent(session);
+    setShowOptionalProfileForm(false);
     try {
       sessionStorage.setItem(STUDENT_SESSION_STORAGE_KEY, JSON.stringify(session));
     } catch {
@@ -602,9 +621,14 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
     [schoolName]
   );
 
-  // ── Submit Test & Grade Instantly ──
+  // ── Submit Test & Grade Instantly (Works with or without Name/Email!) ──
   const finalizeAndSubmitTest = async () => {
-    if (!student || !activeBank || testQuestions.length === 0) return;
+    if (!activeBank || testQuestions.length === 0) return;
+
+    const effectiveName = student?.name?.trim() || loginName.trim() || 'ವಿದ್ಯಾರ್ಥಿ (Guest)';
+    const rawEmail = (student?.email || loginEmail || '').trim().toLowerCase();
+    const effectiveEmail = EMAIL_REGEX.test(rawEmail) ? rawEmail : '';
+    const effectiveUid = student?.uid || 'guest';
 
     let correctCount = 0;
     let wrongCount = 0;
@@ -637,7 +661,9 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
         isUnanswered,
         explanation: q.explanationText || '',
         imageUrl: isSafeImageSrc(q.imageUrl) ? q.imageUrl : '',
+        imageUrl2: isSafeImageSrc(q.imageUrl2) ? q.imageUrl2 : '',
         answerImageUrl: isSafeImageSrc(q.answerImageUrl) ? q.answerImageUrl : '',
+        answerImageUrl2: isSafeImageSrc(q.answerImageUrl2) ? q.answerImageUrl2 : '',
       };
     });
 
@@ -647,9 +673,9 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
 
     const attempt: OnlineTestAttemptRecord = {
       id: `test_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-      studentUid: student.uid,
-      studentName: student.name,
-      studentEmail: student.email,
+      studentUid: effectiveUid,
+      studentName: effectiveName,
+      studentEmail: effectiveEmail,
       grade: activeBank.metadata.grade || canonicalGradeLabel(selectedGradeKey),
       subject: activeBank.metadata.subject || 'ವಿಷಯ',
       chapters: chapterNames,
@@ -667,11 +693,14 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
 
     // Show immediate on-spot results right away
     setActiveAttempt(attempt);
+    setResultEmailInput(effectiveEmail);
+    setResultEmailError(null);
     setShowSubmitConfirm(false);
     setStage('result');
 
     // Save locally immediately so history updates instantly
-    const updatedLocal = saveLocalHistory(student.email, attempt);
+    const historyKey = effectiveEmail || 'guest_local';
+    const updatedLocal = saveLocalHistory(historyKey, attempt);
     setPastAttempts(prev => {
       const mergedMap = new Map<string, OnlineTestAttemptRecord>();
       for (const item of [attempt, ...updatedLocal, ...prev]) {
@@ -682,225 +711,164 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
       );
     });
 
-    // Automatically email solved questions & answers to student's email ID
-    const wasEmailed = await dispatchResultEmail(attempt);
-    const finalizedAttempt: OnlineTestAttemptRecord = { ...attempt, emailSent: wasEmailed };
-    setActiveAttempt(finalizedAttempt);
-    saveLocalHistory(student.email, finalizedAttempt);
-
-    // Persist attempt record to Firestore
-    await saveOnlineTestAttemptToFirebase(finalizedAttempt);
+    // Only auto-email and save to Firestore when student explicitly provided a valid email
+    if (effectiveEmail) {
+      const wasEmailed = await dispatchResultEmail(attempt);
+      const finalizedAttempt: OnlineTestAttemptRecord = { ...attempt, emailSent: wasEmailed };
+      setActiveAttempt(finalizedAttempt);
+      saveLocalHistory(historyKey, finalizedAttempt);
+      await saveOnlineTestAttemptToFirebase(finalizedAttempt);
+    } else {
+      setEmailDelivery({ status: 'idle', message: '' });
+    }
   };
 
   const answeredCount = Object.keys(answersMap).length;
   const currentQuestion = testQuestions[currentIdx] || null;
   const activeMedium = activeBank?.metadata?.medium || 'ಕನ್ನಡ';
 
-  // ════════════════════════════════════════════════════════════════
-  // SCREEN 1: STUDENT EMAIL LOGIN
-  // ════════════════════════════════════════════════════════════════
-  if (!student) {
-    return (
-      <div className="max-w-3xl mx-auto py-4 font-kannada">
-        <div className="no-print mb-4">
-          <button
-            type="button"
-            onClick={onBackToSetup}
-            className="px-3.5 py-2 rounded-lg font-semibold text-xs bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>ಮುಖ್ಯ ಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ</span>
-          </button>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="bg-[#181c3d] text-white px-6 sm:px-8 py-6">
-            <div className="text-xs font-semibold tracking-wide uppercase text-indigo-300">
-              {schoolName}
-            </div>
-            <h1 className="text-xl sm:text-2xl font-bold mt-1">
-              ವಿದ್ಯಾರ್ಥಿ ಆನ್‌ಲೈನ್ ಪರೀಕ್ಷಾ ಲಾಗಿನ್ (Student Online MCQ Test)
-            </h1>
-            <p className="text-sm text-slate-300 mt-1.5 leading-relaxed">
-              ನಿಮ್ಮ ಇಮೇಲ್ ಐಡಿ ಬಳಸಿ ಲಾಗಿನ್ ಆಗಿ, ವಿಷಯ ಮತ್ತು ಪಾಠಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ ಬಹು ಆಯ್ಕೆ (MCQ) ಪರೀಕ್ಷೆ ನೀಡಿ.
-              ಪರೀಕ್ಷೆಯ ಫಲಿತಾಂಶ ತಕ್ಷಣವೇ ಕಾಣಿಸುತ್ತದೆ ಮತ್ತು ಬಿಡಿಸಿದ ಪ್ರಶ್ನೆ-ಉತ್ತರಗಳ ಪ್ರತಿ ನಿಮ್ಮ ಇಮೇಲ್‌ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ.
-            </p>
-          </div>
-
-          <div className="p-6 sm:p-8 space-y-6">
-            {/* Option A: One-Click Google Sign-In */}
-            <div className="space-y-3">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                ಆಯ್ಕೆ 1 · Google ಖಾತೆಯ ಮೂಲಕ ತಕ್ಷಣ ಲಾಗಿನ್
-              </div>
-              <button
-                type="button"
-                onClick={handleGoogleLogin}
-                disabled={isGoogleSigningIn}
-                className="w-full min-h-[48px] px-5 py-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-900 font-bold text-sm transition-colors flex items-center justify-center gap-3 shadow-2xs disabled:opacity-60"
-              >
-                {isGoogleSigningIn ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
-                ) : (
-                  <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
-                    <path
-                      fill="#4285F4"
-                      d="M23.745 12.27c0-.79-.07-1.54-.19-2.27h-11.3v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12.255 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96h-3.98v3.09C3.515 21.3 7.565 24 12.255 24z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.525 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62h-3.98a11.86 11.86 0 0 0 0 10.76l3.98-3.09z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12.255 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C18.205 1.19 15.495 0 12.255 0c-4.69 0-8.74 2.7-10.71 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"
-                    />
-                  </svg>
-                )}
-                <span>Google ಇಮೇಲ್ ಮೂಲಕ ಲಾಗಿನ್ ಆಗಿ (Sign in with Google)</span>
-              </button>
-            </div>
-
-            <div className="relative flex items-center">
-              <div className="flex-grow border-t border-slate-200" />
-              <span className="px-3 text-xs font-semibold text-slate-400">ಅಥವಾ (OR)</span>
-              <div className="flex-grow border-t border-slate-200" />
-            </div>
-
-            {/* Option B: Direct Student Name + Email ID Login */}
-            <form onSubmit={handleDirectEmailLogin} className="space-y-4">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                ಆಯ್ಕೆ 2 · ನಿಮ್ಮ ಹೆಸರು ಮತ್ತು ಇಮೇಲ್ ಐಡಿ ನಮೂದಿಸಿ ಲಾಗಿನ್ ಆಗಿ
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="student-name-input"
-                    className="block text-xs font-bold text-slate-700 mb-1.5"
-                  >
-                    ವಿದ್ಯಾರ್ಥಿಯ ಹೆಸರು (Student Name) *
-                  </label>
-                  <div className="relative">
-                    <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      id="student-name-input"
-                      type="text"
-                      required
-                      maxLength={100}
-                      value={loginName}
-                      onChange={e => setLoginName(e.target.value)}
-                      placeholder="ಉದಾ: ರಾಹುಲ್ ಕುಮಾರ್"
-                      className="w-full min-h-[44px] pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="student-email-input"
-                    className="block text-xs font-bold text-slate-700 mb-1.5"
-                  >
-                    ಇಮೇಲ್ ಐಡಿ (Email Address) *
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      id="student-email-input"
-                      type="email"
-                      required
-                      maxLength={150}
-                      value={loginEmail}
-                      onChange={e => setLoginEmail(e.target.value)}
-                      placeholder="student@gmail.com"
-                      className="w-full min-h-[44px] pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {loginError && (
-                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
-                  <span>{loginError}</span>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                className="w-full min-h-[48px] px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-sm"
-              >
-                <span>ಪರೀಕ್ಷಾ ಪುಟಕ್ಕೆ ಮುಂದುವರಿಯಿರಿ (Continue to Online Test)</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const displayStudentName = student?.name || loginName.trim() || 'ವಿದ್ಯಾರ್ಥಿ';
+  const displayStudentEmail = student?.email || '';
 
   // ════════════════════════════════════════════════════════════════
-  // SCREEN 2: ONLINE TEST CONFIGURATION (SUBJECT, CHAPTERS, MCQ COUNT)
+  // SCREEN 1: ONLINE TEST CONFIGURATION (PROGRESSIVE PHOTO CARDS + NO MANDATORY LOGIN!)
   // ════════════════════════════════════════════════════════════════
   if (stage === 'setup') {
     const presetCounts = [5, 10, 15, 20, 25].filter(n => n <= availableMcqPool.length);
+    const activeSemMeta = getSemesterPeriodMeta(selectedSemester);
 
     return (
-      <div className="max-w-5xl mx-auto py-2 space-y-5 font-kannada">
-        {/* Logged-in Student Header Strip */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs px-5 py-4 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-11 h-11 rounded-xl bg-indigo-600 text-white font-bold text-base flex items-center justify-center shrink-0">
-              {student.name.charAt(0).toUpperCase()}
+      <div className="max-w-6xl mx-auto py-2 space-y-5 font-kannada">
+        {/* Top Navigation & Optional Student Profile Bar (Dark Espresso Theme) */}
+        <div className="bg-[#231d18] rounded-2xl border border-amber-200/15 shadow-xl px-4 sm:px-5 py-3.5 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                type="button"
+                onClick={onBackToSetup}
+                className="px-3 py-1.5 rounded-lg font-bold text-xs bg-[#191410] border border-amber-200/20 hover:bg-[#2f2720] text-amber-100 transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>ಹಿಂತಿರುಗಿ</span>
+              </button>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-bold text-[#f7f0e6] truncate">
+                    {student ? student.name : 'ನೇರ ಆನ್‌ಲೈನ್ ಪರೀಕ್ಷೆ (ಲಾಗಿನ್ ಅಗತ್ಯವಿಲ್ಲ)'}
+                  </span>
+                  {displayStudentEmail && (
+                    <span className="text-xs text-[#c6b7a4] truncate">({displayStudentEmail})</span>
+                  )}
+                </div>
+                {!student && (
+                  <p className="text-[11px] text-emerald-300 font-semibold">
+                    ಹೆಸರು ಅಥವಾ ಇಮೇಲ್ ಐಡಿ ಇಲ್ಲದೆಯೇ ನೇರವಾಗಿ ಪರೀಕ್ಷೆ ಬರೆಯಬಹುದು (ಐಚ್ಛಿಕ)
+                  </p>
+                )}
+              </div>
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base font-bold text-slate-900 truncate">{student.name}</h2>
-                <span className="text-xs font-medium text-slate-500">
-                  ({student.authMethod === 'google' ? 'Google ಪರಿಶೀಲಿತ' : 'ಇಮೇಲ್ ಲಾಗಿನ್'})
-                </span>
-              </div>
-              <div className="text-xs text-slate-600 flex items-center gap-1.5 mt-0.5 truncate">
-                <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                <span className="truncate">{student.email}</span>
-              </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {pastAttempts.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowHistoryPanel(prev => !prev)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold border border-amber-200/20 bg-[#1a1511] hover:bg-[#2d241d] text-amber-100 inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  <History className="w-3.5 h-3.5 text-amber-300" />
+                  <span>ಹಿಂದಿನ ಪರೀಕ್ಷೆಗಳು ({pastAttempts.length})</span>
+                  {showHistoryPanel ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setShowOptionalProfileForm(prev => !prev)}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold border border-amber-300/30 bg-[#2e241b] hover:bg-[#3b2d21] text-amber-200 inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+              >
+                <UserIcon className="w-3.5 h-3.5" />
+                <span>{student ? 'ವಿವರ ಬದಲಿಸಿ' : 'ಹೆಸರು / ಇಮೇಲ್ (ಐಚ್ಛಿಕ)'}</span>
+              </button>
+
+              {student && (
+                <button
+                  type="button"
+                  onClick={handleStudentLogout}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold border border-rose-400/30 bg-[#2a1a1a] hover:bg-rose-900/50 text-rose-200 inline-flex items-center gap-1 whitespace-nowrap shrink-0 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>ತೆರವು</span>
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            {pastAttempts.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setShowHistoryPanel(prev => !prev)}
-                className="px-3.5 py-2 rounded-lg text-xs font-bold border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
-              >
-                <History className="w-4 h-4 text-indigo-600" />
-                <span>ಹಿಂದಿನ ಪರೀಕ್ಷೆಗಳು ({pastAttempts.length})</span>
-                {showHistoryPanel ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={handleStudentLogout}
-              className="px-3.5 py-2 rounded-lg text-xs font-bold border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 text-slate-700 inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-colors"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>ಬೇರೆ ಇಮೇಲ್ ಲಾಗಿನ್</span>
-            </button>
-          </div>
+          {/* Collapsible Optional Name / Email / Google Login Form */}
+          {showOptionalProfileForm && (
+            <div className="pt-3 border-t border-amber-200/15 space-y-3">
+              <form onSubmit={handleDirectEmailLogin} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+                <div className="sm:col-span-4">
+                  <label htmlFor="optional-student-name" className="block text-[11px] font-bold text-[#e5d8c7] mb-1">
+                    ವಿದ್ಯಾರ್ಥಿಯ ಹೆಸರು (ಐಚ್ಛಿಕ)
+                  </label>
+                  <input
+                    id="optional-student-name"
+                    type="text"
+                    maxLength={100}
+                    value={loginName}
+                    onChange={e => setLoginName(e.target.value)}
+                    placeholder="ಉದಾ: ರಾಹುಲ್ ಕುಮಾರ್"
+                    className="w-full px-3 py-2 rounded-lg border border-amber-200/20 bg-[#17120e] text-xs text-[#faf4ec] placeholder:text-[#8c7d6b] focus:outline-none focus:ring-2 focus:ring-amber-400/35"
+                  />
+                </div>
+                <div className="sm:col-span-4">
+                  <label htmlFor="optional-student-email" className="block text-[11px] font-bold text-[#e5d8c7] mb-1">
+                    ಇಮೇಲ್ ಐಡಿ (ಐಚ್ಛಿಕ — ಫಲಿತಾಂಶ ಪ್ರತಿಯನ್ನು ಪಡೆಯಲು)
+                  </label>
+                  <input
+                    id="optional-student-email"
+                    type="email"
+                    maxLength={150}
+                    value={loginEmail}
+                    onChange={e => setLoginEmail(e.target.value)}
+                    placeholder="student@gmail.com"
+                    className="w-full px-3 py-2 rounded-lg border border-amber-200/20 bg-[#17120e] text-xs text-[#faf4ec] placeholder:text-[#8c7d6b] focus:outline-none focus:ring-2 focus:ring-amber-400/35"
+                  />
+                </div>
+                <div className="sm:col-span-4 flex items-center gap-2">
+                  <button
+                    type="submit"
+                    className="px-3.5 py-2 rounded-lg bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold cursor-pointer whitespace-nowrap"
+                  >
+                    ಉಳಿಸಿ
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    disabled={isGoogleSigningIn}
+                    className="px-3 py-2 rounded-lg border border-amber-200/25 bg-[#1b1612] hover:bg-[#2a221b] text-amber-100 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap disabled:opacity-60"
+                  >
+                    {isGoogleSigningIn ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5 text-amber-300" />}
+                    <span>Google ಲಾಗಿನ್</span>
+                  </button>
+                </div>
+              </form>
+              {loginError && (
+                <div className="p-2.5 rounded-lg bg-rose-950/70 border border-rose-400/35 text-rose-200 text-xs font-medium flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                  <span>{loginError}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Collapsible Past Attempts History */}
         {showHistoryPanel && pastAttempts.length > 0 && (
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5 space-y-3">
+          <div className="bg-[#231d18] rounded-2xl border border-amber-200/15 shadow-xl p-5 space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900">ನಿಮ್ಮ ಹಿಂದಿನ ಆನ್‌ಲೈನ್ ಪರೀಕ್ಷಾ ಫಲಿತಾಂಶಗಳು</h3>
-              <span className="text-xs text-slate-500">ವಿವರ ನೋಡಲು ಕ್ಲಿಕ್ ಮಾಡಿ</span>
+              <h3 className="text-sm font-bold text-[#f7f0e6]">ನಿಮ್ಮ ಹಿಂದಿನ ಆನ್‌ಲೈನ್ ಪರೀಕ್ಷಾ ಫಲಿತಾಂಶಗಳು</h3>
+              <span className="text-xs text-[#bfb09d]">ವಿವರ ನೋಡಲು ಕ್ಲಿಕ್ ಮಾಡಿ</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {pastAttempts.map(att => (
@@ -918,13 +886,13 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
                     setReviewFilter('all');
                     setStage('result');
                   }}
-                  className="text-left p-3.5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30 transition-colors flex items-center justify-between gap-3"
+                  className="text-left p-3.5 rounded-xl border border-amber-200/15 bg-[#1a1511] hover:border-amber-300/45 hover:bg-[#2a221a] transition-colors flex items-center justify-between gap-3 cursor-pointer"
                 >
                   <div className="min-w-0">
-                    <div className="text-sm font-bold text-slate-900 truncate">
+                    <div className="text-sm font-bold text-[#f7f0e6] truncate">
                       {att.subject} · {att.grade}
                     </div>
-                    <div className="text-xs text-slate-500 mt-0.5">
+                    <div className="text-xs text-[#b9aa97] mt-0.5">
                       {new Date(att.submittedAt).toLocaleString('en-IN', {
                         dateStyle: 'medium',
                         timeStyle: 'short',
@@ -933,10 +901,10 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
                     </div>
                   </div>
                   <div className="text-right shrink-0 tabular-nums">
-                    <div className="text-base font-extrabold text-indigo-700">
+                    <div className="text-base font-extrabold text-amber-300">
                       {att.score}/{att.totalQuestions}
                     </div>
-                    <div className="text-xs font-bold text-slate-600">{att.percentage}%</div>
+                    <div className="text-xs font-bold text-emerald-300">{att.percentage}%</div>
                   </div>
                 </button>
               ))}
@@ -944,279 +912,257 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
           </div>
         )}
 
-        {/* Main Online MCQ Test Configurator Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-5 border-b border-slate-200 bg-slate-50/70 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold text-slate-900">
-                ಆನ್‌ಲೈನ್ ಬಹು ಆಯ್ಕೆ ಪರೀಕ್ಷೆ (MCQ Only Online Test)
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
-                ಇಲ್ಲಿ ಕೇವಲ ಬಹು ಆಯ್ಕೆ (MCQ) ಪ್ರಶ್ನೆಗಳು ಮಾತ್ರ ಬರುತ್ತವೆ. ತರಗತಿ, ವಿಷಯ, ಪಾಠಗಳು ಮತ್ತು ಪ್ರಶ್ನೆಗಳ ಸಂಖ್ಯೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ.
-              </p>
-            </div>
-            <div className="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-lg tabular-nums whitespace-nowrap shrink-0">
-              ಲಭ್ಯವಿರುವ MCQ ಗಳು: {availableMcqPool.length}
-            </div>
-          </div>
+        {/* Progressive Photo Card Selector: Semester -> Class (1-10) -> Subject */}
+        <VisualSelectionFlow
+          mode="online_test"
+          activeStep={selectionStep}
+          onChangeStep={setSelectionStep}
+          semester={selectedSemester}
+          onSelectSemester={setSelectedSemester}
+          selectedGradeKey={selectedGradeKey}
+          onSelectGradeKey={setSelectedGradeKey}
+          selectedFileId={selectedBankId}
+          onSelectFileId={setSelectedBankId}
+          availableFiles={availableFiles}
+          statsMap={effectiveStatsMap}
+          isScanningStats={effectiveIsScanning}
+          configureStepLabel="ಪಾಠ & ಪರೀಕ್ಷೆ ಪ್ರಾರಂಭ"
+        />
 
-          <div className="p-6 space-y-6">
-            {/* Step 1: Class & Subject Selection */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Step 4: Chapters, MCQ Count & Start Test (shown when Subject is picked) */}
+        {selectionStep === 'configure' && (
+          <div className="bg-[#231d18] rounded-2xl border border-amber-200/15 shadow-xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-amber-200/15 bg-gradient-to-r from-[#233d30] via-[#263f33] to-[#1e3127] flex flex-wrap items-center justify-between gap-3">
               <div>
-                <label
-                  htmlFor="online-test-grade"
-                  className="block text-xs font-bold text-slate-700 mb-1.5"
-                >
-                  1. ತರಗತಿ ಆಯ್ಕೆಮಾಡಿ (Select Class / Grade)
-                </label>
-                <select
-                  id="online-test-grade"
-                  value={selectedGradeKey}
-                  onChange={e => setSelectedGradeKey(e.target.value)}
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
-                >
-                  {gradeOptions.map(g => (
-                    <option key={g.key} value={g.key}>
-                      {g.label} ({g.count} ವಿಷಯಗಳು)
-                    </option>
-                  ))}
-                </select>
+                <h1 className="text-base sm:text-lg font-extrabold text-[#faf4ec]">
+                  ಆನ್‌ಲೈನ್ ಬಹು ಆಯ್ಕೆ ಪರೀಕ್ಷೆ — {activeBank?.metadata?.subject || 'ವಿಷಯ'} ({selectedGradeKey}ನೇ ತರಗತಿ)
+                </h1>
+                <p className="text-xs text-amber-200/90 mt-0.5">
+                  {activeSemMeta.periodKn} · ಇಲ್ಲಿ ಕೇವಲ ಬಹು ಆಯ್ಕೆ (MCQ) ಪ್ರಶ್ನೆಗಳು ಮಾತ್ರ ಬರುತ್ತವೆ.
+                </p>
               </div>
-
-              <div>
-                <label
-                  htmlFor="online-test-subject"
-                  className="block text-xs font-bold text-slate-700 mb-1.5"
-                >
-                  2. ವಿಷಯ ಆಯ್ಕೆಮಾಡಿ (Select Subject)
-                </label>
-                <select
-                  id="online-test-subject"
-                  value={selectedBankId}
-                  onChange={e => setSelectedBankId(e.target.value)}
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
-                >
-                  {subjectsForGrade.map(f => (
-                    <option key={f.id} value={f.id}>
-                      {f.subject} — {f.medium}
-                    </option>
-                  ))}
-                </select>
+              <div className="text-xs font-extrabold text-[#1f160c] bg-[#f7e7b4] px-3.5 py-1.5 rounded-full tabular-nums whitespace-nowrap shrink-0 shadow-sm">
+                ಲಭ್ಯವಿರುವ MCQ ಗಳು: {availableMcqPool.length}
               </div>
             </div>
 
-            {isLoadingBank && (
-              <div className="p-6 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center gap-2.5 text-sm font-semibold text-slate-700">
-                <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
-                <span>ವಿಷಯದ ಬಹು ಆಯ್ಕೆ (MCQ) ಪ್ರಶ್ನೆಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...</span>
-              </div>
-            )}
+            <div className="p-6 space-y-6">
+              {isLoadingBank && (
+                <div className="p-6 rounded-xl border border-amber-200/15 bg-[#1a1511] flex items-center justify-center gap-2.5 text-sm font-semibold text-amber-100">
+                  <Loader2 className="w-5 h-5 animate-spin text-amber-400" />
+                  <span>ವಿಷಯದ ಬಹು ಆಯ್ಕೆ (MCQ) ಪ್ರಶ್ನೆಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...</span>
+                </div>
+              )}
 
-            {bankLoadError && (
-              <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-medium flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 shrink-0 text-rose-600" />
-                <span>{bankLoadError}</span>
-              </div>
-            )}
+              {bankLoadError && (
+                <div className="p-4 rounded-xl bg-rose-950/70 border border-rose-400/35 text-rose-200 text-sm font-medium flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 shrink-0 text-rose-400" />
+                  <span>{bankLoadError}</span>
+                </div>
+              )}
 
-            {/* Step 2: Chapter Multi-Selection with MCQ counts */}
-            {!isLoadingBank && activeBank && (
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                      <BookOpen className="w-4 h-4 text-indigo-600" />
+              {/* Chapter Multi-Selection with MCQ counts */}
+              {!isLoadingBank && activeBank && (
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="text-xs sm:text-sm font-bold text-[#f7f0e6] flex items-center gap-1.5">
+                      <BookOpen className="w-4 h-4 text-amber-300" />
                       <span>
-                        3. ಪಾಠಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ (Select Chapters) — ಆಯ್ಕೆಯಾದವು: {selectedChapterIds.length} / {chaptersWithMcqs.length}
+                        ಪಾಠಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ (Select Chapters) — ಆಯ್ಕೆಯಾದವು: {selectedChapterIds.length} / {chaptersWithMcqs.length}
                       </span>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={selectAllMcqChapters}
-                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 whitespace-nowrap shrink-0"
-                    >
-                      ಎಲ್ಲಾ ಆಯ್ಕೆಮಾಡಿ
-                    </button>
-                    <button
-                      type="button"
-                      onClick={clearAllChapters}
-                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 whitespace-nowrap shrink-0"
-                    >
-                      ತೆರವುಗೊಳಿಸಿ
-                    </button>
-                  </div>
-                </div>
-
-                {chaptersWithMcqs.length === 0 ? (
-                  <div className="p-5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-sm flex items-start gap-2.5">
-                    <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-bold">ಈ ವಿಷಯದಲ್ಲಿ ಬಹು ಆಯ್ಕೆ (MCQ) ಪ್ರಶ್ನೆಗಳು ಲಭ್ಯವಿಲ್ಲ.</div>
-                      <div className="text-xs mt-1 text-amber-800">
-                        ದಯವಿಟ್ಟು ಬೇರೆ ತರಗತಿ ಅಥವಾ ವಿಷಯವನ್ನು ಆಯ್ಕೆಮಾಡಿ.
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={selectAllMcqChapters}
+                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-200 hover:bg-amber-500/30 border border-amber-300/30 whitespace-nowrap shrink-0 cursor-pointer"
+                      >
+                        ಎಲ್ಲಾ ಆಯ್ಕೆಮಾಡಿ
+                      </button>
+                      <button
+                        type="button"
+                        onClick={clearAllChapters}
+                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#191410] text-[#d6c8b7] hover:bg-[#2b231c] border border-amber-200/15 whitespace-nowrap shrink-0 cursor-pointer"
+                      >
+                        ತೆರವುಗೊಳಿಸಿ
+                      </button>
                     </div>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-72 overflow-y-auto pr-1">
-                    {chapterStats.map((ch, idx) => {
-                      const hasMcq = ch.mcqCount > 0;
-                      const isChecked = selectedChapterIds.includes(ch.chapterId);
-                      return (
-                        <label
-                          key={ch.chapterId}
-                          className={`flex items-start gap-2.5 p-3 rounded-xl border transition-colors ${
-                            !hasMcq
-                              ? 'bg-slate-50 border-slate-200/70 opacity-55 cursor-not-allowed'
-                              : isChecked
-                                ? 'bg-indigo-50/60 border-indigo-400 cursor-pointer'
-                                : 'bg-white border-slate-200 hover:border-slate-300 cursor-pointer'
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            disabled={!hasMcq}
-                            checked={isChecked}
-                            onChange={() => hasMcq && toggleChapter(ch.chapterId)}
-                            className="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 shrink-0"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <div className="text-xs font-bold text-slate-900 leading-snug line-clamp-2">
-                              {ch.chapterNumber ? `${ch.chapterNumber}. ` : `${idx + 1}. `}
-                              {ch.chapterName}
+
+                  {chaptersWithMcqs.length === 0 ? (
+                    <div className="p-5 rounded-xl bg-amber-950/50 border border-amber-400/30 text-amber-100 text-sm flex items-start gap-2.5">
+                      <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                      <div>
+                        <div className="font-bold">ಈ ಸೆಮಿಸ್ಟರ್/ವಿಷಯದಲ್ಲಿ ಬಹು ಆಯ್ಕೆ (MCQ) ಪ್ರಶ್ನೆಗಳು ಲಭ್ಯವಿಲ್ಲ.</div>
+                        <div className="text-xs mt-1 text-amber-200/80">
+                          ದಯವಿಟ್ಟು &quot;ಪೂರ್ಣ ವರ್ಷ&quot; ಸೆಮಿಸ್ಟರ್ ಅಥವಾ ಬೇರೆ ವಿಷಯವನ್ನು ಆಯ್ಕೆಮಾಡಿ.
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-72 overflow-y-auto pr-1">
+                      {chapterStats.map((ch, idx) => {
+                        const hasMcq = ch.mcqCount > 0;
+                        const isChecked = selectedChapterIds.includes(ch.chapterId);
+                        return (
+                          <label
+                            key={ch.chapterId}
+                            className={`flex items-start gap-2.5 p-3 rounded-xl border transition-colors ${
+                              !hasMcq
+                                ? 'bg-[#171310] border-amber-200/10 opacity-45 cursor-not-allowed'
+                                : isChecked
+                                  ? 'bg-gradient-to-r from-[#23372d] to-[#272a22] border-emerald-400/60 cursor-pointer'
+                                  : 'bg-[#1b1612] border-amber-200/12 hover:border-amber-300/35 cursor-pointer'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              disabled={!hasMcq}
+                              checked={isChecked}
+                              onChange={() => hasMcq && toggleChapter(ch.chapterId)}
+                              className="mt-1 h-4 w-4 rounded border-amber-200/30 bg-[#14100d] text-emerald-600 focus:ring-emerald-500 shrink-0"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="text-xs font-bold text-[#f7f0e6] leading-snug line-clamp-2">
+                                {ch.chapterNumber ? `${ch.chapterNumber}. ` : `${idx + 1}. `}
+                                {ch.chapterName}
+                              </div>
+                              <div className="text-[11px] font-semibold mt-1 tabular-nums">
+                                {hasMcq ? (
+                                  <span className="text-amber-300">{ch.mcqCount} MCQ ಪ್ರಶ್ನೆಗಳು</span>
+                                ) : (
+                                  <span className="text-[#8e8070]">0 MCQ ಪ್ರಶ್ನೆಗಳು</span>
+                                )}
+                              </div>
                             </div>
-                            <div className="text-[11px] font-semibold mt-1 tabular-nums text-slate-500">
-                              {hasMcq ? (
-                                <span className="text-indigo-700">{ch.mcqCount} MCQ ಪ್ರಶ್ನೆಗಳು</span>
-                              ) : (
-                                <span>0 MCQ ಪ್ರಶ್ನೆಗಳು</span>
-                              )}
-                            </div>
-                          </div>
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Step 3: Number of Questions Selector */}
-            {!isLoadingBank && activeBank && availableMcqPool.length > 0 && (
-              <div className="p-4 sm:p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <label
-                      htmlFor="online-test-count"
-                      className="text-xs font-bold text-slate-800 flex items-center gap-1.5"
-                    >
-                      <Layers className="w-4 h-4 text-indigo-600" />
-                      <span>4. ಪ್ರಶ್ನೆಗಳ ಸಂಖ್ಯೆ ಆಯ್ಕೆಮಾಡಿ (Number of MCQ Questions)</span>
-                    </label>
-                    <p className="text-xs text-slate-500 mt-0.5 tabular-nums">
-                      ಆಯ್ಕೆಮಾಡಿದ ಪಾಠಗಳಲ್ಲಿ ಒಟ್ಟು <strong>{availableMcqPool.length}</strong> ಬಹು ಆಯ್ಕೆ ಪ್ರಶ್ನೆಗಳು ಲಭ್ಯವಿವೆ (ಗರಿಷ್ಠ 100).
-                    </p>
-                  </div>
-
-                  <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={shuffleQuestions}
-                      onChange={e => setShuffleQuestions(e.target.checked)}
-                      className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <Shuffle className="w-3.5 h-3.5 text-slate-500" />
-                    <span>ಪ್ರಶ್ನೆಗಳನ್ನು ಮಿಶ್ರಣಗೊಳಿಸಿ (Shuffle)</span>
-                  </label>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  {presetCounts.map(n => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => setQuestionCount(n)}
-                      className={`min-h-[40px] px-4 py-1.5 rounded-lg text-xs font-bold tabular-nums border transition-colors whitespace-nowrap shrink-0 ${
-                        questionCount === n
-                          ? 'bg-indigo-600 text-white border-indigo-600'
-                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
-                      }`}
-                    >
-                      {n} ಪ್ರಶ್ನೆಗಳು
-                    </button>
-                  ))}
-                  {availableMcqPool.length > 0 && !presetCounts.includes(availableMcqPool.length) && (
-                    <button
-                      type="button"
-                      onClick={() => setQuestionCount(Math.min(100, availableMcqPool.length))}
-                      className={`min-h-[40px] px-4 py-1.5 rounded-lg text-xs font-bold tabular-nums border transition-colors whitespace-nowrap shrink-0 ${
-                        questionCount === Math.min(100, availableMcqPool.length)
-                          ? 'bg-indigo-600 text-white border-indigo-600'
-                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
-                      }`}
-                    >
-                      ಎಲ್ಲಾ ({Math.min(100, availableMcqPool.length)})
-                    </button>
+                          </label>
+                        );
+                      })}
+                    </div>
                   )}
+                </div>
+              )}
 
-                  <div className="flex items-center gap-2 ml-auto">
-                    <span className="text-xs font-semibold text-slate-600">ಸ್ವಂತ ಸಂಖ್ಯೆ:</span>
-                    <input
-                      id="online-test-count"
-                      type="number"
-                      min={1}
-                      max={Math.min(100, availableMcqPool.length)}
-                      value={questionCount}
-                      onChange={e => {
-                        const val = parseInt(e.target.value, 10);
-                        if (Number.isNaN(val)) {
-                          setQuestionCount(1);
-                        } else {
-                          setQuestionCount(Math.max(1, Math.min(val, availableMcqPool.length, 100)));
-                        }
-                      }}
-                      className="w-20 min-h-[40px] px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-sm font-bold text-center text-slate-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
-                    />
+              {/* Number of Questions Selector */}
+              {!isLoadingBank && activeBank && availableMcqPool.length > 0 && (
+                <div className="p-4 sm:p-5 rounded-xl bg-[#1b1612] border border-amber-200/15 space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <label
+                        htmlFor="online-test-count"
+                        className="text-xs font-bold text-[#f7f0e6] flex items-center gap-1.5"
+                      >
+                        <Layers className="w-4 h-4 text-amber-300" />
+                        <span>ಪ್ರಶ್ನೆಗಳ ಸಂಖ್ಯೆ ಆಯ್ಕೆಮಾಡಿ (Number of MCQ Questions)</span>
+                      </label>
+                      <p className="text-xs text-[#bfb09d] mt-0.5 tabular-nums">
+                        ಆಯ್ಕೆಮಾಡಿದ ಪಾಠಗಳಲ್ಲಿ ಒಟ್ಟು <strong className="text-amber-200">{availableMcqPool.length}</strong> ಬಹು ಆಯ್ಕೆ ಪ್ರಶ್ನೆಗಳು ಲಭ್ಯವಿವೆ (ಗರಿಷ್ಠ 100).
+                      </p>
+                    </div>
+
+                    <label className="inline-flex items-center gap-2 text-xs font-semibold text-[#e6d8c7] cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={shuffleQuestions}
+                        onChange={e => setShuffleQuestions(e.target.checked)}
+                        className="h-4 w-4 rounded border-amber-200/30 bg-[#14100d] text-amber-500 focus:ring-amber-400"
+                      />
+                      <Shuffle className="w-3.5 h-3.5 text-amber-300" />
+                      <span>ಪ್ರಶ್ನೆಗಳನ್ನು ಮಿಶ್ರಣಗೊಳಿಸಿ (Shuffle)</span>
+                    </label>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {presetCounts.map(n => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setQuestionCount(n)}
+                        className={`min-h-[40px] px-4 py-1.5 rounded-lg text-xs font-bold tabular-nums border transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                          questionCount === n
+                            ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white border-amber-400/50 shadow-sm'
+                            : 'bg-[#251e18] text-[#e6d8c7] border-amber-200/20 hover:bg-[#312820]'
+                        }`}
+                      >
+                        {n} ಪ್ರಶ್ನೆಗಳು
+                      </button>
+                    ))}
+                    {availableMcqPool.length > 0 && !presetCounts.includes(availableMcqPool.length) && (
+                      <button
+                        type="button"
+                        onClick={() => setQuestionCount(Math.min(100, availableMcqPool.length))}
+                        className={`min-h-[40px] px-4 py-1.5 rounded-lg text-xs font-bold tabular-nums border transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                          questionCount === Math.min(100, availableMcqPool.length)
+                            ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white border-amber-400/50 shadow-sm'
+                            : 'bg-[#251e18] text-[#e6d8c7] border-amber-200/20 hover:bg-[#312820]'
+                        }`}
+                      >
+                        ಎಲ್ಲಾ ({Math.min(100, availableMcqPool.length)})
+                      </button>
+                    )}
+
+                    <div className="flex items-center gap-2 ml-auto">
+                      <span className="text-xs font-semibold text-[#c9baa7]">ಸ್ವಂತ ಸಂಖ್ಯೆ:</span>
+                      <input
+                        id="online-test-count"
+                        type="number"
+                        min={1}
+                        max={Math.min(100, availableMcqPool.length)}
+                        value={questionCount}
+                        onChange={e => {
+                          const val = parseInt(e.target.value, 10);
+                          if (Number.isNaN(val)) {
+                            setQuestionCount(1);
+                          } else {
+                            setQuestionCount(Math.max(1, Math.min(val, availableMcqPool.length, 100)));
+                          }
+                        }}
+                        className="w-20 min-h-[40px] px-3 py-1.5 rounded-lg border border-amber-200/25 bg-[#14100d] text-sm font-bold text-center text-[#faf4ec] tabular-nums focus:outline-none focus:ring-2 focus:ring-amber-400/35"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {configError && (
-              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                <span>{configError}</span>
-              </div>
-            )}
+              {configError && (
+                <div className="p-3.5 rounded-xl bg-rose-950/70 border border-rose-400/35 text-rose-200 text-xs font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span>{configError}</span>
+                </div>
+              )}
 
-            {/* Start Test CTA */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-200">
-              <div className="text-xs text-slate-600">
-                ಫಲಿತಾಂಶದ ಪ್ರತಿ <strong className="text-slate-900">{student.email}</strong> ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ.
+              {/* Start Test CTA */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-amber-200/15">
+                <div className="text-xs text-[#c7b8a5]">
+                  {displayStudentEmail ? (
+                    <>
+                      ಫಲಿತಾಂಶದ ಪ್ರತಿ <strong className="text-amber-200">{displayStudentEmail}</strong> ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ.
+                    </>
+                  ) : (
+                    <span>ಪರೀಕ್ಷೆ ಮುಗಿದ ತಕ್ಷಣ ಫಲಿತಾಂಶ ಮತ್ತು ಸರಿಯಾದ ಉತ್ತರಗಳು ಪರದೆಯ ಮೇಲೆ ಕಾಣಿಸುತ್ತವೆ.</span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  disabled={isLoadingBank || availableMcqPool.length === 0 || selectedChapterIds.length === 0}
+                  onClick={handleStartTest}
+                  className="min-h-[48px] px-7 py-3 rounded-xl bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-sm transition-all inline-flex items-center gap-2 shadow-lg border border-emerald-400/35 whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  <Play className="w-4 h-4 fill-current text-amber-300" />
+                  <span>
+                    ಆನ್‌ಲೈನ್ ಪರೀಕ್ಷೆ ಪ್ರಾರಂಭಿಸಿ ({Math.min(questionCount, availableMcqPool.length, 100)} ಪ್ರಶ್ನೆಗಳು)
+                  </span>
+                </button>
               </div>
-              <button
-                type="button"
-                disabled={isLoadingBank || availableMcqPool.length === 0 || selectedChapterIds.length === 0}
-                onClick={handleStartTest}
-                className="min-h-[48px] px-7 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold text-sm transition-colors inline-flex items-center gap-2 shadow-sm whitespace-nowrap shrink-0"
-              >
-                <Play className="w-4 h-4 fill-current" />
-                <span>
-                  ಆನ್‌ಲೈನ್ ಪರೀಕ್ಷೆ ಪ್ರಾರಂಭಿಸಿ ({Math.min(questionCount, availableMcqPool.length, 100)} ಪ್ರಶ್ನೆಗಳು)
-                </span>
-              </button>
             </div>
           </div>
-        </div>
+        )}
       </div>
     );
   }
 
   // ════════════════════════════════════════════════════════════════
-  // SCREEN 3: ACTIVE ONLINE MCQ EXAM RUNNER
+  // SCREEN 3: ACTIVE ONLINE MCQ EXAM RUNNER (DARK ESPRESSO THEME)
   // ════════════════════════════════════════════════════════════════
   if (stage === 'running' && currentQuestion) {
     const selectedOptionIdx = answersMap[currentQuestion.id];
@@ -1226,29 +1172,30 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
     return (
       <div className="max-w-4xl mx-auto py-2 space-y-4 font-kannada">
         {/* Exam Top Status Bar */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
+        <div className="bg-[#231d18] rounded-2xl border border-amber-200/15 shadow-xl px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-slate-500">
+            <div className="text-xs font-semibold text-amber-300/90">
               {activeBank?.metadata?.grade} · {activeBank?.metadata?.subject}
             </div>
-            <div className="text-sm font-bold text-slate-900 truncate">
-              {student.name} ({student.email})
+            <div className="text-sm font-bold text-[#f7f0e6] truncate">
+              {displayStudentName}
+              {displayStudentEmail ? ` (${displayStudentEmail})` : ''}
             </div>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
-            <div className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 text-xs font-bold tabular-nums inline-flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <div className="px-3 py-1.5 rounded-lg bg-[#1a2a21] border border-emerald-400/30 text-emerald-200 text-xs font-bold tabular-nums inline-flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
               <span>ಉತ್ತರಿಸಿದವು: {answeredCount}/{testQuestions.length}</span>
             </div>
-            <div className="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-800 border border-indigo-200 text-xs font-bold tabular-nums inline-flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-indigo-600" />
+            <div className="px-3 py-1.5 rounded-lg bg-[#2e2318] text-amber-200 border border-amber-300/30 text-xs font-bold tabular-nums inline-flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-amber-400" />
               <span>{formatDurationMMSS(elapsedSeconds)}</span>
             </div>
             <button
               type="button"
               onClick={() => setShowExitConfirm(true)}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-600 whitespace-nowrap shrink-0"
+              className="px-3 py-1.5 rounded-lg border border-amber-200/20 bg-[#191410] hover:bg-[#2a221b] text-xs font-bold text-[#e6d8c7] whitespace-nowrap shrink-0 cursor-pointer"
             >
               ನಿರ್ಗಮಿಸಿ
             </button>
@@ -1257,15 +1204,15 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
 
         {/* Inline Exit Confirmation */}
         {showExitConfirm && (
-          <div className="p-4 rounded-xl bg-amber-50 border border-amber-300 flex flex-wrap items-center justify-between gap-3">
-            <div className="text-xs sm:text-sm font-semibold text-amber-900">
+          <div className="p-4 rounded-xl bg-amber-950/75 border border-amber-400/40 flex flex-wrap items-center justify-between gap-3">
+            <div className="text-xs sm:text-sm font-semibold text-amber-100">
               ನೀವು ಪರೀಕ್ಷೆಯನ್ನು ಮಧ್ಯದಲ್ಲಿ ನಿಲ್ಲಿಸಿ ಹಿಂತಿರುಗಲು ಬಯಸುವಿರಾ? ನಿಮ್ಮ ಉತ್ತರಗಳು ಉಳಿಯುವುದಿಲ್ಲ.
             </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setShowExitConfirm(false)}
-                className="px-3.5 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-bold text-slate-700"
+                className="px-3.5 py-1.5 rounded-lg bg-[#231d18] border border-amber-200/25 text-xs font-bold text-amber-100 cursor-pointer"
               >
                 ಪರೀಕ್ಷೆ ಮುಂದುವರಿಸಿ
               </button>
@@ -1275,7 +1222,7 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
                   setShowExitConfirm(false);
                   setStage('setup');
                 }}
-                className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold"
+                className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold cursor-pointer"
               >
                 ಹೌದು, ನಿರ್ಗಮಿಸಿ
               </button>
@@ -1284,16 +1231,16 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
         )}
 
         {/* Thin Progress Bar */}
-        <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+        <div className="h-1.5 w-full bg-[#2a221b] rounded-full overflow-hidden">
           <div
-            className="h-full bg-indigo-600 transition-all duration-300"
+            className="h-full bg-gradient-to-r from-orange-500 to-amber-400 transition-all duration-300"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
 
         {/* Question Navigator Palette */}
-        <div className="bg-white rounded-2xl border border-slate-200 px-4 py-3">
-          <div className="text-[11px] font-bold text-slate-500 mb-2">
+        <div className="bg-[#231d18] rounded-2xl border border-amber-200/15 px-4 py-3">
+          <div className="text-[11px] font-bold text-[#bfb09d] mb-2">
             ಪ್ರಶ್ನೆ ಸಂಖ್ಯೆ ಆಯ್ಕೆ (Question Navigator)
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -1306,12 +1253,12 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
                   type="button"
                   onClick={() => setCurrentIdx(idx)}
                   aria-label={`Question ${idx + 1}`}
-                  className={`w-9 h-9 rounded-lg text-xs font-bold tabular-nums border transition-colors ${
+                  className={`w-9 h-9 rounded-lg text-xs font-bold tabular-nums border transition-colors cursor-pointer ${
                     isCurrent
-                      ? 'bg-indigo-600 text-white border-indigo-600 ring-2 ring-indigo-300'
+                      ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white border-amber-300 ring-2 ring-amber-400/35'
                       : isAnswered
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
-                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                        ? 'bg-[#1f3429] text-emerald-200 border-emerald-400/45 hover:bg-[#274334]'
+                        : 'bg-[#18130f] text-[#c8b9a6] border-amber-200/15 hover:bg-[#2a221b]'
                   }`}
                 >
                   {idx + 1}
@@ -1322,30 +1269,49 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
         </div>
 
         {/* Active Question Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-7 space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
-            <span className="text-xs font-bold text-indigo-700 tabular-nums">
+        <div className="bg-[#231d18] rounded-2xl border border-amber-200/15 shadow-xl p-5 sm:p-7 space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-amber-200/12">
+            <span className="text-xs font-extrabold text-amber-300 tabular-nums">
               ಪ್ರಶ್ನೆ {currentIdx + 1} / {testQuestions.length}
             </span>
-            <span className="text-xs font-medium text-slate-500">
+            <span className="text-xs font-medium text-[#bfb09d]">
               ಪಾಠ: {currentQuestion.chapterName}
             </span>
           </div>
 
           {/* Question Text */}
-          <div className="text-base sm:text-lg font-semibold text-slate-900 leading-relaxed whitespace-pre-line">
+          <div className="text-base sm:text-lg font-bold text-[#faf4ec] leading-relaxed whitespace-pre-line">
             <MathText text={currentQuestion.question} />
           </div>
 
-          {/* Optional Question Diagram Image */}
-          {isSafeImageSrc(currentQuestion.imageUrl) && currentQuestion.imageUrl && (
-            <div className="my-2 flex justify-center">
-              <ResilientQuestionImage
-                src={currentQuestion.imageUrl}
-                alt={`Question ${currentIdx + 1} diagram`}
-                className="max-h-64 w-auto rounded-xl border border-slate-200 bg-white p-2 object-contain"
-              />
-            </div>
+          {/* Optional Question Diagram Images (1 or 2 Side-by-Side) */}
+          {((isSafeImageSrc(currentQuestion.imageUrl) && currentQuestion.imageUrl) ||
+            (isSafeImageSrc(currentQuestion.imageUrl2) && currentQuestion.imageUrl2)) && (
+            isSafeImageSrc(currentQuestion.imageUrl) &&
+            currentQuestion.imageUrl &&
+            isSafeImageSrc(currentQuestion.imageUrl2) &&
+            currentQuestion.imageUrl2 ? (
+              <div className="my-2 grid grid-cols-2 gap-3 items-center">
+                <ResilientQuestionImage
+                  src={currentQuestion.imageUrl}
+                  alt={`Question ${currentIdx + 1} diagram 1`}
+                  className="max-h-60 w-full rounded-xl border border-amber-200/25 bg-white p-2 object-contain"
+                />
+                <ResilientQuestionImage
+                  src={currentQuestion.imageUrl2}
+                  alt={`Question ${currentIdx + 1} diagram 2`}
+                  className="max-h-60 w-full rounded-xl border border-amber-200/25 bg-white p-2 object-contain"
+                />
+              </div>
+            ) : (
+              <div className="my-2 flex justify-center">
+                <ResilientQuestionImage
+                  src={(currentQuestion.imageUrl || currentQuestion.imageUrl2)!}
+                  alt={`Question ${currentIdx + 1} diagram`}
+                  className="max-h-64 w-auto rounded-xl border border-amber-200/25 bg-white p-2 object-contain"
+                />
+              </div>
+            )
           )}
 
           {/* Clickable MCQ Options */}
@@ -1365,17 +1331,17 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
                       [currentQuestion.id]: optIdx,
                     }))
                   }
-                  className={`w-full min-h-[52px] text-left px-4 py-3.5 rounded-xl border transition-all flex items-start gap-3.5 ${
+                  className={`w-full min-h-[52px] text-left px-4 py-3.5 rounded-xl border transition-all flex items-start gap-3.5 cursor-pointer ${
                     isSelected
-                      ? 'bg-indigo-50 border-indigo-600 ring-1 ring-indigo-600 text-slate-950'
-                      : 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-slate-50 text-slate-800'
+                      ? 'bg-gradient-to-r from-[#342619] to-[#2c2218] border-amber-400 ring-1 ring-amber-400/60 text-white'
+                      : 'bg-[#1a1511] border-amber-200/15 hover:border-amber-300/40 hover:bg-[#272019] text-[#eee3d5]'
                   }`}
                 >
                   <span
                     className={`w-7 h-7 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${
                       isSelected
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-slate-100 text-slate-700 border border-slate-200'
+                        ? 'bg-amber-500 text-[#1b140d]'
+                        : 'bg-[#2a221b] text-amber-200 border border-amber-200/20'
                     }`}
                   >
                     {label}
@@ -1384,7 +1350,7 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
                     <MathText text={cleanedBody} />
                   </span>
                   {isSelected && (
-                    <Check className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+                    <Check className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
                   )}
                 </button>
               );
@@ -1393,8 +1359,8 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
 
           {/* Inline Submit Confirmation Banner */}
           {showSubmitConfirm && (
-            <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-200 space-y-3">
-              <div className="text-sm font-bold text-indigo-950">
+            <div className="p-4 rounded-xl bg-[#2c2218] border border-amber-300/35 space-y-3">
+              <div className="text-sm font-bold text-amber-100">
                 {unansweredRemaining > 0
                   ? `ಇನ್ನೂ ${unansweredRemaining} ಪ್ರಶ್ನೆಗಳಿಗೆ ಉತ್ತರಿಸಿಲ್ಲ. ಆದರೂ ಪರೀಕ್ಷೆಯನ್ನು ಸಲ್ಲಿಸಬೇಕೆ?`
                   : 'ಎಲ್ಲಾ ಪ್ರಶ್ನೆಗಳಿಗೆ ಉತ್ತರಿಸಿದ್ದೀರಿ! ಪರೀಕ್ಷೆಯನ್ನು ಸಲ್ಲಿಸಿ ಫಲಿತಾಂಶ ನೋಡಲು ಸಿದ್ಧರಿದ್ದೀರಾ?'}
@@ -1403,7 +1369,7 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
                 <button
                   type="button"
                   onClick={finalizeAndSubmitTest}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center gap-1.5"
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>ಹೌದು, ಪರೀಕ್ಷೆ ಸಲ್ಲಿಸಿ ಫಲಿತಾಂಶ ನೋಡಿ</span>
@@ -1411,7 +1377,7 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowSubmitConfirm(false)}
-                  className="px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs font-bold"
+                  className="px-4 py-2.5 rounded-xl bg-[#1a1511] border border-amber-200/25 text-amber-100 text-xs font-bold cursor-pointer"
                 >
                   ರದ್ದುಮಾಡಿ
                 </button>
@@ -1420,13 +1386,13 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
           )}
 
           {/* Bottom Navigation Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200">
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-amber-200/15">
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 disabled={currentIdx === 0}
                 onClick={() => setCurrentIdx(prev => Math.max(0, prev - 1))}
-                className="min-h-[42px] px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-40 text-xs font-bold text-slate-700 inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                className="min-h-[42px] px-4 py-2 rounded-xl border border-amber-200/20 bg-[#1a1511] hover:bg-[#2b231c] disabled:opacity-40 text-xs font-bold text-amber-100 inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>ಹಿಂದಿನ</span>
@@ -1442,7 +1408,7 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
                       return next;
                     })
                   }
-                  className="min-h-[42px] px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-50 whitespace-nowrap shrink-0"
+                  className="min-h-[42px] px-3.5 py-2 rounded-xl border border-amber-200/15 text-xs font-semibold text-[#c5b6a4] hover:text-white hover:bg-[#2a221b] whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   ಆಯ್ಕೆ ತೆರವು
                 </button>
@@ -1454,7 +1420,7 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setCurrentIdx(prev => Math.min(testQuestions.length - 1, prev + 1))}
-                  className="min-h-[42px] px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                  className="min-h-[42px] px-5 py-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <span>ಮುಂದಿನ ಪ್ರಶ್ನೆ</span>
                   <ArrowRight className="w-4 h-4" />
@@ -1470,7 +1436,7 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
                     setShowSubmitConfirm(true);
                   }
                 }}
-                className="min-h-[42px] px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap shrink-0"
+                className="min-h-[42px] px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-sm whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>ಪರೀಕ್ಷೆ ಸಲ್ಲಿಸಿ (Submit)</span>
@@ -1501,25 +1467,25 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
           <button
             type="button"
             onClick={() => setStage('setup')}
-            className="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-800 inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
+            className="px-4 py-2 rounded-xl bg-[#231d18] border border-amber-200/20 hover:bg-[#312820] text-xs font-bold text-amber-100 inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
           >
-            <RotateCcw className="w-4 h-4 text-indigo-600" />
+            <RotateCcw className="w-4 h-4 text-amber-300" />
             <span>ಹೊಸ ಪರೀಕ್ಷೆ ನೀಡಿ (New Test)</span>
           </button>
 
           <div className="flex flex-wrap items-center gap-2">
             <a
               href={mailtoHref}
-              className="px-4 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-xs font-bold text-slate-800 inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
+              className="px-4 py-2 rounded-xl bg-[#231d18] border border-amber-200/20 hover:bg-[#312820] text-xs font-bold text-amber-100 inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
             >
-              <Mail className="w-4 h-4 text-indigo-600" />
+              <Mail className="w-4 h-4 text-amber-300" />
               <span>ಇಮೇಲ್ ಆ್ಯಪ್‌ನಲ್ಲಿ ಕಳುಹಿಸಿ</span>
             </a>
 
             <button
               type="button"
               onClick={() => window.print()}
-              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer shadow-md"
             >
               <Printer className="w-4 h-4" />
               <span>ಉತ್ತರ ಪತ್ರಿಕೆ ಮುದ್ರಿಸಿ / PDF ಉಳಿಸಿ</span>
@@ -1528,24 +1494,25 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
         </div>
 
         {/* Hero Score Summary Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="bg-[#181c3d] text-white px-6 py-5 flex flex-wrap items-center justify-between gap-4">
+        <div className="bg-white rounded-2xl border border-amber-200/20 shadow-xl overflow-hidden text-slate-900">
+          <div className="bg-gradient-to-r from-[#2c2117] via-[#3a2a1c] to-[#23382c] text-white px-6 py-5 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-indigo-300">
+              <div className="text-xs font-semibold uppercase tracking-wider text-amber-300">
                 {schoolName}
               </div>
               <h1 className="text-xl sm:text-2xl font-bold mt-0.5">
                 ಆನ್‌ಲೈನ್ ಪರೀಕ್ಷಾ ಫಲಿತಾಂಶ (Instant Test Result)
               </h1>
-              <div className="text-xs sm:text-sm text-slate-300 mt-1">
-                {activeAttempt.studentName} ({activeAttempt.studentEmail}) · {activeAttempt.grade} · {activeAttempt.subject}
+              <div className="text-xs sm:text-sm text-amber-100/85 mt-1">
+                {activeAttempt.studentName}
+                {activeAttempt.studentEmail ? ` (${activeAttempt.studentEmail})` : ''} · {activeAttempt.grade} · {activeAttempt.subject}
               </div>
             </div>
             <div className="text-right tabular-nums">
               <div className="text-3xl sm:text-4xl font-extrabold text-white">
                 {activeAttempt.score} / {activeAttempt.totalQuestions}
               </div>
-              <div className="text-sm font-bold text-indigo-300">
+              <div className="text-sm font-bold text-amber-300">
                 {activeAttempt.percentage}% ಅಂಕಗಳು
               </div>
             </div>
@@ -1613,7 +1580,7 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
               </div>
             )}
 
-            {/* Email Copy Delivery Status Panel (Hidden on Print) */}
+            {/* Optional Email Copy Delivery Panel (Hidden on Print) */}
             <div className="no-print p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2.5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-start gap-2.5 min-w-0 flex-1">
@@ -1626,27 +1593,54 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
                   )}
                   <div className="min-w-0">
                     <div className="text-xs font-bold text-slate-900">
-                      ಇಮೇಲ್ ಪ್ರತಿ ಸ್ಥಿತಿ ({activeAttempt.studentEmail})
+                      {activeAttempt.studentEmail
+                        ? `ಇಮೇಲ್ ಪ್ರತಿ ಸ್ಥಿತಿ (${activeAttempt.studentEmail})`
+                        : 'ಫಲಿತಾಂಶದ ಪ್ರತಿಯನ್ನು ಇಮೇಲ್‌ಗೆ ಪಡೆಯಿರಿ (ಐಚ್ಛಿಕ)'}
                     </div>
                     <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
                       {emailDelivery.message ||
-                        'ನಿಮ್ಮ ಬಿಡಿಸಿದ ಪ್ರಶ್ನೆಗಳು ಮತ್ತು ಉತ್ತರಗಳ ಪ್ರತಿಯನ್ನು ನಿಮ್ಮ ಇಮೇಲ್‌ಗೆ ಕಳುಹಿಸಬಹುದು.'}
+                        'ಬೇಕಿದ್ದರೆ ಕೆಳಗೆ ಇಮೇಲ್ ವಿಳಾಸ ನಮೂದಿಸಿ ಉತ್ತರ ಪತ್ರಿಕೆಯ ಪ್ರತಿಯನ್ನು ಇಮೇಲ್‌ಗೆ ಕಳುಹಿಸಿಕೊಳ್ಳಬಹುದು.'}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  {!activeAttempt.studentEmail && (
+                    <input
+                      type="email"
+                      value={resultEmailInput}
+                      onChange={e => {
+                        setResultEmailInput(e.target.value);
+                        setResultEmailError(null);
+                      }}
+                      placeholder="student@gmail.com (ಐಚ್ಛಿಕ)"
+                      className="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-900 w-52 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                    />
+                  )}
                   <button
                     type="button"
                     disabled={emailDelivery.status === 'sending'}
-                    onClick={() => dispatchResultEmail(activeAttempt)}
-                    className="px-3.5 py-2 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-800 inline-flex items-center gap-1.5 disabled:opacity-50 whitespace-nowrap shrink-0"
+                    onClick={() => {
+                      const targetEmail = (activeAttempt.studentEmail || resultEmailInput).trim().toLowerCase();
+                      if (!EMAIL_REGEX.test(targetEmail)) {
+                        setResultEmailError('ದಯವಿಟ್ಟು ಸರಿಯಾದ ಇಮೇಲ್ ವಿಳಾಸ ನಮೂದಿಸಿ.');
+                        return;
+                      }
+                      setResultEmailError(null);
+                      const updatedAttempt = { ...activeAttempt, studentEmail: targetEmail };
+                      setActiveAttempt(updatedAttempt);
+                      dispatchResultEmail(updatedAttempt);
+                    }}
+                    className="px-3.5 py-2 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-800 inline-flex items-center gap-1.5 disabled:opacity-50 whitespace-nowrap shrink-0 cursor-pointer"
                   >
                     <Send className="w-3.5 h-3.5 text-indigo-600" />
                     <span>{emailDelivery.status === 'sent' ? 'ಮರುಕಳುಹಿಸಿ' : 'ಇಮೇಲ್ ಕಳುಹಿಸಿ'}</span>
                   </button>
                 </div>
               </div>
+              {resultEmailError && (
+                <p className="text-xs font-semibold text-rose-700">{resultEmailError}</p>
+              )}
 
               {emailDelivery.status === 'not_configured' && (
                 <div className="pt-2 border-t border-slate-200/80">
@@ -1745,14 +1739,33 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
                     <MathText text={item.question} />
                   </div>
 
-                  {isSafeImageSrc(item.imageUrl) && item.imageUrl && (
-                    <div className="my-1">
-                      <ResilientQuestionImage
-                        src={item.imageUrl}
-                        alt={`Question ${originalIndex} diagram`}
-                        className="max-h-48 w-auto rounded-lg border border-slate-200 p-1.5 bg-white object-contain"
-                      />
-                    </div>
+                  {((isSafeImageSrc(item.imageUrl) && item.imageUrl) ||
+                    (isSafeImageSrc(item.imageUrl2) && item.imageUrl2)) && (
+                    isSafeImageSrc(item.imageUrl) &&
+                    item.imageUrl &&
+                    isSafeImageSrc(item.imageUrl2) &&
+                    item.imageUrl2 ? (
+                      <div className="my-1 grid grid-cols-2 gap-3 max-w-2xl items-center">
+                        <ResilientQuestionImage
+                          src={item.imageUrl}
+                          alt={`Question ${originalIndex} diagram 1`}
+                          className="max-h-48 w-full rounded-lg border border-slate-200 p-1.5 bg-white object-contain"
+                        />
+                        <ResilientQuestionImage
+                          src={item.imageUrl2}
+                          alt={`Question ${originalIndex} diagram 2`}
+                          className="max-h-48 w-full rounded-lg border border-slate-200 p-1.5 bg-white object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="my-1">
+                        <ResilientQuestionImage
+                          src={(item.imageUrl || item.imageUrl2)!}
+                          alt={`Question ${originalIndex} diagram`}
+                          className="max-h-48 w-auto rounded-lg border border-slate-200 p-1.5 bg-white object-contain"
+                        />
+                      </div>
+                    )
                   )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-sm">
@@ -1794,14 +1807,33 @@ export const OnlineTestView: React.FC<OnlineTestViewProps> = ({
                     </div>
                   )}
 
-                  {isSafeImageSrc(item.answerImageUrl) && item.answerImageUrl && (
-                    <div className="my-1">
-                      <ResilientQuestionImage
-                        src={item.answerImageUrl}
-                        alt={`Answer ${originalIndex} diagram`}
-                        className="max-h-48 w-auto rounded-lg border border-slate-200 p-1.5 bg-white object-contain"
-                      />
-                    </div>
+                  {((isSafeImageSrc(item.answerImageUrl) && item.answerImageUrl) ||
+                    (isSafeImageSrc(item.answerImageUrl2) && item.answerImageUrl2)) && (
+                    isSafeImageSrc(item.answerImageUrl) &&
+                    item.answerImageUrl &&
+                    isSafeImageSrc(item.answerImageUrl2) &&
+                    item.answerImageUrl2 ? (
+                      <div className="my-1 grid grid-cols-2 gap-3 max-w-2xl items-center">
+                        <ResilientQuestionImage
+                          src={item.answerImageUrl}
+                          alt={`Answer ${originalIndex} diagram 1`}
+                          className="max-h-48 w-full rounded-lg border border-slate-200 p-1.5 bg-white object-contain"
+                        />
+                        <ResilientQuestionImage
+                          src={item.answerImageUrl2}
+                          alt={`Answer ${originalIndex} diagram 2`}
+                          className="max-h-48 w-full rounded-lg border border-slate-200 p-1.5 bg-white object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="my-1">
+                        <ResilientQuestionImage
+                          src={(item.answerImageUrl || item.answerImageUrl2)!}
+                          alt={`Answer ${originalIndex} diagram`}
+                          className="max-h-48 w-auto rounded-lg border border-slate-200 p-1.5 bg-white object-contain"
+                        />
+                      </div>
+                    )
                   )}
                 </div>
               );

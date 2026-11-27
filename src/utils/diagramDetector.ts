@@ -110,8 +110,10 @@ const GENERAL_IMAGE_MENTION_REGEX =
 export function hasUploadedImage(q: QuestionItem): boolean {
   return Boolean(
     (typeof q.imageUrl === 'string' && q.imageUrl.trim().length > 0) ||
+      (typeof q.imageUrl2 === 'string' && q.imageUrl2.trim().length > 0) ||
       (typeof q.diagramSvg === 'string' && q.diagramSvg.trim().length > 0) ||
       (typeof q.answerImageUrl === 'string' && q.answerImageUrl.trim().length > 0) ||
+      (typeof q.answerImageUrl2 === 'string' && q.answerImageUrl2.trim().length > 0) ||
       (typeof q.answerDiagramSvg === 'string' && q.answerDiagramSvg.trim().length > 0)
   );
 }
@@ -123,10 +125,12 @@ export function hasUploadedImage(q: QuestionItem): boolean {
 export function detectImageRequirement(q: QuestionItem): QuestionImageRequirement {
   const hasQuestionImage = Boolean(
     (typeof q.imageUrl === 'string' && q.imageUrl.trim().length > 0) ||
+      (typeof q.imageUrl2 === 'string' && q.imageUrl2.trim().length > 0) ||
       (typeof q.diagramSvg === 'string' && q.diagramSvg.trim().length > 0)
   );
   const hasAnswerImage = Boolean(
     (typeof q.answerImageUrl === 'string' && q.answerImageUrl.trim().length > 0) ||
+      (typeof q.answerImageUrl2 === 'string' && q.answerImageUrl2.trim().length > 0) ||
       (typeof q.answerDiagramSvg === 'string' && q.answerDiagramSvg.trim().length > 0)
   );
   const hasImage = hasQuestionImage || hasAnswerImage;

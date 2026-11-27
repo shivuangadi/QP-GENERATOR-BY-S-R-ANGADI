@@ -203,6 +203,14 @@ function extractNumericTokens(fp: string): string[] {
  * degree-OCR, spacing, and minor-phrasing duplicates.
  */
 export function areQuestionsDuplicates(a: QuestionItem, b: QuestionItem): boolean {
+  if (!a || !b || a.id === b.id) return false;
+  if (
+    (Array.isArray(a.notDuplicateIds) && a.notDuplicateIds.includes(b.id)) ||
+    (Array.isArray(b.notDuplicateIds) && b.notDuplicateIds.includes(a.id))
+  ) {
+    return false;
+  }
+
   const fpA = normalizeQuestionFingerprint(a.question || '');
   const fpB = normalizeQuestionFingerprint(b.question || '');
   if (!fpA || !fpB) return false;
@@ -428,6 +436,139 @@ export function areQuestionsDuplicates(a: QuestionItem, b: QuestionItem): boolea
   return false;
 }
 
+/**
+ * Compares TWO questions strictly by COMPLETE CONTENT (full question + options + full answer),
+ * NEVER flagging questions merely because their printed serial numbers repeat across sections.
+ * Respects `notDuplicateIds` so any pair marked "Not Duplicate" never shows up again.
+ * Returns a human-readable match reason string if possibly duplicate, or `null` otherwise.
+ */
+export function detectContentDuplicateReason(a: QuestionItem, b: QuestionItem): string | null {
+  if (!a || !b || a.id === b.id) return null;
+  if (
+    (Array.isArray(a.notDuplicateIds) && a.notDuplicateIds.includes(b.id)) ||
+    (Array.isArray(b.notDuplicateIds) && b.notDuplicateIds.includes(a.id))
+  ) {
+    return null;
+  }
+
+  const fpA = normalizeQuestionFingerprint(a.question || '');
+  const fpB = normalizeQuestionFingerprint(b.question || '');
+  if (!fpA || !fpB) return null;
+
+  const optsA = normalizeOptionsCompare(a.options);
+  const optsB = normalizeOptionsCompare(b.options);
+  const ansA = normalizeAnswerCompare(a.answer);
+  const ansB = normalizeAnswerCompare(b.answer);
+
+  const fullA = [fpA, optsA, ansA].filter(Boolean).join(' ').trim();
+  const fullB = [fpB, optsB, ansB].filter(Boolean).join(' ').trim();
+
+  // 1. Exact complete Question + Options + Answer match
+  if (fullA.length >= 20 && fullA === fullB) {
+    return 'ಸಂಪೂರ್ಣ ಪ್ರಶ್ನೆ ಮತ್ತು ಉತ್ತರ ಒಂದೇ ಆಗಿವೆ (Exact Q & A Match)';
+  }
+
+  // Guard short generic figure-dependent stems unless options/answers also match
+  const isGenericFig = isShortGenericFigureStem(fpA) || isShortGenericFigureStem(fpB);
+  if (isGenericFig) {
+    if (fpA === fpB && optsA === optsB && ansA && ansB && ansA === ansB) {
+      return 'ಸಂಪೂರ್ಣ ಪ್ರಶ್ನೆ ಮತ್ತು ಉತ್ತರ ಒಂದೇ ಆಗಿವೆ (Exact Q & A Match)';
+    }
+    return null;
+  }
+
+  // 2. Identical question text (and options when both have options) with compatible answers
+  if (fpA.length >= 18 && fpA === fpB && (!optsA || !optsB || optsA === optsB)) {
+    if (!ansA || !ansB || ansA === ansB || ansA.includes(ansB) || ansB.includes(ansA)) {
+      return 'ಒಂದೇ ಪ್ರಶ್ನೆ ಮತ್ತು ಉತ್ತರ (Identical Question & Answer)';
+    }
+    const ansTokA = new Set(ansA.split(' ').filter(t => t.length >= 2 && !STOP_WORDS.has(t)));
+    const ansTokB = new Set(ansB.split(' ').filter(t => t.length >= 2 && !STOP_WORDS.has(t)));
+    let sharedAns = 0;
+    for (const t of ansTokA) {
+      if (ansTokB.has(t)) sharedAns++;
+    }
+    const minAnsSize = Math.min(ansTokA.size, ansTokB.size);
+    if (minAnsSize > 0 && sharedAns / minAnsSize >= 0.45) {
+      return 'ಒಂದೇ ಪ್ರಶ್ನೆ ಪಠ್ಯ (Identical Question)';
+    }
+  }
+
+  // 3. Structural content duplicate check (ignoring serial numbers completely)
+  const cloneNoSerialA: QuestionItem = { ...a, questionNumber: undefined, printedSerial: undefined };
+  const cloneNoSerialB: QuestionItem = { ...b, questionNumber: undefined, printedSerial: undefined };
+  if (areQuestionsDuplicates(cloneNoSerialA, cloneNoSerialB)) {
+    return 'ಹೋಲುವ ಪ್ರಶ್ನೆ ಮತ್ತು ಉತ್ತರ (Matching Question & Answer)';
+  }
+
+  // 4. High complete-content similarity across full Question + Options + Answer
+  if (fpA.length >= 24 && fpB.length >= 24 && fullA.length >= 36 && fullB.length >= 36) {
+    const numsA = extractNumericTokens(fpA);
+    const numsB = extractNumericTokens(fpB);
+    const sameNums = numsA.length === numsB.length && numsA.every((n, i) => n === numsB[i]);
+    if (sameNums) {
+      const setA = new Set(fullA.split(' ').filter(t => t.length >= 2 && !STOP_WORDS.has(t)));
+      const setB = new Set(fullB.split(' ').filter(t => t.length >= 2 && !STOP_WORDS.has(t)));
+      if (setA.size >= 4 && setB.size >= 4) {
+        let inter = 0;
+        for (const t of setA) {
+          if (setB.has(t)) inter++;
+        }
+        const union = new Set([...setA, ...setB]).size;
+        if (union > 0 && inter / union >= 0.8) {
+          return 'ಸಂಪೂರ್ಣ ವಿಷಯ ಹೋಲುತ್ತಿದೆ (High Q & A Similarity)';
+        }
+      }
+    }
+  }
+
+  // 5. Identical substantial full answer + strong question token overlap
+  if (ansA.length >= 45 && ansA === ansB) {
+    const qTokA = new Set(fpA.split(' ').filter(t => t.length >= 3 && !STOP_WORDS.has(t)));
+    const qTokB = new Set(fpB.split(' ').filter(t => t.length >= 3 && !STOP_WORDS.has(t)));
+    let sharedQ = 0;
+    for (const t of qTokA) {
+      if (qTokB.has(t)) sharedQ++;
+    }
+    const minQ = Math.min(qTokA.size, qTokB.size);
+    if (sharedQ >= 2 && minQ > 0 && sharedQ / minQ >= 0.5) {
+      return 'ಒಂದೇ ಉತ್ತರ ಮತ್ತು ಹೋಲುವ ಪ್ರಶ್ನೆ (Same Answer & Similar Question)';
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Checks whether a chapter has repeating or restarting serial numbers (e.g. Prose #1, Grammar #1, Poem #1).
+ */
+export function hasRepeatingOrRestartingSerials(questions: QuestionItem[]): boolean {
+  const seen = new Set<number>();
+  let prev = 0;
+  for (const q of questions || []) {
+    const n = typeof q.questionNumber === 'number' && q.questionNumber > 0 ? q.questionNumber : null;
+    if (n === null) continue;
+    if (seen.has(n) || n < prev) return true;
+    seen.add(n);
+    prev = n;
+  }
+  return false;
+}
+
+/**
+ * Assigns continuous serial numbers 1..N across each chapter while strictly preserving existing PDF order.
+ */
+export function assignContinuousSerialNumbers(chapters: Chapter[]): Chapter[] {
+  return (chapters || []).map(ch => ({
+    ...ch,
+    questions: (ch.questions || []).map((q, idx) => ({
+      ...q,
+      questionNumber: idx + 1,
+      printedSerial: String(idx + 1),
+    })),
+  }));
+}
+
 function normalizeChapterNameKey(name?: string): string {
   return String(name || '')
     .replace(/[೦-೯]/g, ch => KANNADA_DIGITS_MAP[ch] ?? ch)
@@ -515,11 +656,13 @@ function mergeMatchedQuestion(
 
   // Preserve uploaded images from EITHER copy (existing takes priority if both exist)
   const imageUrl = existing.imageUrl || incoming.imageUrl;
+  const imageUrl2 = existing.imageUrl2 || incoming.imageUrl2;
   const diagramSvg = existing.diagramSvg || incoming.diagramSvg;
   const answerImageUrl = existing.answerImageUrl || incoming.answerImageUrl;
+  const answerImageUrl2 = existing.answerImageUrl2 || incoming.answerImageUrl2;
   const answerDiagramSvg = existing.answerDiagramSvg || incoming.answerDiagramSvg;
   const hasDiagram = Boolean(
-    imageUrl || diagramSvg || answerImageUrl || answerDiagramSvg || existing.hasDiagram || incoming.hasDiagram
+    imageUrl || imageUrl2 || diagramSvg || answerImageUrl || answerImageUrl2 || answerDiagramSvg || existing.hasDiagram || incoming.hasDiagram
   );
 
   // Pick the fuller, higher-quality explanation answer between the two copies
@@ -543,18 +686,28 @@ function mergeMatchedQuestion(
       ? sanitizedIncoming.marks
       : sanitizedExisting.marks ?? sanitizedIncoming.marks;
 
+  const mergedId = existingHadImage || !incomingHadImage ? existing.id : incoming.id;
+  const mergedNotDupSet = new Set<string>([
+    ...(Array.isArray(existing.notDuplicateIds) ? existing.notDuplicateIds : []),
+    ...(Array.isArray(incoming.notDuplicateIds) ? incoming.notDuplicateIds : []),
+  ]);
+  mergedNotDupSet.delete(mergedId);
+  const mergedNotDupIds = mergedNotDupSet.size > 0 ? Array.from(mergedNotDupSet) : undefined;
+
   const merged: QuestionItem = {
     ...sanitizedIncoming,
     ...sanitizedExisting,
-    id: existingHadImage || !incomingHadImage ? existing.id : incoming.id,
+    id: mergedId,
     marks: finalMarks,
     question: finalQuestionText,
     answer: chosenAnswer,
     options: finalOptions,
     items: finalItems,
     imageUrl,
+    imageUrl2,
     diagramSvg,
     answerImageUrl,
+    answerImageUrl2,
     answerDiagramSvg,
     hasDiagram,
     diagramDescription: existing.diagramDescription || incoming.diagramDescription,
@@ -564,6 +717,7 @@ function mergeMatchedQuestion(
     answerPage: incoming.answerPage ?? existing.answerPage,
     questionNumber: incoming.questionNumber ?? existing.questionNumber,
     printedSerial: incoming.printedSerial ?? existing.printedSerial,
+    ...(mergedNotDupIds ? { notDuplicateIds: mergedNotDupIds } : {}),
     chapterId: existing.chapterId || incoming.chapterId,
     chapterName: existing.chapterName || incoming.chapterName,
     chapterNumber: existing.chapterNumber ?? incoming.chapterNumber,
@@ -660,11 +814,17 @@ export function deduplicateQuestionBank(bank: QuestionBank): DeduplicateBankResu
       removedDuplicates += chRemoved;
     }
 
-    // Restore natural order: by official PDF questionNumber when present, otherwise original chapter order
+    // Restore exact PDF order: NEVER scramble order by sorting on repeating/restarting section numbers!
     const origPosMap = new Map<string, number>();
     rawQs.forEach((q, idx) => origPosMap.set(q.id, idx));
-    const numberedCount = uniqueQs.filter(q => typeof q.questionNumber === 'number' && q.questionNumber > 0).length;
-    if (numberedCount >= Math.ceil(uniqueQs.length * 0.5)) {
+
+    const numberedQs = uniqueQs.filter(q => typeof q.questionNumber === 'number' && q.questionNumber > 0);
+    const uniqueNumSet = new Set(numberedQs.map(q => q.questionNumber!));
+    const hasStrictlyUniqueSerials =
+      numberedQs.length >= Math.ceil(uniqueQs.length * 0.5) &&
+      uniqueNumSet.size === numberedQs.length;
+
+    if (hasStrictlyUniqueSerials) {
       uniqueQs.sort((a, b) => {
         const na = typeof a.questionNumber === 'number' && a.questionNumber > 0 ? a.questionNumber : 99999;
         const nb = typeof b.questionNumber === 'number' && b.questionNumber > 0 ? b.questionNumber : 99999;
@@ -672,7 +832,14 @@ export function deduplicateQuestionBank(bank: QuestionBank): DeduplicateBankResu
         return (origPosMap.get(a.id) ?? 99999) - (origPosMap.get(b.id) ?? 99999);
       });
     } else {
+      // Preserve exact PDF top-to-bottom order and assign continuous 1..N serial numbers
       uniqueQs.sort((a, b) => (origPosMap.get(a.id) ?? 99999) - (origPosMap.get(b.id) ?? 99999));
+      if (hasRepeatingOrRestartingSerials(uniqueQs)) {
+        uniqueQs.forEach((q, idx) => {
+          q.questionNumber = idx + 1;
+          q.printedSerial = String(idx + 1);
+        });
+      }
     }
 
     totalQuestionsAfter += uniqueQs.length;

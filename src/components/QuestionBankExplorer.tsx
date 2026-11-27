@@ -28,6 +28,7 @@ import {
   EyeOff,
   AlertCircle,
   Edit3,
+  Hash,
 } from 'lucide-react';
 import {
   matchesGrade,
@@ -46,7 +47,9 @@ import {
   pickBestMatchingBankCandidate,
   formatMergeSummaryKannada,
   deduplicateQuestionBank,
-  areQuestionsDuplicates,
+  detectContentDuplicateReason,
+  hasRepeatingOrRestartingSerials,
+  assignContinuousSerialNumbers,
   isAnswerMissingOrIncomplete,
 } from '../utils/bankMerger.ts';
 import {
@@ -89,6 +92,7 @@ interface QuestionBankExplorerProps {
   onUpdateBank?: (updatedBank: QuestionBank) => Promise<void> | void;
   onOpenSavedBank?: (loadedBank: QuestionBank, entry?: IndexEntry) => void;
   onDeleteSavedBank?: (deletedId: string) => void;
+  onRebuildBank?: (bank: SavedBankSummary) => void;
 }
 
 export function matchesDifficulty(
@@ -170,6 +174,7 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
   onUpdateBank,
   onOpenSavedBank,
   onDeleteSavedBank,
+  onRebuildBank,
 }) => {
   const [selectedChapterId, setSelectedChapterId] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
@@ -191,9 +196,9 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
 
   // Image / PDF Cropper Modal state + stable snapshot queue so moving Prev/Next works even under "Pending Images" filter
   const [editingImageQuestion, setEditingImageQuestion] = useState<QuestionItem | null>(null);
-  const [editingImageSlot, setEditingImageSlot] = useState<'question' | 'answer'>('question');
+  const [editingImageSlot, setEditingImageSlot] = useState<'question' | 'question2' | 'answer' | 'answer2'>('question');
   const [modalNavQueue, setModalNavQueue] = useState<
-    Array<{ chapterId: string; questionId: string; defaultSlot: 'question' | 'answer' }>
+    Array<{ chapterId: string; questionId: string; defaultSlot: 'question' | 'question2' | 'answer' | 'answer2' }>
   >([]);
   const [modalNavIndex, setModalNavIndex] = useState<number>(0);
   const [saveNotice, setSaveNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -341,46 +346,76 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
     return count;
   }, [bank, selectedChapterId, isBriefOrMissingDetailedAnswer]);
 
-  // Detect possible duplicate questions within each chapter (same serial number OR fuzzy duplicate text)
-  const possibleDuplicateKeys = useMemo(() => {
-    const dupKeys = new Set<string>();
+  // Detect possible duplicate pairs strictly by COMPLETE CONTENT (full question + options + full answer).
+  // NEVER considers repeated serial numbers across sections, and respects persistent `notDuplicateIds`.
+  const allPossibleDuplicatePairs = useMemo(() => {
+    const pairs: Array<{
+      pairKey: string;
+      chapterId: string;
+      chapterName: string;
+      questionA: QuestionItem;
+      questionB: QuestionItem;
+      indexA: number;
+      indexB: number;
+      reason: string;
+    }> = [];
     bank.chapters.forEach(ch => {
       const qs = ch.questions || [];
-      const serialGroups = new Map<number, string[]>();
-      qs.forEach(q => {
-        if (typeof q.questionNumber === 'number' && q.questionNumber > 0) {
-          const list = serialGroups.get(q.questionNumber) || [];
-          list.push(`${ch.chapterId}::${q.id}`);
-          serialGroups.set(q.questionNumber, list);
-        }
-      });
-      serialGroups.forEach(keys => {
-        if (keys.length > 1) {
-          keys.forEach(k => dupKeys.add(k));
-        }
-      });
       for (let i = 0; i < qs.length; i++) {
         for (let j = i + 1; j < qs.length; j++) {
-          if (areQuestionsDuplicates(qs[i], qs[j])) {
-            dupKeys.add(`${ch.chapterId}::${qs[i].id}`);
-            dupKeys.add(`${ch.chapterId}::${qs[j].id}`);
+          const reason = detectContentDuplicateReason(qs[i], qs[j]);
+          if (reason) {
+            pairs.push({
+              pairKey: `${ch.chapterId}::${qs[i].id}::${qs[j].id}`,
+              chapterId: ch.chapterId,
+              chapterName: ch.chapterName,
+              questionA: qs[i],
+              questionB: qs[j],
+              indexA: i + 1,
+              indexB: j + 1,
+              reason,
+            });
           }
         }
       }
     });
-    return dupKeys;
+    return pairs;
   }, [bank]);
 
-  const possibleDuplicateCount = useMemo(() => {
-    let count = 0;
-    bank.chapters.forEach(ch => {
-      if (selectedChapterId !== 'all' && ch.chapterId !== selectedChapterId) return;
-      ch.questions.forEach(q => {
-        if (possibleDuplicateKeys.has(`${ch.chapterId}::${q.id}`)) count += 1;
-      });
+  const filteredDuplicatePairs = useMemo(() => {
+    const s = searchQuery.toLowerCase().trim();
+    return allPossibleDuplicatePairs.filter(pair => {
+      if (selectedChapterId !== 'all' && pair.chapterId !== selectedChapterId) return false;
+      if (s) {
+        const hay = [
+          pair.questionA.question,
+          pair.questionA.answer,
+          pair.questionB.question,
+          pair.questionB.answer,
+        ]
+          .join(' ')
+          .toLowerCase();
+        if (!hay.includes(s)) return false;
+      }
+      return true;
     });
-    return count;
-  }, [bank, selectedChapterId, possibleDuplicateKeys]);
+  }, [allPossibleDuplicatePairs, selectedChapterId, searchQuery]);
+
+  const possibleDuplicateKeys = useMemo(() => {
+    const dupKeys = new Set<string>();
+    allPossibleDuplicatePairs.forEach(pair => {
+      dupKeys.add(`${pair.chapterId}::${pair.questionA.id}`);
+      dupKeys.add(`${pair.chapterId}::${pair.questionB.id}`);
+    });
+    return dupKeys;
+  }, [allPossibleDuplicatePairs]);
+
+  const possibleDuplicateCount = filteredDuplicatePairs.length;
+
+  const hasRepeatingSerials = useMemo(
+    () => (bank.chapters || []).some(ch => hasRepeatingOrRestartingSerials(ch.questions || [])),
+    [bank]
+  );
 
   // Extract all filtered questions
   const filteredQuestions = useMemo(() => {
@@ -783,7 +818,7 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
   // Open the Image/Crop modal and snapshot the current visible list so Prev/Next works smoothly
   const openImageModalForQuestion = (
     q: QuestionItem,
-    explicitSlot?: 'question' | 'answer'
+    explicitSlot?: 'question' | 'question2' | 'answer' | 'answer2'
   ) => {
     const queueList = filteredQuestions.some(item => item.id === q.id && item.chapterId === q.chapterId)
       ? filteredQuestions
@@ -840,11 +875,18 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
           return {
             ...q,
             imageUrl: update.imageUrl,
+            imageUrl2: update.imageUrl2,
             diagramSvg: update.diagramSvg,
             answerImageUrl: update.answerImageUrl,
+            answerImageUrl2: update.answerImageUrl2,
             answerDiagramSvg: update.answerDiagramSvg,
             hasDiagram: update.hasDiagram,
-            needsImage: update.hasDiagram ? true : q.needsImage,
+            needsImage:
+              update.needsImage !== undefined
+                ? update.needsImage
+                : update.hasDiagram
+                  ? true
+                  : q.needsImage,
             diagramDescription: update.diagramDescription,
             answerDiagramDescription: update.answerDiagramDescription,
             objective: update.hasDiagram && !q.objective ? 'ಕೌಶಲ' : q.objective,
@@ -935,15 +977,12 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
 
   // Permanently delete a single (duplicate/unwanted) question and clean up any attached images
   const handleDeleteQuestion = async (qItem: QuestionItem) => {
-    const qImgId = extractImageIdFromUrl(qItem.imageUrl);
-    if (qImgId) {
-      deleteQuestionImageFromFirebase(qImgId).catch(() => {});
-      fetch(`/api/question-image/${qImgId}`, { method: 'DELETE' }).catch(() => {});
-    }
-    const aImgId = extractImageIdFromUrl(qItem.answerImageUrl);
-    if (aImgId) {
-      deleteQuestionImageFromFirebase(aImgId).catch(() => {});
-      fetch(`/api/question-image/${aImgId}`, { method: 'DELETE' }).catch(() => {});
+    for (const imgUrl of [qItem.imageUrl, qItem.imageUrl2, qItem.answerImageUrl, qItem.answerImageUrl2]) {
+      const imgId = extractImageIdFromUrl(imgUrl);
+      if (imgId) {
+        deleteQuestionImageFromFirebase(imgId).catch(() => {});
+        fetch(`/api/question-image/${imgId}`, { method: 'DELETE' }).catch(() => {});
+      }
     }
 
     const updatedChapters = bank.chapters.map(ch => {
@@ -987,6 +1026,62 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
     );
   };
 
+  // Mark a compared pair as "Not Duplicate" persistently so it NEVER appears as a duplicate again
+  const handleMarkNotDuplicate = async (qA: QuestionItem, qB: QuestionItem) => {
+    const updatedChapters = bank.chapters.map(ch => {
+      if (ch.chapterId !== qA.chapterId && ch.chapterId !== qB.chapterId) return ch;
+      return {
+        ...ch,
+        questions: ch.questions.map(q => {
+          if (q.id === qA.id) {
+            const nextIds = Array.from(
+              new Set([...(Array.isArray(q.notDuplicateIds) ? q.notDuplicateIds : []), qB.id])
+            );
+            return { ...q, notDuplicateIds: nextIds };
+          }
+          if (q.id === qB.id) {
+            const nextIds = Array.from(
+              new Set([...(Array.isArray(q.notDuplicateIds) ? q.notDuplicateIds : []), qA.id])
+            );
+            return { ...q, notDuplicateIds: nextIds };
+          }
+          return q;
+        }),
+      };
+    });
+
+    const updatedBank: QuestionBank = {
+      ...bank,
+      metadata: {
+        ...bank.metadata,
+        updatedAt: new Date().toISOString(),
+      },
+      chapters: updatedChapters,
+    };
+
+    await persistBankUpdate(
+      updatedBank,
+      'ಈ ಜೋಡಿಯನ್ನು "ಡುಪ್ಲಿಕೇಟ್ ಅಲ್ಲ (Not Duplicate)" ಎಂದು ಶಾಶ್ವತವಾಗಿ ಗುರುತಿಸಲಾಗಿದೆ — ಮತ್ತೆ ಕಾಣಿಸುವುದಿಲ್ಲ!'
+    );
+  };
+
+  // Assign continuous 1..N serial numbers per chapter without changing exact PDF order
+  const handleRenumberContinuous = async () => {
+    const renumberedChapters = assignContinuousSerialNumbers(bank.chapters);
+    const updatedBank: QuestionBank = {
+      ...bank,
+      metadata: {
+        ...bank.metadata,
+        updatedAt: new Date().toISOString(),
+      },
+      chapters: renumberedChapters,
+    };
+    await persistBankUpdate(
+      updatedBank,
+      'ಎಲ್ಲಾ ಅಧ್ಯಾಯಗಳ ಪ್ರಶ್ನೆಗಳಿಗೆ ಆರಂಭದಿಂದ ಕೊನೆಯವರೆಗೆ ನಿರಂತರ ಕ್ರಮ ಸಂಖ್ಯೆ (1..N) ನೀಡಲಾಗಿದೆ!'
+    );
+  };
+
   // Toggle "No image needed" dismissal on a false-positive question
   const handleToggleNeedsImage = async (qItem: QuestionItem, needs: boolean) => {
     const updatedChapters = bank.chapters.map(ch => {
@@ -1017,8 +1112,18 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
   };
 
   // Delete a Question or Answer image inline (cleans Firebase + server cache + updates bank)
-  const handleDeleteQuestionImage = async (qItem: QuestionItem, slot: 'question' | 'answer') => {
-    const urlToRemove = slot === 'question' ? qItem.imageUrl : qItem.answerImageUrl;
+  const handleDeleteQuestionImage = async (
+    qItem: QuestionItem,
+    slot: 'question' | 'question2' | 'answer' | 'answer2'
+  ) => {
+    const urlToRemove =
+      slot === 'question'
+        ? qItem.imageUrl
+        : slot === 'question2'
+          ? qItem.imageUrl2
+          : slot === 'answer'
+            ? qItem.answerImageUrl
+            : qItem.answerImageUrl2;
     const imageId = extractImageIdFromUrl(urlToRemove);
     if (imageId) {
       deleteQuestionImageFromFirebase(imageId).catch(() => {});
@@ -1034,12 +1139,19 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
           const next: QuestionItem = {
             ...q,
             imageUrl: slot === 'question' ? undefined : q.imageUrl,
+            imageUrl2: slot === 'question2' ? undefined : q.imageUrl2,
             diagramSvg: slot === 'question' ? undefined : q.diagramSvg,
             answerImageUrl: slot === 'answer' ? undefined : q.answerImageUrl,
+            answerImageUrl2: slot === 'answer2' ? undefined : q.answerImageUrl2,
             answerDiagramSvg: slot === 'answer' ? undefined : q.answerDiagramSvg,
           };
           next.hasDiagram = Boolean(
-            next.imageUrl || next.diagramSvg || next.answerImageUrl || next.answerDiagramSvg
+            next.imageUrl ||
+              next.imageUrl2 ||
+              next.diagramSvg ||
+              next.answerImageUrl ||
+              next.answerImageUrl2 ||
+              next.answerDiagramSvg
           );
           return next;
         }),
@@ -1055,9 +1167,18 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
       chapters: updatedChapters,
     };
 
+    const slotLabel =
+      slot === 'question'
+        ? 'ಪ್ರಶ್ನೆ ಚಿತ್ರ 1'
+        : slot === 'question2'
+          ? 'ಪ್ರಶ್ನೆ ಚಿತ್ರ 2'
+          : slot === 'answer'
+            ? 'ಉತ್ತರ ಚಿತ್ರ 1'
+            : 'ಉತ್ತರ ಚಿತ್ರ 2';
+
     await persistBankUpdate(
       updatedBank,
-      `${slot === 'question' ? 'ಪ್ರಶ್ನೆ ಚಿತ್ರ' : 'ಉತ್ತರ ಚಿತ್ರ'} ಡಿಲೀಟ್ ಮಾಡಲಾಗಿದೆ (Firebase ನಿಂದಲೂ ತೆರವುಗೊಂಡಿದೆ).`
+      `${slotLabel} ಡಿಲೀಟ್ ಮಾಡಲಾಗಿದೆ (Firebase ನಿಂದಲೂ ತೆರವುಗೊಂಡಿದೆ).`
     );
   };
 
@@ -1244,6 +1365,7 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
                 openButtonLabel="ತೆರೆಯಿರಿ"
                 onOpenBank={sb => handleReopenSavedJsonBank(sb.id)}
                 onDeleteBank={handleDeleteSavedJsonBank}
+                onRebuildBank={onRebuildBank}
               />
             )}
           </div>
@@ -1468,12 +1590,20 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-slate-600 tabular-nums">
         <div className="flex flex-wrap items-center gap-2.5">
           <span>
-            ತೋರಿಸಲಾಗುತ್ತಿರುವ ಪ್ರಶ್ನೆಗಳು: <strong className="text-slate-900">{filteredQuestions.length}</strong>
-            {imageFilter === 'pending' && ' (ಚಿತ್ರ ಅಪ್ಲೋಡ್ ಬಾಕಿ ಇರುವ ಪ್ರಶ್ನೆಗಳು)'}
-            {imageFilter === 'uploaded' && ' (ಚಿತ್ರ ಅಪ್ಲೋಡ್ ಆಗಿರುವ ಪ್ರಶ್ನೆಗಳು)'}
-            {imageFilter === 'all_diagram' && ' (ಎಲ್ಲಾ ಚಿತ್ರ ಆಧಾರಿತ ಪ್ರಶ್ನೆಗಳು)'}
-            {showIncompleteAnswersOnly && ' (ಸಂಕ್ಷಿಪ್ತ / ಅಪೂರ್ಣ ಉತ್ತರಗಳು)'}
-            {showPossibleDuplicatesOnly && ' (ಸಂಭಾವ್ಯ ಡುಪ್ಲಿಕೇಟ್ ಪ್ರಶ್ನೆಗಳು)'}
+            {showPossibleDuplicatesOnly ? (
+              <>
+                ಸಂಭಾವ್ಯ ಡುಪ್ಲಿಕೇಟ್ ಜೋಡಿಗಳು (Side-by-Side):{' '}
+                <strong className="text-rose-700">{filteredDuplicatePairs.length}</strong>
+              </>
+            ) : (
+              <>
+                ತೋರಿಸಲಾಗುತ್ತಿರುವ ಪ್ರಶ್ನೆಗಳು: <strong className="text-slate-900">{filteredQuestions.length}</strong>
+                {imageFilter === 'pending' && ' (ಚಿತ್ರ ಅಪ್ಲೋಡ್ ಬಾಕಿ ಇರುವ ಪ್ರಶ್ನೆಗಳು)'}
+                {imageFilter === 'uploaded' && ' (ಚಿತ್ರ ಅಪ್ಲೋಡ್ ಆಗಿರುವ ಪ್ರಶ್ನೆಗಳು)'}
+                {imageFilter === 'all_diagram' && ' (ಎಲ್ಲಾ ಚಿತ್ರ ಆಧಾರಿತ ಪ್ರಶ್ನೆಗಳು)'}
+                {showIncompleteAnswersOnly && ' (ಸಂಕ್ಷಿಪ್ತ / ಅಪೂರ್ಣ ಉತ್ತರಗಳು)'}
+              </>
+            )}
           </span>
 
           <button
@@ -1494,7 +1624,7 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
             </span>
           </button>
 
-          {possibleDuplicateCount > 0 && (
+          {(possibleDuplicateCount > 0 || showPossibleDuplicatesOnly) && (
             <button
               type="button"
               onClick={() => setShowPossibleDuplicatesOnly(prev => !prev)}
@@ -1503,12 +1633,25 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
                   ? 'bg-rose-600 text-white border-rose-700'
                   : 'bg-rose-50 hover:bg-rose-100 text-rose-800 border-rose-300'
               }`}
-              title="ಒಂದೇ ಕ್ರಮ ಸಂಖ್ಯೆ ಅಥವಾ ಹೋಲುವ ಪ್ರಶ್ನೆಗಳನ್ನು ಪರಿಶೀಲಿಸಿ ಡುಪ್ಲಿಕೇಟ್ ಡಿಲೀಟ್ ಮಾಡಿ"
+              title="ಸಂಪೂರ್ಣ ಪ್ರಶ್ನೆ ಮತ್ತು ಉತ್ತರ ಹೋಲುವ ಜೋಡಿಗಳನ್ನು ಅಕ್ಕಪಕ್ಕದಲ್ಲಿ (Side-by-Side) ಹೋಲಿಸಿ"
             >
               <AlertTriangle className="w-3 h-3" />
               <span>
-                ಸಂಭಾವ್ಯ ಡುಪ್ಲಿಕೇಟ್ ({possibleDuplicateCount})
+                ಸಂಭಾವ್ಯ ಡುಪ್ಲಿಕೇಟ್ ({possibleDuplicateCount} ಜೋಡಿ)
               </span>
+            </button>
+          )}
+
+          {hasRepeatingSerials && onUpdateBank && (
+            <button
+              type="button"
+              disabled={isPersisting}
+              onClick={handleRenumberContinuous}
+              className="px-2.5 py-1 rounded-lg border text-2xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border-indigo-300 disabled:opacity-50"
+              title="ಪುನರಾವರ್ತಿತ ಕ್ರಮ ಸಂಖ್ಯೆಗಳನ್ನು PDF ಕ್ರಮ ಬದಲಿಸದೇ 1 ರಿಂದ N ವರೆಗೆ ನಿರಂತರವಾಗಿ ಸರಿಪಡಿಸಿ"
+            >
+              <Hash className="w-3 h-3" />
+              <span>ನಿರಂತರ ಕ್ರಮ ಸಂಖ್ಯೆ (1..N)</span>
             </button>
           )}
         </div>
@@ -1537,9 +1680,243 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
         )}
       </div>
 
-      {/* 4. Questions Listing */}
+      {/* 4. Questions Listing OR Side-by-Side Duplicate Comparison Mode */}
       <div className="space-y-3">
-        {filteredQuestions.length === 0 ? (
+        {showPossibleDuplicatesOnly ? (
+          filteredDuplicatePairs.length === 0 ? (
+            <div className="bg-emerald-50/70 rounded-2xl border border-emerald-200 p-10 text-center text-emerald-900 space-y-2">
+              <CheckCircle2 className="w-9 h-9 text-emerald-600 mx-auto" />
+              <p className="font-bold text-sm">
+                ಯಾವುದೇ ಸಂಭಾವ್ಯ ಡುಪ್ಲಿಕೇಟ್ ಜೋಡಿಗಳು ಕಂಡುಬಂದಿಲ್ಲ! (No Duplicate Pairs Found)
+              </p>
+              <p className="text-xs text-emerald-800">
+                ಸಂಪೂರ್ಣ ಪ್ರಶ್ನೆ ಮತ್ತು ಉತ್ತರ ಆಧಾರಿತ ಪರಿಶೀಲನೆಯಲ್ಲಿ ಎಲ್ಲಾ ಪ್ರಶ್ನೆಗಳು ವಿಶಿಷ್ಟವಾಗಿವೆ.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowPossibleDuplicatesOnly(false)}
+                className="mt-2 px-4 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors cursor-pointer"
+              >
+                ಎಲ್ಲಾ ಪ್ರಶ್ನೆಗಳಿಗೆ ಹಿಂತಿರುಗಿ
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-rose-50/80 border border-rose-200 rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs text-rose-900">
+                <span className="font-semibold">
+                  ಅಕ್ಕಪಕ್ಕದಲ್ಲಿ (Side-by-Side) ಸಂಪೂರ್ಣ ಪ್ರಶ್ನೆ ಮತ್ತು ಉತ್ತರ ಹೋಲಿಸಿ — ಡುಪ್ಲಿಕೇಟ್ ಅಲ್ಲದಿದ್ದರೆ{' '}
+                  <strong>&quot;ಡುಪ್ಲಿಕೇಟ್ ಅಲ್ಲ&quot;</strong> ಒತ್ತಿ, ಡುಪ್ಲಿಕೇಟ್ ಆಗಿದ್ದರೆ ಬೇಕಾದ ಪ್ರತಿಯನ್ನು ಮಾತ್ರ <strong>ಡಿಲೀಟ್</strong> ಮಾಡಿ.
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowPossibleDuplicatesOnly(false)}
+                  className="px-2.5 py-1 rounded-lg bg-white hover:bg-rose-100 border border-rose-300 text-rose-800 text-2xs font-bold cursor-pointer whitespace-nowrap"
+                >
+                  ಸಾಮಾನ್ಯ ಪಟ್ಟಿಗೆ ಹಿಂತಿರುಗಿ
+                </button>
+              </div>
+
+              {filteredDuplicatePairs.map((pair, pairIdx) => (
+                <div
+                  key={pair.pairKey}
+                  className="bg-white rounded-2xl border-2 border-rose-200 overflow-hidden shadow-xs"
+                >
+                  {/* Pair Header */}
+                  <div className="px-4 py-2.5 bg-rose-50/70 border-b border-rose-200 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <span className="font-extrabold text-rose-800 tabular-nums">
+                        ಜೋಡಿ #{pairIdx + 1}
+                      </span>
+                      <span aria-hidden="true" className="text-rose-300">·</span>
+                      <span className="font-bold text-indigo-800">{pair.chapterName}</span>
+                      <span className="px-2 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-300 text-3xs font-bold">
+                        {pair.reason}
+                      </span>
+                    </div>
+
+                    {onUpdateBank && (
+                      <button
+                        type="button"
+                        disabled={isPersisting}
+                        onClick={() => handleMarkNotDuplicate(pair.questionA, pair.questionB)}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-2xs font-bold flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-xs"
+                        title="ಇವೆರಡೂ ಬೇರೆ ಪ್ರಶ್ನೆಗಳಾಗಿದ್ದರೆ ಗುರುತಿಸಿ — ಇನ್ನು ಮುಂದೆ ಮತ್ತೆ ಡುಪ್ಲಿಕೇಟ್ ಎಂದು ತೋರಿಸುವುದಿಲ್ಲ"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>ಡುಪ್ಲಿಕೇಟ್ ಅಲ್ಲ (Not Duplicate)</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Side-by-Side Question A & Question B */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-rose-200">
+                    {(
+                      [
+                        { label: 'ಪ್ರಶ್ನೆ A (Copy 1)', q: pair.questionA, fallbackNum: pair.indexA, accent: 'indigo' },
+                        { label: 'ಪ್ರಶ್ನೆ B (Copy 2)', q: pair.questionB, fallbackNum: pair.indexB, accent: 'amber' },
+                      ] as const
+                    ).map(({ label, q, fallbackNum, accent }) => {
+                      const sideKey = `${pair.pairKey}::${q.id}`;
+                      const isConfirmingSideDelete = confirmDeleteQuestionKey === sideKey;
+                      return (
+                        <div key={q.id} className="p-4 flex flex-col justify-between gap-3 bg-white">
+                          <div className="space-y-2.5">
+                            {/* Side Card Header */}
+                            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 text-2xs">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span
+                                  className={`px-2 py-0.5 rounded font-extrabold ${
+                                    accent === 'indigo'
+                                      ? 'bg-indigo-100 text-indigo-800'
+                                      : 'bg-amber-100 text-amber-900'
+                                  }`}
+                                >
+                                  {label}
+                                </span>
+                                <span className="font-extrabold text-slate-900 tabular-nums">
+                                  #{q.printedSerial || q.questionNumber || fallbackNum}
+                                </span>
+                                <span className="text-slate-400">·</span>
+                                <span className="text-slate-600 font-semibold">{q.questionType}</span>
+                                <span className="text-slate-400">·</span>
+                                <span className="font-bold text-emerald-700 tabular-nums">
+                                  {q.marks} {q.marks === 1 ? 'ಅಂಕ' : 'ಅಂಕಗಳು'}
+                                </span>
+                                {q.sourcePage && (
+                                  <span className="text-slate-400 tabular-nums">· p.{q.sourcePage}</span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Full Question */}
+                            <div className="text-slate-900 font-semibold text-xs sm:text-sm leading-relaxed whitespace-pre-line">
+                              <MathText text={q.question} />
+                            </div>
+
+                            {/* Question Images if any */}
+                            {(q.imageUrl || q.imageUrl2) && (
+                              <div className="grid grid-cols-2 gap-2">
+                                {q.imageUrl && (
+                                  <ResilientQuestionImage
+                                    src={q.imageUrl}
+                                    alt="ಪ್ರಶ್ನೆ ಚಿತ್ರ 1"
+                                    className="max-h-36 w-full rounded-lg border border-slate-200 object-contain bg-white p-1"
+                                  />
+                                )}
+                                {q.imageUrl2 && (
+                                  <ResilientQuestionImage
+                                    src={q.imageUrl2}
+                                    alt="ಪ್ರಶ್ನೆ ಚಿತ್ರ 2"
+                                    className="max-h-36 w-full rounded-lg border border-slate-200 object-contain bg-white p-1"
+                                  />
+                                )}
+                              </div>
+                            )}
+
+                            {/* Options if MCQ */}
+                            {q.options && q.options.length > 0 && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-slate-700">
+                                {q.options.map((opt, oIdx) => (
+                                  <div
+                                    key={oIdx}
+                                    className="bg-slate-50 rounded-lg px-2.5 py-1 border border-slate-200/70"
+                                  >
+                                    <MathText text={opt} />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Match Items if any */}
+                            {q.items && q.items.length > 0 && (
+                              <div className="grid grid-cols-1 gap-1 text-xs bg-slate-50 p-2 rounded-lg border border-slate-200">
+                                {q.items.map((it, iIdx) => (
+                                  <div key={iIdx} className="flex justify-between gap-2 border-b border-slate-200/60 pb-0.5 last:border-b-0">
+                                    <span className="font-medium text-slate-800"><MathText text={it.left} /></span>
+                                    <span className="font-bold text-indigo-700"><MathText text={it.right} /></span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Full Answer */}
+                            <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-2.5 text-xs text-emerald-950 space-y-1.5">
+                              <div className="font-bold text-emerald-900">ಉತ್ತರ (Answer):</div>
+                              <div className="whitespace-pre-line leading-relaxed">
+                                <MathText text={q.answer || '— ಉತ್ತರ ಖಾಲಿಯಾಗಿದೆ —'} />
+                              </div>
+                              {(q.answerImageUrl || q.answerImageUrl2) && (
+                                <div className="grid grid-cols-2 gap-2 pt-1">
+                                  {q.answerImageUrl && (
+                                    <ResilientQuestionImage
+                                      src={q.answerImageUrl}
+                                      alt="ಉತ್ತರ ಚಿತ್ರ 1"
+                                      className="max-h-32 w-full rounded-lg border border-emerald-300 object-contain bg-white p-1"
+                                    />
+                                  )}
+                                  {q.answerImageUrl2 && (
+                                    <ResilientQuestionImage
+                                      src={q.answerImageUrl2}
+                                      alt="ಉತ್ತರ ಚಿತ್ರ 2"
+                                      className="max-h-32 w-full rounded-lg border border-emerald-300 object-contain bg-white p-1"
+                                    />
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Side Card Actions: Edit & Manual Delete */}
+                          {onUpdateBank && (
+                            <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                              <button
+                                type="button"
+                                onClick={() => openTextEditModalForQuestion(q)}
+                                className="px-2.5 py-1.5 rounded-lg text-2xs font-semibold border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                              >
+                                <Edit3 className="w-3 h-3" />
+                                <span>ತಿದ್ದುಪಡಿ (Edit)</span>
+                              </button>
+
+                              {isConfirmingSideDelete ? (
+                                <div className="inline-flex items-center gap-1 bg-rose-50 border border-rose-300 rounded-lg px-2 py-1">
+                                  <button
+                                    type="button"
+                                    disabled={isPersisting}
+                                    onClick={() => handleDeleteQuestion(q)}
+                                    className="px-2.5 py-0.5 rounded bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white text-3xs font-bold cursor-pointer whitespace-nowrap"
+                                  >
+                                    ಖಚಿತವಾಗಿ ಡಿಲೀಟ್
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setConfirmDeleteQuestionKey(null)}
+                                    className="px-2 py-0.5 rounded bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-3xs font-semibold cursor-pointer whitespace-nowrap"
+                                  >
+                                    ರದ್ದು
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setConfirmDeleteQuestionKey(sideKey)}
+                                  className="px-3 py-1.5 rounded-lg text-2xs font-bold border border-rose-300 bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-800 transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                  <span>ಈ ಪ್ರಶ್ನೆ ಡಿಲೀಟ್ (Delete)</span>
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : filteredQuestions.length === 0 ? (
           <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-10 text-center text-slate-500 space-y-2">
             <HelpCircle className="w-8 h-8 text-slate-400 mx-auto" />
             <p className="font-bold text-sm text-slate-800">
@@ -1591,17 +1968,22 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
                   <div className="flex flex-wrap items-center gap-2 text-slate-600">
                     <span
                       className="font-extrabold text-slate-900 tabular-nums"
-                      title="PDF ಕ್ರಮ ಸಂಖ್ಯೆ (PDF Question Number)"
+                      title="ನಿರಂತರ ಕ್ರಮ ಸಂಖ್ಯೆ (Question Serial Number)"
                     >
                       #{q.printedSerial || q.questionNumber || idx + 1}
                     </span>
                     <span aria-hidden="true">·</span>
                     <span className="font-semibold text-indigo-700">{q.chapterName}</span>
                     {isPossibleDup && (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-300 text-3xs font-extrabold">
+                      <button
+                        type="button"
+                        onClick={() => setShowPossibleDuplicatesOnly(true)}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-300 text-3xs font-extrabold cursor-pointer"
+                        title="ಎರಡೂ ಪ್ರಶ್ನೆಗಳನ್ನು ಅಕ್ಕಪಕ್ಕದಲ್ಲಿ (Side-by-Side) ಹೋಲಿಸಿ ನೋಡಿ"
+                      >
                         <AlertTriangle className="w-3 h-3" />
-                        <span>ಸಂಭಾವ್ಯ ಡುಪ್ಲಿಕೇಟ್</span>
-                      </span>
+                        <span>ಸಂಭಾವ್ಯ ಡುಪ್ಲಿಕೇಟ್ · ಹೋಲಿಸಿ</span>
+                      </button>
                     )}
                     {q.objective && (
                       <>
@@ -1722,35 +2104,68 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
                   <MathText text={q.question} />
                 </div>
 
-                {/* Attached Question Diagram / Image Preview with Inline Replace & Delete */}
-                {(q.imageUrl || q.diagramSvg) && (
+                {/* Attached Question Diagram / Dual Images Side-by-Side Preview */}
+                {(q.imageUrl || q.imageUrl2 || q.diagramSvg) && (
                   <div className="pt-1 space-y-1.5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="text-2xs font-semibold text-slate-500">
-                        ಪ್ರಶ್ನೆ ಚಿತ್ರ (Question Paper Image):
+                        ಪ್ರಶ್ನೆ ಚಿತ್ರಗಳು (Question Paper {q.imageUrl && q.imageUrl2 ? '2 Images Side-by-Side' : 'Image'}):
                       </span>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <button
                           type="button"
                           onClick={() => openImageModalForQuestion(q, 'question')}
                           className="px-2 py-0.5 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
                         >
                           <Replace className="w-3 h-3" />
-                          <span>ಬದಲಾಯಿಸಿ (Replace)</span>
+                          <span>ಚಿತ್ರ 1 ಬದಲಿಸಿ</span>
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDeleteQuestionImage(q, 'question')}
-                          className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                          onClick={() => openImageModalForQuestion(q, 'question2')}
+                          className="px-2 py-0.5 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
                         >
-                          <Trash2 className="w-3 h-3" />
-                          <span>ಡಿಲೀಟ್ (Delete)</span>
+                          <Replace className="w-3 h-3" />
+                          <span>{q.imageUrl2 ? 'ಚಿತ್ರ 2 ಬದಲಿಸಿ' : '+ 2ನೇ ಚಿತ್ರ'}</span>
                         </button>
+                        {q.imageUrl && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteQuestionImage(q, 'question')}
+                            className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span>ಚಿತ್ರ 1 ಡಿಲೀಟ್</span>
+                          </button>
+                        )}
+                        {q.imageUrl2 && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteQuestionImage(q, 'question2')}
+                            className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span>ಚಿತ್ರ 2 ಡಿಲೀಟ್</span>
+                          </button>
+                        )}
                       </div>
                     </div>
-                    {q.imageUrl ? (
+                    {q.imageUrl && q.imageUrl2 ? (
+                      <div className="grid grid-cols-2 gap-2.5 max-w-2xl items-center">
+                        <ResilientQuestionImage
+                          src={q.imageUrl}
+                          alt={q.diagramDescription || 'ಪ್ರಶ್ನೆ ಚಿತ್ರ 1'}
+                          className="max-h-44 w-full rounded-lg border border-slate-200 object-contain bg-white p-1"
+                        />
+                        <ResilientQuestionImage
+                          src={q.imageUrl2}
+                          alt="ಪ್ರಶ್ನೆ ಚಿತ್ರ 2"
+                          className="max-h-44 w-full rounded-lg border border-slate-200 object-contain bg-white p-1"
+                        />
+                      </div>
+                    ) : q.imageUrl || q.imageUrl2 ? (
                       <ResilientQuestionImage
-                        src={q.imageUrl}
+                        src={(q.imageUrl || q.imageUrl2)!}
                         alt={q.diagramDescription || 'ಪ್ರಶ್ನೆ ಚಿತ್ರ'}
                         className="max-h-44 max-w-full rounded-lg border border-slate-200 object-contain bg-white p-1"
                       />
@@ -1806,35 +2221,68 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
                     <span className="whitespace-pre-line leading-relaxed"><MathText text={q.answer} /></span>
                   </div>
 
-                  {/* Separate Answer Key Diagram Preview with Inline Replace & Delete */}
-                  {(q.answerImageUrl || q.answerDiagramSvg) && (
+                  {/* Separate Answer Key Dual Images Side-by-Side Preview */}
+                  {(q.answerImageUrl || q.answerImageUrl2 || q.answerDiagramSvg) && (
                     <div className="pt-1 border-t border-emerald-200/60 space-y-1.5">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="text-2xs font-bold text-emerald-800">
-                          ಉತ್ತರ ಚಿತ್ರ / ಲೇಬಲ್ ಮಾಡಿದ ಚಿತ್ರ (Answer Key Image):
+                          ಉತ್ತರ ಚಿತ್ರಗಳು (Answer Key {q.answerImageUrl && q.answerImageUrl2 ? '2 Images Side-by-Side' : 'Image'}):
                         </span>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <button
                             type="button"
                             onClick={() => openImageModalForQuestion(q, 'answer')}
                             className="px-2 py-0.5 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-300 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
                           >
                             <Replace className="w-3 h-3" />
-                            <span>ಬದಲಾಯಿಸಿ (Replace)</span>
+                            <span>ಉತ್ತರ 1 ಬದಲಿಸಿ</span>
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleDeleteQuestionImage(q, 'answer')}
-                            className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                            onClick={() => openImageModalForQuestion(q, 'answer2')}
+                            className="px-2 py-0.5 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-300 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
                           >
-                            <Trash2 className="w-3 h-3" />
-                            <span>ಡಿಲೀಟ್ (Delete)</span>
+                            <Replace className="w-3 h-3" />
+                            <span>{q.answerImageUrl2 ? 'ಉತ್ತರ 2 ಬದಲಿಸಿ' : '+ 2ನೇ ಉತ್ತರ ಚಿತ್ರ'}</span>
                           </button>
+                          {q.answerImageUrl && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteQuestionImage(q, 'answer')}
+                              className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              <span>ಉತ್ತರ 1 ಡಿಲೀಟ್</span>
+                            </button>
+                          )}
+                          {q.answerImageUrl2 && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteQuestionImage(q, 'answer2')}
+                              className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              <span>ಉತ್ತರ 2 ಡಿಲೀಟ್</span>
+                            </button>
+                          )}
                         </div>
                       </div>
-                      {q.answerImageUrl ? (
+                      {q.answerImageUrl && q.answerImageUrl2 ? (
+                        <div className="grid grid-cols-2 gap-2.5 max-w-2xl items-center">
+                          <ResilientQuestionImage
+                            src={q.answerImageUrl}
+                            alt={q.answerDiagramDescription || 'ಉತ್ತರ ಚಿತ್ರ 1'}
+                            className="max-h-44 w-full rounded-lg border border-emerald-300 object-contain bg-white p-1"
+                          />
+                          <ResilientQuestionImage
+                            src={q.answerImageUrl2}
+                            alt="ಉತ್ತರ ಚಿತ್ರ 2"
+                            className="max-h-44 w-full rounded-lg border border-emerald-300 object-contain bg-white p-1"
+                          />
+                        </div>
+                      ) : q.answerImageUrl || q.answerImageUrl2 ? (
                         <ResilientQuestionImage
-                          src={q.answerImageUrl}
+                          src={(q.answerImageUrl || q.answerImageUrl2)!}
                           alt={q.answerDiagramDescription || 'ಉತ್ತರ ಚಿತ್ರ'}
                           className="max-h-44 max-w-full rounded-lg border border-emerald-300 object-contain bg-white p-1"
                         />
@@ -1913,6 +2361,20 @@ export const QuestionBankExplorer: React.FC<QuestionBankExplorerProps> = ({
             }}
             onSelectSavedPdf={handleSelectSavedPdf}
             onSave={handleSaveQuestionImage}
+            onMarkImageNotRequired={() =>
+              handleSaveQuestionImage({
+                imageUrl: undefined,
+                imageUrl2: undefined,
+                diagramSvg: undefined,
+                answerImageUrl: undefined,
+                answerImageUrl2: undefined,
+                answerDiagramSvg: undefined,
+                hasDiagram: false,
+                needsImage: false,
+                diagramDescription: undefined,
+                answerDiagramDescription: undefined,
+              })
+            }
           />
         );
       })()}

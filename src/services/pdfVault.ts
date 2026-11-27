@@ -548,8 +548,23 @@ export async function listAllSavedQuestionBanks(): Promise<SavedBankSummary[]> {
         existing.alsoOnServer = true;
         existing.serverPath = f.path;
         existing.filename = f.filename || existing.filename;
-        if ((f.uploadedImageCount || 0) > (existing.uploadedImageCount || 0)) {
-          existing.uploadedImageCount = f.uploadedImageCount;
+        const serverImgs = f.uploadedImageCount || 0;
+        const existingImgs = existing.uploadedImageCount || 0;
+        const serverUpdatedAt = String(f.createdAt || '');
+        if (serverImgs > existingImgs) {
+          existing.uploadedImageCount = serverImgs;
+        }
+        if (
+          serverImgs >= existingImgs &&
+          serverUpdatedAt &&
+          (!existing.updatedAt || serverUpdatedAt > existing.updatedAt)
+        ) {
+          existing.source = 'server';
+          existing.path = f.path;
+          existing.updatedAt = serverUpdatedAt;
+          existing.totalChapters = f.totalChapters || existing.totalChapters;
+          existing.totalQuestions = f.totalQuestions || existing.totalQuestions;
+          delete existing.bank;
         }
         continue;
       }

@@ -34,6 +34,9 @@ import {
   SlidersHorizontal,
   Replace,
   Search,
+  Ban,
+  Maximize2,
+  Plus,
 } from 'lucide-react';
 import { QuestionItem } from '../types/questionBank.ts';
 import {
@@ -54,10 +57,13 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 export interface QuestionImageUpdate {
   imageUrl?: string;
+  imageUrl2?: string;
   diagramSvg?: string;
   answerImageUrl?: string;
+  answerImageUrl2?: string;
   answerDiagramSvg?: string;
   hasDiagram: boolean;
+  needsImage?: boolean;
   diagramDescription?: string;
   answerDiagramDescription?: string;
 }
@@ -80,8 +86,9 @@ interface QuestionImageModalProps {
   onSelectSavedPdf?: (pdf: SavedPdfEntry) => Promise<void> | void;
   initialQuestionPage?: number;
   initialAnswerPage?: number;
-  initialSlot?: 'question' | 'answer';
+  initialSlot?: 'question' | 'question2' | 'answer' | 'answer2';
   onSave: (update: QuestionImageUpdate) => void | Promise<void>;
+  onMarkImageNotRequired?: () => void | Promise<void>;
   onNavigatePrev?: () => void;
   onNavigateNext?: () => void;
   hasPrevQuestion?: boolean;
@@ -107,8 +114,9 @@ interface CompressedPreview {
   isSvg?: boolean;
 }
 
-type TargetSlot = 'question' | 'answer';
+type TargetSlot = 'question' | 'question2' | 'answer' | 'answer2';
 type InputMode = 'pdf' | 'upload' | 'url';
+type PdfViewMode = 'fit-page' | 'fit-width' | 'custom';
 
 const SIZE_PRESETS_KB = [10, 20, 35, 50, 100];
 
@@ -280,6 +288,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
   initialAnswerPage = 1,
   initialSlot = 'question',
   onSave,
+  onMarkImageNotRequired,
   onNavigatePrev,
   onNavigateNext,
   hasPrevQuestion = false,
@@ -294,12 +303,14 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
   );
   const [isLoadingSavedPdf, setIsLoadingSavedPdf] = useState<boolean>(false);
 
-  // Current edited values for both slots (only short URLs or SVG, NEVER raw Base64 in JSON!)
+  // Current edited values for all 4 slots (Question 1 & 2, Answer 1 & 2 — only short URLs or SVG, NEVER Base64!)
   const [questionImageUrl, setQuestionImageUrl] = useState<string>(question.imageUrl || '');
+  const [questionImageUrl2, setQuestionImageUrl2] = useState<string>(question.imageUrl2 || '');
   const [questionDiagramSvg, setQuestionDiagramSvg] = useState<string>(question.diagramSvg || '');
   const [questionDesc, setQuestionDesc] = useState<string>(question.diagramDescription || '');
 
   const [answerImageUrl, setAnswerImageUrl] = useState<string>(question.answerImageUrl || '');
+  const [answerImageUrl2, setAnswerImageUrl2] = useState<string>(question.answerImageUrl2 || '');
   const [answerDiagramSvg, setAnswerDiagramSvg] = useState<string>(question.answerDiagramSvg || '');
   const [answerDesc, setAnswerDesc] = useState<string>(question.answerDiagramDescription || '');
 
@@ -317,18 +328,29 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
   const [manualUrlInput, setManualUrlInput] = useState<string>('');
   const [manualSvgInput, setManualSvgInput] = useState<string>('');
 
-  // Local PDF state
+  // Local PDF state — defaults to 'fit-page' so the ENTIRE full PDF page is visible on open!
   const [localPdfBuffer, setLocalPdfBuffer] = useState<ArrayBuffer | null>(pdfBuffer || null);
   const [localPdfName, setLocalPdfName] = useState<string>(pdfFileName || '');
   const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [pdfNumPages, setPdfNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(
-    Math.max(1, initialSlot === 'answer' ? initialAnswerPage : initialQuestionPage)
+    Math.max(
+      1,
+      initialSlot === 'answer' || initialSlot === 'answer2' ? initialAnswerPage : initialQuestionPage
+    )
   );
   const [pageInputText, setPageInputText] = useState<string>(
-    String(Math.max(1, initialSlot === 'answer' ? initialAnswerPage : initialQuestionPage))
+    String(
+      Math.max(
+        1,
+        initialSlot === 'answer' || initialSlot === 'answer2' ? initialAnswerPage : initialQuestionPage
+      )
+    )
   );
+  const [pdfViewMode, setPdfViewMode] = useState<PdfViewMode>('fit-page');
   const [zoom, setZoom] = useState<number>(1.0);
+  const [stageSize, setStageSize] = useState<{ width: number; height: number }>({ width: 920, height: 680 });
+  const [pageBaseSize, setPageBaseSize] = useState<{ width: number; height: number }>({ width: 595, height: 842 });
   const [isRenderingPage, setIsRenderingPage] = useState<boolean>(false);
   const [isAutoFindingPage, setIsAutoFindingPage] = useState<boolean>(false);
   const [autoPageBadge, setAutoPageBadge] = useState<string | null>(null);
@@ -349,9 +371,79 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isDeletingSlot, setIsDeletingSlot] = useState<TargetSlot | null>(null);
   const [isSavingFinal, setIsSavingFinal] = useState<boolean>(false);
+  const [isMarkingNotRequired, setIsMarkingNotRequired] = useState<boolean>(false);
   const [isNavigatingQuestion, setIsNavigatingQuestion] = useState<boolean>(false);
   const [statusNotice, setStatusNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [brokenPreviewSlots, setBrokenPreviewSlots] = useState<Record<string, boolean>>({});
+
+  const isAnswerSlot = (slot: TargetSlot) => slot === 'answer' || slot === 'answer2';
+
+  const slotDisplayLabel = (slot: TargetSlot) => {
+    switch (slot) {
+      case 'question':
+        return 'ಪ್ರಶ್ನೆ ಚಿತ್ರ 1';
+      case 'question2':
+        return 'ಪ್ರಶ್ನೆ ಚಿತ್ರ 2';
+      case 'answer':
+        return 'ಉತ್ತರ ಚಿತ್ರ 1';
+      case 'answer2':
+        return 'ಉತ್ತರ ಚಿತ್ರ 2';
+    }
+  };
+
+  // Live ResizeObserver on the PDF viewport container so Fit Page / Fit Width always fill the full window cleanly
+  useEffect(() => {
+    if (!isOpen || inputMode !== 'pdf') return;
+    const el = pdfScrollContainerRef.current;
+    if (!el) return;
+
+    const updateSize = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 120 && rect.height > 120) {
+        setStageSize(prev =>
+          Math.abs(prev.width - rect.width) > 4 || Math.abs(prev.height - rect.height) > 4
+            ? { width: Math.floor(rect.width), height: Math.floor(rect.height) }
+            : prev
+        );
+      }
+    };
+
+    updateSize();
+    const ro = new ResizeObserver(updateSize);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [isOpen, inputMode, localPdfBuffer, isQuestionBoxExpanded]);
+
+  // Compute exact display scale & pixel dimensions for the PDF page canvas
+  const effectiveScale = (() => {
+    const baseW = Math.max(100, pageBaseSize.width);
+    const baseH = Math.max(100, pageBaseSize.height);
+    if (pdfViewMode === 'fit-page') {
+      const availW = Math.max(220, stageSize.width - 28);
+      const availH = Math.max(220, stageSize.height - 28);
+      return Math.max(0.25, Math.min(2.5, Math.min(availW / baseW, availH / baseH)));
+    }
+    if (pdfViewMode === 'fit-width') {
+      const availW = Math.max(220, stageSize.width - 36);
+      return Math.max(0.3, Math.min(2.5, availW / baseW));
+    }
+    return Math.max(0.3, Math.min(3.0, zoom));
+  })();
+
+  const displayCanvasWidth = Math.max(140, Math.round(pageBaseSize.width * effectiveScale));
+  const displayCanvasHeight = Math.max(140, Math.round(pageBaseSize.height * effectiveScale));
+
+  const handleZoomOut = () => {
+    const nextZoom = Math.max(0.3, +(effectiveScale - 0.2).toFixed(2));
+    setPdfViewMode('custom');
+    setZoom(nextZoom);
+  };
+
+  const handleZoomIn = () => {
+    const nextZoom = Math.min(3.0, +(effectiveScale + 0.25).toFixed(2));
+    setPdfViewMode('custom');
+    setZoom(nextZoom);
+  };
 
   // Sync incoming pdfBuffer prop separately so late async PDF loading never wipes user edits or slot state
   useEffect(() => {
@@ -366,9 +458,11 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     setQuestionImageUrl(question.imageUrl || '');
+    setQuestionImageUrl2(question.imageUrl2 || '');
     setQuestionDiagramSvg(question.diagramSvg || '');
     setQuestionDesc(question.diagramDescription || '');
     setAnswerImageUrl(question.answerImageUrl || '');
+    setAnswerImageUrl2(question.answerImageUrl2 || '');
     setAnswerDiagramSvg(question.answerDiagramSvg || '');
     setAnswerDesc(question.answerDiagramDescription || '');
     setActiveSlot(initialSlot);
@@ -377,9 +471,11 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
     setPendingCanvas(null);
     setPendingPreview(null);
     setBrokenPreviewSlots({});
+    // Always open in full-page fit mode so large images & full PDF page are visible immediately
+    setPdfViewMode('fit-page');
 
     const exactSavedPg =
-      initialSlot === 'answer'
+      initialSlot === 'answer' || initialSlot === 'answer2'
         ? question.answerPage || initialAnswerPage || initialQuestionPage || 1
         : question.sourcePage || initialQuestionPage || 1;
     const startPg = Math.max(1, exactSavedPg);
@@ -401,11 +497,25 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
     if (activeSlot === 'question') {
       setManualUrlInput(questionImageUrl);
       setManualSvgInput(questionDiagramSvg);
-    } else {
+    } else if (activeSlot === 'question2') {
+      setManualUrlInput(questionImageUrl2);
+      setManualSvgInput('');
+    } else if (activeSlot === 'answer') {
       setManualUrlInput(answerImageUrl);
       setManualSvgInput(answerDiagramSvg);
+    } else {
+      setManualUrlInput(answerImageUrl2);
+      setManualSvgInput('');
     }
-  }, [activeSlot, questionImageUrl, questionDiagramSvg, answerImageUrl, answerDiagramSvg]);
+  }, [
+    activeSlot,
+    questionImageUrl,
+    questionImageUrl2,
+    questionDiagramSvg,
+    answerImageUrl,
+    answerImageUrl2,
+    answerDiagramSvg,
+  ]);
 
   // Smart exact-page locator inside the loaded PDF:
   // Validates stored sourcePage/answerPage against chapter page bounds + PDF text layer,
@@ -455,14 +565,15 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
         }
       };
 
-      const rangeStr = slot === 'answer' ? chapterAnswerPages : chapterQuestionPages;
+      const isAns = slot === 'answer' || slot === 'answer2';
+      const rangeStr = isAns ? chapterAnswerPages : chapterQuestionPages;
       const primaryPages: number[] = [];
       if (rangeStr) {
         const zeroBased = parsePageRangeString(rangeStr, total);
         zeroBased.forEach(idx => primaryPages.push(idx + 1));
       }
 
-      const storedPageRaw = slot === 'answer' ? question.answerPage : question.sourcePage;
+      const storedPageRaw = isAns ? question.answerPage : question.sourcePage;
       const storedPage =
         typeof storedPageRaw === 'number' && storedPageRaw >= 1 && storedPageRaw <= total
           ? storedPageRaw
@@ -480,7 +591,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
 
       // Build matching signals from the question / answer / printedSerial
       const targetRawText =
-        slot === 'answer' && question.answer && question.answer.length > 6
+        isAns && question.answer && question.answer.length > 6
           ? `${question.answer} ${question.question || ''}`
           : `${question.question || ''} ${(question.options || []).slice(0, 2).join(' ')}`;
 
@@ -584,7 +695,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
             total,
             primaryPages.length > 0
               ? primaryPages[0]
-              : slot === 'answer'
+              : isAns
                 ? initialAnswerPage || 1
                 : initialQuestionPage || 1
           )
@@ -823,7 +934,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
     };
   }, [isOpen, localPdfBuffer, pdfBuffer, isLoadingSavedPdf, savedPdfs, activePdfId, gradeKey, subjectCode, onPdfLoaded]);
 
-  // Render active PDF page onto canvas
+  // Render active PDF page onto canvas at crisp 2.0x bitmap resolution (no re-render flicker on zoom!)
   useEffect(() => {
     if (!isOpen || inputMode !== 'pdf' || !pdfDoc || !canvasRef.current) return;
 
@@ -844,7 +955,16 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
         const page = await pdfDoc.getPage(safePage);
         if (cancelled) return;
 
-        const viewport = page.getViewport({ scale: 1.6 * zoom });
+        // Capture intrinsic 1.0x page dimensions so Fit Page / Fit Width / Zoom compute exact CSS display size
+        const baseViewport = page.getViewport({ scale: 1.0 });
+        setPageBaseSize({
+          width: Math.max(100, Math.round(baseViewport.width)),
+          height: Math.max(100, Math.round(baseViewport.height)),
+        });
+
+        // Render high-resolution internal bitmap (2.0x) so cropped diagrams stay razor-sharp even in Fit Page mode
+        const renderScale = 2.0;
+        const viewport = page.getViewport({ scale: renderScale });
         const canvas = canvasRef.current;
         if (!canvas) return;
 
@@ -878,7 +998,15 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, inputMode, pdfDoc, currentPage, zoom]);
+  }, [isOpen, inputMode, pdfDoc, currentPage]);
+
+  // Apply exact display width & height to the PDF canvas whenever Fit Page / Fit Width / Zoom changes (instant, 0ms lag!)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.style.width = `${displayCanvasWidth}px`;
+    canvas.style.height = `${displayCanvasHeight}px`;
+  }, [displayCanvasWidth, displayCanvasHeight, isOpen, inputMode, pdfDoc, currentPage]);
 
   // Self-healing fallback: if an existing /api/question-image/{id} fails to load via HTTP, read directly from Firebase Firestore
   const handlePreviewImageError = useCallback(
@@ -908,8 +1036,20 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
       setIsUploading(true);
       setStatusNotice(null);
       try {
-        const previousUrl = slot === 'question' ? questionImageUrl : answerImageUrl;
+        const previousUrl =
+          slot === 'question'
+            ? questionImageUrl
+            : slot === 'question2'
+              ? questionImageUrl2
+              : slot === 'answer'
+                ? answerImageUrl
+                : answerImageUrl2;
         const previousId = extractImageIdFromUrl(previousUrl);
+        const firebaseRole: 'question' | 'answer' = isAnswerSlot(slot) ? 'answer' : 'question';
+        const firebaseQuestionId =
+          slot === 'question2' || slot === 'answer2'
+            ? `${question.id || 'q1'}_2`
+            : question.id || 'q1';
 
         // 1. Primary cloud persistence in Firebase Firestore (`question_images/{imageId}`)
         const saved = await saveQuestionImageToFirebase({
@@ -921,11 +1061,11 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
           gradeKey,
           subjectCode,
           chapterId: question.chapterId || `ch${question.chapterNumber || 1}`,
-          questionId: question.id || 'q1',
-          role: slot,
+          questionId: firebaseQuestionId,
+          role: firebaseRole,
         });
 
-        // 2. Prime server disk cache so `/api/question-image/{imageId}` serves instantly everywhere (Question Paper, Explorer, Print)
+        // 2. Prime server disk cache so `/api/question-image/{imageId}` serves instantly everywhere
         fetch('/api/upload-question-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -935,8 +1075,8 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
             gradeKey,
             subjectCode,
             chapterId: question.chapterId || `ch${question.chapterNumber || 1}`,
-            questionId: question.id || 'q1',
-            role: slot,
+            questionId: firebaseQuestionId,
+            role: firebaseRole,
           }),
         }).catch(err => console.warn('Local cache warm skipped:', err));
 
@@ -948,10 +1088,16 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
           setQuestionImageUrl(saved.imageUrl);
           setQuestionDiagramSvg('');
           setBrokenPreviewSlots(prev => ({ ...prev, question: false }));
-        } else {
+        } else if (slot === 'question2') {
+          setQuestionImageUrl2(saved.imageUrl);
+          setBrokenPreviewSlots(prev => ({ ...prev, question2: false }));
+        } else if (slot === 'answer') {
           setAnswerImageUrl(saved.imageUrl);
           setAnswerDiagramSvg('');
           setBrokenPreviewSlots(prev => ({ ...prev, answer: false }));
+        } else {
+          setAnswerImageUrl2(saved.imageUrl);
+          setBrokenPreviewSlots(prev => ({ ...prev, answer2: false }));
         }
 
         // Clean up replaced previous Firebase image in background
@@ -967,7 +1113,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
 
         setStatusNotice({
           type: 'success',
-          text: `${slot === 'question' ? 'ಪ್ರಶ್ನೆ ಚಿತ್ರ' : 'ಉತ್ತರ ಚಿತ್ರ'} Firebase ಗೆ ಉಳಿಸಲಾಗಿದೆ (${saved.sizeKB} KB) — JSON ನಲ್ಲಿ URL ಮಾತ್ರ ಸೇರುತ್ತದೆ.`,
+          text: `${slotDisplayLabel(slot)} Firebase ಗೆ ಉಳಿಸಲಾಗಿದೆ (${saved.sizeKB} KB) — JSON ನಲ್ಲಿ URL ಮಾತ್ರ ಸೇರುತ್ತದೆ.`,
         });
       } catch (err: any) {
         setStatusNotice({
@@ -980,21 +1126,30 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
     },
     [
       answerImageUrl,
+      answerImageUrl2,
       gradeKey,
       question.chapterId,
       question.chapterNumber,
       question.id,
       questionImageUrl,
+      questionImageUrl2,
       subjectCode,
     ]
   );
 
-  // Delete an image from slot + Firebase + server cache
+  // Delete an image from any of the 4 slots + Firebase + server cache
   const handleDeleteSlotImage = async (slot: TargetSlot) => {
     setIsDeletingSlot(slot);
     setStatusNotice(null);
     try {
-      const currentUrl = slot === 'question' ? questionImageUrl : answerImageUrl;
+      const currentUrl =
+        slot === 'question'
+          ? questionImageUrl
+          : slot === 'question2'
+            ? questionImageUrl2
+            : slot === 'answer'
+              ? answerImageUrl
+              : answerImageUrl2;
       const imageId = extractImageIdFromUrl(currentUrl);
       if (imageId) {
         await deleteQuestionImageFromFirebase(imageId);
@@ -1005,15 +1160,21 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
         setQuestionImageUrl('');
         setQuestionDiagramSvg('');
         setBrokenPreviewSlots(prev => ({ ...prev, question: false }));
-      } else {
+      } else if (slot === 'question2') {
+        setQuestionImageUrl2('');
+        setBrokenPreviewSlots(prev => ({ ...prev, question2: false }));
+      } else if (slot === 'answer') {
         setAnswerImageUrl('');
         setAnswerDiagramSvg('');
         setBrokenPreviewSlots(prev => ({ ...prev, answer: false }));
+      } else {
+        setAnswerImageUrl2('');
+        setBrokenPreviewSlots(prev => ({ ...prev, answer2: false }));
       }
 
       setStatusNotice({
         type: 'success',
-        text: `${slot === 'question' ? 'ಪ್ರಶ್ನೆ ಚಿತ್ರ' : 'ಉತ್ತರ ಚಿತ್ರ'} ಡಿಲೀಟ್ ಮಾಡಲಾಗಿದೆ (Firebase ನಿಂದಲೂ ತೆರವುಗೊಂಡಿದೆ).`,
+        text: `${slotDisplayLabel(slot)} ಡಿಲೀಟ್ ಮಾಡಲಾಗಿದೆ (Firebase ನಿಂದಲೂ ತೆರವುಗೊಂಡಿದೆ).`,
       });
     } catch (err: any) {
       setStatusNotice({
@@ -1025,7 +1186,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
     }
   };
 
-  // Start replacing an existing slot image
+  // Start replacing or adding an image for any of the 4 slots
   const handleReplaceSlotImage = (slot: TargetSlot) => {
     handleSwitchSlot(slot);
     setPendingCanvas(null);
@@ -1038,7 +1199,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
     }
     setStatusNotice({
       type: 'success',
-      text: `${slot === 'question' ? 'ಪ್ರಶ್ನೆ ಚಿತ್ರ' : 'ಉತ್ತರ ಚಿತ್ರ'} ಬದಲಾಯಿಸಲು ಎಡಭಾಗದಿಂದ ಹೊಸ ಚಿತ್ರ ಕ್ರಾಪ್ ಮಾಡಿ ಅಥವಾ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.`,
+      text: `${slotDisplayLabel(slot)} ಕ್ರಾಪ್ ಮಾಡಲು ಎಡಭಾಗದ PDF ಪುಟದಲ್ಲಿ ಮೌಸ್ ಎಳೆಯಿರಿ ಅಥವಾ ಚಿತ್ರ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.`,
     });
   };
 
@@ -1134,6 +1295,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
       setLocalPdfName(file.name);
       setCurrentPage(1);
       setPageInputText('1');
+      setPdfViewMode('fit-page');
 
       let numPages = 0;
       try {
@@ -1182,6 +1344,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
       }
       setLocalPdfBuffer(buf);
       setLocalPdfName(pdf.fileName);
+      setPdfViewMode('fit-page');
       if (onSelectSavedPdf) {
         await onSelectSavedPdf(pdf);
       } else if (onPdfLoaded) {
@@ -1294,23 +1457,31 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
       setQuestionImageUrl(cleanUrl);
       setQuestionDiagramSvg(cleanUrl ? '' : cleanSvg);
       setBrokenPreviewSlots(prev => ({ ...prev, question: false }));
-    } else {
+    } else if (activeSlot === 'question2') {
+      setQuestionImageUrl2(cleanUrl);
+      setBrokenPreviewSlots(prev => ({ ...prev, question2: false }));
+    } else if (activeSlot === 'answer') {
       setAnswerImageUrl(cleanUrl);
       setAnswerDiagramSvg(cleanUrl ? '' : cleanSvg);
       setBrokenPreviewSlots(prev => ({ ...prev, answer: false }));
+    } else {
+      setAnswerImageUrl2(cleanUrl);
+      setBrokenPreviewSlots(prev => ({ ...prev, answer2: false }));
     }
 
     setStatusNotice({
       type: 'success',
-      text: `${activeSlot === 'question' ? 'ಪ್ರಶ್ನೆ ಚಿತ್ರ' : 'ಉತ್ತರ ಚಿತ್ರ'} ನವೀಕರಿಸಲಾಗಿದೆ.`,
+      text: `${slotDisplayLabel(activeSlot)} ನವೀಕರಿಸಲಾಗಿದೆ.`,
     });
   };
 
   const hasUnsavedChanges =
     Boolean(pendingPreview) ||
     questionImageUrl.trim() !== (question.imageUrl || '').trim() ||
+    questionImageUrl2.trim() !== (question.imageUrl2 || '').trim() ||
     questionDiagramSvg.trim() !== (question.diagramSvg || '').trim() ||
     answerImageUrl.trim() !== (question.answerImageUrl || '').trim() ||
+    answerImageUrl2.trim() !== (question.answerImageUrl2 || '').trim() ||
     answerDiagramSvg.trim() !== (question.answerDiagramSvg || '').trim() ||
     questionDesc.trim() !== (question.diagramDescription || '').trim() ||
     answerDesc.trim() !== (question.answerDiagramDescription || '').trim();
@@ -1318,11 +1489,19 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
   // Shared commit routine (uploads any staged pending crop to Firebase & calls onSave)
   const commitCurrentChanges = useCallback(async (): Promise<boolean> => {
     let finalQuestionUrl = questionImageUrl.trim();
+    let finalQuestionUrl2 = questionImageUrl2.trim();
     let finalQuestionSvg = questionDiagramSvg.trim();
     let finalAnswerUrl = answerImageUrl.trim();
+    let finalAnswerUrl2 = answerImageUrl2.trim();
     let finalAnswerSvg = answerDiagramSvg.trim();
 
     if (pendingPreview) {
+      const firebaseRole: 'question' | 'answer' = isAnswerSlot(activeSlot) ? 'answer' : 'question';
+      const firebaseQuestionId =
+        activeSlot === 'question2' || activeSlot === 'answer2'
+          ? `${question.id || 'q1'}_2`
+          : question.id || 'q1';
+
       const saved = await saveQuestionImageToFirebase({
         dataUrl: pendingPreview.dataUrl,
         mimeType: pendingPreview.mimeType,
@@ -1332,8 +1511,8 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
         gradeKey,
         subjectCode,
         chapterId: question.chapterId || `ch${question.chapterNumber || 1}`,
-        questionId: question.id || 'q1',
-        role: activeSlot,
+        questionId: firebaseQuestionId,
+        role: firebaseRole,
       });
 
       fetch('/api/upload-question-image', {
@@ -1345,8 +1524,8 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
           gradeKey,
           subjectCode,
           chapterId: question.chapterId || `ch${question.chapterNumber || 1}`,
-          questionId: question.id || 'q1',
-          role: activeSlot,
+          questionId: firebaseQuestionId,
+          role: firebaseRole,
         }),
       }).catch(() => {});
 
@@ -1356,20 +1535,31 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
       if (activeSlot === 'question') {
         finalQuestionUrl = saved.imageUrl;
         finalQuestionSvg = '';
-      } else {
+      } else if (activeSlot === 'question2') {
+        finalQuestionUrl2 = saved.imageUrl;
+      } else if (activeSlot === 'answer') {
         finalAnswerUrl = saved.imageUrl;
         finalAnswerSvg = '';
+      } else {
+        finalAnswerUrl2 = saved.imageUrl;
       }
     }
 
     const hasAnyDiagram = Boolean(
-      finalQuestionUrl || finalQuestionSvg || finalAnswerUrl || finalAnswerSvg
+      finalQuestionUrl ||
+        finalQuestionUrl2 ||
+        finalQuestionSvg ||
+        finalAnswerUrl ||
+        finalAnswerUrl2 ||
+        finalAnswerSvg
     );
 
     await onSave({
       imageUrl: finalQuestionUrl || undefined,
+      imageUrl2: finalQuestionUrl2 || undefined,
       diagramSvg: finalQuestionSvg || undefined,
       answerImageUrl: finalAnswerUrl || undefined,
+      answerImageUrl2: finalAnswerUrl2 || undefined,
       answerDiagramSvg: finalAnswerSvg || undefined,
       hasDiagram: hasAnyDiagram,
       diagramDescription: questionDesc.trim() || undefined,
@@ -1381,6 +1571,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
     answerDesc,
     answerDiagramSvg,
     answerImageUrl,
+    answerImageUrl2,
     gradeKey,
     onSave,
     pendingPreview,
@@ -1390,8 +1581,67 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
     questionDesc,
     questionDiagramSvg,
     questionImageUrl,
+    questionImageUrl2,
     subjectCode,
   ]);
+
+  // Mark this question as "Image Not Required" right from inside the modal!
+  const handleMarkImageNotRequired = async () => {
+    if (isSavingFinal || isUploading || isNavigatingQuestion || isMarkingNotRequired) return;
+    setIsMarkingNotRequired(true);
+    setStatusNotice(null);
+    try {
+      // Remove any attached images for this question from Firebase & cache in background
+      const urlsToClean = [questionImageUrl, questionImageUrl2, answerImageUrl, answerImageUrl2];
+      for (const u of urlsToClean) {
+        const imgId = extractImageIdFromUrl(u);
+        if (imgId) {
+          deleteQuestionImageFromFirebase(imgId).catch(() => {});
+          fetch(`/api/question-image/${imgId}`, { method: 'DELETE' }).catch(() => {});
+        }
+      }
+
+      setQuestionImageUrl('');
+      setQuestionImageUrl2('');
+      setQuestionDiagramSvg('');
+      setAnswerImageUrl('');
+      setAnswerImageUrl2('');
+      setAnswerDiagramSvg('');
+      setPendingCanvas(null);
+      setPendingPreview(null);
+      setCropRect(null);
+
+      if (onMarkImageNotRequired) {
+        await onMarkImageNotRequired();
+      } else {
+        await onSave({
+          imageUrl: undefined,
+          imageUrl2: undefined,
+          diagramSvg: undefined,
+          answerImageUrl: undefined,
+          answerImageUrl2: undefined,
+          answerDiagramSvg: undefined,
+          hasDiagram: false,
+          needsImage: false,
+          diagramDescription: undefined,
+          answerDiagramDescription: undefined,
+        });
+      }
+
+      if (hasNextQuestion && onNavigateNext) {
+        onNavigateNext();
+      } else {
+        onClose();
+      }
+    } catch (err: any) {
+      setStatusNotice({
+        type: 'error',
+        text: err?.message || '"ಚಿತ್ರ ಅಗತ್ಯವಿಲ್ಲ" ಎಂದು ಗುರುತಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.',
+      });
+    } finally {
+      setIsMarkingNotRequired(false);
+    }
+  };
 
   // Save and close modal
   const handleFinalSave = async () => {
@@ -1410,10 +1660,9 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
   };
 
   // Navigate to Previous or Next question right from inside the modal!
-  // Auto-commits unsaved cropped/uploaded changes before moving so nothing is ever lost.
   const handleMoveQuestion = useCallback(
     async (direction: 'prev' | 'next', forceCommit: boolean = false) => {
-      if (isSavingFinal || isUploading || isNavigatingQuestion) return;
+      if (isSavingFinal || isUploading || isNavigatingQuestion || isMarkingNotRequired) return;
       const moveFn = direction === 'next' ? onNavigateNext : onNavigatePrev;
       const canMove = direction === 'next' ? hasNextQuestion : hasPrevQuestion;
       if (!moveFn || !canMove) return;
@@ -1440,6 +1689,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
       hasNextQuestion,
       hasPrevQuestion,
       hasUnsavedChanges,
+      isMarkingNotRequired,
       isNavigatingQuestion,
       isSavingFinal,
       isUploading,
@@ -1467,7 +1717,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, hasNextQuestion, hasPrevQuestion, onNavigateNext, onNavigatePrev, handleMoveQuestion]);
 
-  // Calculate percentage overlay box for crop rectangle on top of responsive canvas
+  // Calculate percentage overlay box for crop rectangle on top of scaled canvas
   const overlayStyle = (() => {
     const canvas = canvasRef.current;
     if (!canvas || !cropRect || canvas.width === 0 || canvas.height === 0) return null;
@@ -1482,49 +1732,69 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
   if (!isOpen) return null;
 
   const resolvedQuestionSrc = localPreviewMap[questionImageUrl] || questionImageUrl;
+  const resolvedQuestionSrc2 = localPreviewMap[questionImageUrl2] || questionImageUrl2;
   const resolvedAnswerSrc = localPreviewMap[answerImageUrl] || answerImageUrl;
+  const resolvedAnswerSrc2 = localPreviewMap[answerImageUrl2] || answerImageUrl2;
+
+  const busyAction = isSavingFinal || isUploading || isNavigatingQuestion || isMarkingNotRequired;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/65 backdrop-blur-xs font-kannada"
+      className="fixed inset-0 z-50 flex items-center justify-center p-1 sm:p-2 bg-slate-900/70 backdrop-blur-xs font-kannada"
       role="dialog"
       aria-modal="true"
       aria-label="ಚಿತ್ರ ಜೋಡಣೆ ಮತ್ತು PDF ಕ್ರಾಪ್ ಸ್ಟುಡಿಯೋ"
     >
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-6xl max-h-[94vh] flex flex-col overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-2xl w-[99vw] max-w-[1840px] h-[97vh] flex flex-col overflow-hidden">
         {/* Top Modal Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-2.5 border-b border-slate-200 bg-slate-50/90 shrink-0">
-          <div className="min-w-0 flex items-center gap-2.5 flex-wrap">
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2 border-b border-slate-200 bg-slate-50/95 shrink-0">
+          <div className="min-w-0 flex items-center gap-2 flex-wrap">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
               <ImageIcon className="w-4 h-4 text-indigo-600 shrink-0" />
-              <span>ಚಿತ್ರ ಕ್ರಾಪ್ &amp; Firebase ಸ್ಟುಡಿಯೋ</span>
+              <span>ಚಿತ್ರ ಕ್ರಾಪ್ ಸ್ಟುಡಿಯೋ</span>
             </h3>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-indigo-600 text-white text-xs font-extrabold tabular-nums shadow-2xs">
-              ಪ್ರಶ್ನೆ ಕ್ರಮ ಸಂಖ್ಯೆ: #{question.printedSerial || question.questionNumber || questionIndex || 1}
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-600 text-white text-xs font-extrabold tabular-nums shadow-2xs">
+              #{question.printedSerial || question.questionNumber || questionIndex || 1}
               {totalChapterQuestions ? ` / ${totalChapterQuestions}` : ''}
             </span>
             {questionIndex &&
               (question.printedSerial || question.questionNumber) &&
               String(question.printedSerial || question.questionNumber) !== String(questionIndex) && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-200 text-slate-800 text-2xs font-bold tabular-nums">
-                  ಪಟ್ಟಿಯಲ್ಲಿ ಕ್ರಮ: #{questionIndex}
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-slate-200 text-slate-800 text-2xs font-bold tabular-nums">
+                  ಕ್ರಮ: #{questionIndex}
                 </span>
               )}
-            <span className="text-2xs font-semibold text-slate-600">
+            <span className="text-2xs font-semibold text-slate-600 truncate max-w-[200px]">
               {question.chapterName} · {question.marks} ಅಂಕ
             </span>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+            {/* Image Not Required Button right in Header */}
+            <button
+              type="button"
+              disabled={busyAction}
+              onClick={handleMarkImageNotRequired}
+              className="px-2.5 py-1.5 rounded-lg border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 text-2xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap disabled:opacity-45 transition-colors"
+              title="ಈ ಪ್ರಶ್ನೆಗೆ ಯಾವುದೇ ಚಿತ್ರ ಅಗತ್ಯವಿಲ್ಲ ಎಂದು ಗುರುತಿಸಿ"
+            >
+              {isMarkingNotRequired ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Ban className="w-3.5 h-3.5" />
+              )}
+              <span>ಚಿತ್ರ ಅಗತ್ಯವಿಲ್ಲ (No Image)</span>
+            </button>
+
             {/* In-Modal Previous / Next Question Navigator */}
             {(onNavigatePrev || onNavigateNext) && (
               <div
-                className="flex items-center gap-1 bg-white border border-slate-300 rounded-lg p-0.5 shadow-2xs"
+                className="flex items-center gap-0.5 bg-white border border-slate-300 rounded-lg p-0.5 shadow-2xs"
                 title={navQueueLabel ? `${navQueueLabel} (Alt+← / Alt+→)` : 'ಪ್ರಶ್ನೆ ಬದಲಿಸಿ (Alt+← / Alt+→)'}
               >
                 <button
                   type="button"
-                  disabled={!hasPrevQuestion || isSavingFinal || isUploading || isNavigatingQuestion}
+                  disabled={!hasPrevQuestion || busyAction}
                   onClick={() => handleMoveQuestion('prev', false)}
                   className="px-2 py-1 rounded-md text-2xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 disabled:opacity-35 disabled:cursor-not-allowed flex items-center gap-0.5 cursor-pointer whitespace-nowrap transition-colors"
                   title="ಹಿಂದಿನ ಪ್ರಶ್ನೆಗೆ ಹೋಗಿ (Alt + ←)"
@@ -1539,7 +1809,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                 )}
                 <button
                   type="button"
-                  disabled={!hasNextQuestion || isSavingFinal || isUploading || isNavigatingQuestion}
+                  disabled={!hasNextQuestion || busyAction}
                   onClick={() => handleMoveQuestion('next', false)}
                   className="px-2 py-1 rounded-md text-2xs font-bold text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100 disabled:opacity-35 disabled:cursor-not-allowed flex items-center gap-0.5 cursor-pointer whitespace-nowrap transition-colors"
                   title="ಮುಂದಿನ ಪ್ರಶ್ನೆಗೆ ಹೋಗಿ (Alt + →)"
@@ -1553,41 +1823,65 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
             <button
               type="button"
               onClick={() => setIsQuestionBoxExpanded(prev => !prev)}
-              className="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-2xs font-bold text-slate-700 cursor-pointer whitespace-nowrap"
+              className="px-2 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-2xs font-bold text-slate-700 cursor-pointer whitespace-nowrap"
             >
-              {isQuestionBoxExpanded ? 'ಪ್ರಶ್ನೆ ಮರೆಮಾಡಿ ▲' : 'ಸಂಪೂರ್ಣ ಪ್ರಶ್ನೆ ತೋರಿಸಿ ▼'}
+              {isQuestionBoxExpanded ? 'ಪ್ರಶ್ನೆ ಮರೆಮಾಡಿ ▲' : 'ಪ್ರಶ್ನೆ ತೋರಿಸಿ ▼'}
             </button>
 
-            {/* Target Slot Segmented Switch */}
-            <div className="flex items-center gap-1 p-1 bg-slate-200/80 rounded-lg text-xs">
+            {/* 4-Slot Target Switcher (Question 1, Question 2, Answer 1, Answer 2) */}
+            <div className="flex items-center gap-0.5 p-0.5 bg-slate-200/80 rounded-lg text-2xs">
               <button
                 type="button"
                 onClick={() => handleSwitchSlot('question')}
-                className={`px-3 py-1.5 rounded-md font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                className={`px-2 py-1.5 rounded-md font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                   activeSlot === 'question'
                     ? 'bg-white text-indigo-700 shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                ಪ್ರಶ್ನೆ ಚಿತ್ರ {questionImageUrl || questionDiagramSvg ? '✓' : ''}
+                ಪ್ರಶ್ನೆ 1 {questionImageUrl || questionDiagramSvg ? '✓' : ''}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitchSlot('question2')}
+                className={`px-2 py-1.5 rounded-md font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  activeSlot === 'question2'
+                    ? 'bg-white text-indigo-700 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="ಪ್ರಶ್ನೆಗೆ 2ನೇ ಚಿತ್ರ (ಪಕ್ಕಪಕ್ಕದಲ್ಲಿ ಕಾಣಿಸುತ್ತದೆ)"
+              >
+                ಪ್ರಶ್ನೆ 2 {questionImageUrl2 ? '✓' : '+'}
               </button>
               <button
                 type="button"
                 onClick={() => handleSwitchSlot('answer')}
-                className={`px-3 py-1.5 rounded-md font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                className={`px-2 py-1.5 rounded-md font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                   activeSlot === 'answer'
                     ? 'bg-white text-emerald-700 shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                ಉತ್ತರ ಚಿತ್ರ {answerImageUrl || answerDiagramSvg ? '✓' : ''}
+                ಉತ್ತರ 1 {answerImageUrl || answerDiagramSvg ? '✓' : ''}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitchSlot('answer2')}
+                className={`px-2 py-1.5 rounded-md font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  activeSlot === 'answer2'
+                    ? 'bg-white text-emerald-700 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="ಉತ್ತರಕ್ಕೆ 2ನೇ ಚಿತ್ರ (ಪಕ್ಕಪಕ್ಕದಲ್ಲಿ ಕಾಣಿಸುತ್ತದೆ)"
+              >
+                ಉತ್ತರ 2 {answerImageUrl2 ? '✓' : '+'}
               </button>
             </div>
 
             <button
               type="button"
               onClick={onClose}
-              className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-200/70 rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-200/70 rounded-lg transition-colors cursor-pointer"
               aria-label="ಮುಚ್ಚಿ"
             >
               <X className="w-4 h-4" />
@@ -1595,12 +1889,12 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
           </div>
         </div>
 
-        {/* Full Untruncated Question & Serial Number Display Banner */}
+        {/* Compact Collapsible Question & Serial Number Banner (maximizes PDF viewport height) */}
         {isQuestionBoxExpanded && (
-          <div className="px-5 py-2.5 bg-indigo-50/70 border-b border-indigo-200/80 shrink-0 max-h-40 overflow-y-auto">
+          <div className="px-4 py-1.5 bg-indigo-50/75 border-b border-indigo-200/80 shrink-0 max-h-24 overflow-y-auto">
             <div className="flex flex-wrap items-start justify-between gap-2">
-              <div className="flex-1 min-w-0 space-y-1.5">
-                <div className="text-xs sm:text-sm font-bold text-slate-900 whitespace-pre-line leading-relaxed">
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="text-xs font-bold text-slate-900 whitespace-pre-line leading-snug">
                   <span className="text-indigo-700 font-extrabold mr-1.5">
                     {question.printedSerial || question.questionNumber || questionIndex || 1}.
                   </span>
@@ -1608,17 +1902,17 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                 </div>
 
                 {Array.isArray(question.options) && question.options.length > 0 && (
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-2xs font-medium text-slate-700 pt-0.5">
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-2xs font-medium text-slate-700">
                     {question.options.map((opt, idx) => (
-                      <span key={idx} className="bg-white/85 px-2 py-0.5 rounded border border-indigo-100">
+                      <span key={idx} className="bg-white/85 px-1.5 py-0.5 rounded border border-indigo-100">
                         <MathText text={opt} />
                       </span>
                     ))}
                   </div>
                 )}
 
-                {activeSlot === 'answer' && question.answer && (
-                  <div className="text-2xs text-emerald-900 bg-emerald-50 border border-emerald-200 rounded-md px-2.5 py-1 whitespace-pre-line">
+                {isAnswerSlot(activeSlot) && question.answer && (
+                  <div className="text-2xs text-emerald-900 bg-emerald-50 border border-emerald-200 rounded-md px-2 py-0.5 whitespace-pre-line">
                     <span className="font-bold mr-1">ಉತ್ತರ:</span>
                     <MathText text={question.answer} />
                   </div>
@@ -1626,10 +1920,10 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
               </div>
 
               {(question.diagramDescription || question.answerDiagramDescription) && (
-                <div className="text-2xs text-amber-900 bg-amber-50 border border-amber-200 rounded-md px-2.5 py-1 max-w-xs shrink-0">
-                  <span className="font-bold block">ಚಿತ್ರದ ಸುಳಿವು:</span>
+                <div className="text-2xs text-amber-900 bg-amber-50 border border-amber-200 rounded-md px-2 py-0.5 max-w-xs shrink-0">
+                  <span className="font-bold mr-1">ಸುಳಿವು:</span>
                   <span>
-                    {activeSlot === 'answer'
+                    {isAnswerSlot(activeSlot)
                       ? question.answerDiagramDescription || question.diagramDescription
                       : question.diagramDescription}
                   </span>
@@ -1639,17 +1933,17 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
           </div>
         )}
 
-        {/* Two-Zone Studio Workspace */}
+        {/* Two-Zone Studio Workspace: Extra-Wide Left PDF Cropper + Right Preview & Dual Slots */}
         <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
-          {/* LEFT ZONE (~62%): Interactive PDF Cropper / File Uploader / URL-SVG */}
-          <div className="lg:col-span-7 xl:col-span-8 flex flex-col min-h-0 border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50/40">
+          {/* LEFT ZONE (~75% on desktop): Full-Page Interactive PDF Cropper / File Uploader / URL-SVG */}
+          <div className="lg:col-span-8 xl:col-span-9 flex flex-col min-h-0 border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50/40">
             {/* Input Mode Tabs & Print Filter Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 border-b border-slate-200 bg-white shrink-0">
-              <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-1.5 border-b border-slate-200 bg-white shrink-0">
+              <div className="flex items-center gap-1 p-0.5 bg-slate-100 rounded-lg text-xs">
                 <button
                   type="button"
                   onClick={() => setInputMode('pdf')}
-                  className={`px-2.5 py-1.5 rounded-md font-semibold transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md font-semibold transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
                     inputMode === 'pdf'
                       ? 'bg-white text-slate-900 shadow-2xs'
                       : 'text-slate-600 hover:text-slate-900'
@@ -1661,7 +1955,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setInputMode('upload')}
-                  className={`px-2.5 py-1.5 rounded-md font-semibold transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md font-semibold transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
                     inputMode === 'upload'
                       ? 'bg-white text-slate-900 shadow-2xs'
                       : 'text-slate-600 hover:text-slate-900'
@@ -1673,7 +1967,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setInputMode('url')}
-                  className={`px-2.5 py-1.5 rounded-md font-semibold transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md font-semibold transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
                     inputMode === 'url'
                       ? 'bg-white text-slate-900 shadow-2xs'
                       : 'text-slate-600 hover:text-slate-900'
@@ -1684,40 +1978,46 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                 </button>
               </div>
 
-              {/* High-Contrast B&W Print Filter Toggle */}
-              {inputMode !== 'url' && (
-                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={highContrastBW}
-                    onChange={e => setHighContrastBW(e.target.checked)}
-                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <Contrast className="w-3.5 h-3.5 text-slate-600" />
-                  <span className="whitespace-nowrap">ಕಪ್ಪು-ಬಿಳುಪು (B&amp;W Print)</span>
-                </label>
-              )}
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-2xs font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-800 border border-indigo-200 whitespace-nowrap">
+                  ಕ್ರಾಪ್ ಗುರಿ: {slotDisplayLabel(activeSlot)}
+                </span>
+
+                {/* High-Contrast B&W Print Filter Toggle */}
+                {inputMode !== 'url' && (
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={highContrastBW}
+                      onChange={e => setHighContrastBW(e.target.checked)}
+                      className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <Contrast className="w-3.5 h-3.5 text-slate-600" />
+                    <span className="whitespace-nowrap">B&amp;W Print</span>
+                  </label>
+                )}
+              </div>
             </div>
 
             {/* Status / Error Banner inside Stage */}
             {statusNotice && (
               <div
-                className={`mx-4 mt-2.5 px-3.5 py-2 rounded-lg text-xs font-medium flex items-center gap-2 shrink-0 border ${
+                className={`mx-3.5 mt-2 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 shrink-0 border ${
                   statusNotice.type === 'success'
                     ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
                     : 'bg-rose-50 border-rose-200 text-rose-900'
                 }`}
               >
                 {statusNotice.type === 'success' ? (
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                 ) : (
-                  <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
                 )}
                 <span className="flex-1">{statusNotice.text}</span>
               </div>
             )}
 
-            {/* MODE 1: PDF PAGE CROPPER */}
+            {/* MODE 1: FULL-PAGE PDF CROPPER */}
             {inputMode === 'pdf' && (
               <div className="flex-1 min-h-0 flex flex-col">
                 {!localPdfBuffer ? (
@@ -1781,9 +2081,9 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                   </div>
                 ) : (
                   <>
-                    {/* PDF Navigation Bar */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 bg-slate-100/80 border-b border-slate-200 text-xs shrink-0">
-                      <div className="flex items-center gap-1.5">
+                    {/* PDF Navigation, Fit Page / Fit Width & Working Zoom Toolbar */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-1.5 bg-slate-100/90 border-b border-slate-200 text-xs shrink-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <button
                           type="button"
                           disabled={currentPage <= 1}
@@ -1797,7 +2097,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                         >
                           <ChevronLeft className="w-3.5 h-3.5" />
                         </button>
-                        <div className="flex items-center gap-1 bg-white border border-slate-300 rounded-md px-2 py-1">
+                        <div className="flex items-center gap-1 bg-white border border-slate-300 rounded-md px-2 py-0.5">
                           <span className="text-2xs text-slate-500">ಪುಟ</span>
                           <input
                             type="text"
@@ -1819,7 +2119,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                                 setPageInputText(String(currentPage));
                               }
                             }}
-                            className="w-10 text-center font-mono font-bold text-slate-900 tabular-nums focus:outline-hidden"
+                            className="w-9 text-center font-mono font-bold text-slate-900 tabular-nums focus:outline-hidden"
                           />
                           <span className="text-2xs text-slate-500 tabular-nums">/ {pdfNumPages || '...'}</span>
                         </div>
@@ -1837,26 +2137,55 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                           <ChevronRight className="w-3.5 h-3.5" />
                         </button>
 
-                        {/* Zoom */}
-                        <div className="flex items-center gap-1 ml-1.5 border-l border-slate-300 pl-1.5">
+                        {/* Working Zoom In / Zoom Out + Fit Full Page / Fit Width */}
+                        <div className="flex items-center gap-1 ml-1 border-l border-slate-300 pl-1.5">
                           <button
                             type="button"
-                            onClick={() => setZoom(z => Math.max(0.75, +(z - 0.25).toFixed(2)))}
-                            className="p-1.5 bg-white border border-slate-300 rounded-md hover:bg-slate-50 cursor-pointer"
-                            title="Zoom Out"
+                            onClick={handleZoomOut}
+                            disabled={effectiveScale <= 0.32}
+                            className="p-1.5 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
+                            title="Zoom Out (ಚಿಕ್ಕದು ಮಾಡಿ)"
                           >
-                            <ZoomOut className="w-3.5 h-3.5" />
+                            <ZoomOut className="w-3.5 h-3.5 text-slate-800" />
                           </button>
-                          <span className="text-2xs font-mono font-semibold text-slate-700 w-10 text-center tabular-nums">
-                            {Math.round(zoom * 100)}%
+                          <span className="text-2xs font-mono font-bold text-slate-800 w-11 text-center tabular-nums">
+                            {Math.round(effectiveScale * 100)}%
                           </span>
                           <button
                             type="button"
-                            onClick={() => setZoom(z => Math.min(2.0, +(z + 0.25).toFixed(2)))}
-                            className="p-1.5 bg-white border border-slate-300 rounded-md hover:bg-slate-50 cursor-pointer"
-                            title="Zoom In"
+                            onClick={handleZoomIn}
+                            disabled={effectiveScale >= 2.95}
+                            className="p-1.5 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
+                            title="Zoom In (ದೊಡ್ಡದು ಮಾಡಿ)"
                           >
-                            <ZoomIn className="w-3.5 h-3.5" />
+                            <ZoomIn className="w-3.5 h-3.5 text-slate-800" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setPdfViewMode('fit-page')}
+                            className={`px-2 py-1 rounded-md text-2xs font-bold border flex items-center gap-1 cursor-pointer whitespace-nowrap transition-colors ${
+                              pdfViewMode === 'fit-page'
+                                ? 'bg-indigo-600 text-white border-indigo-600'
+                                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                            }`}
+                            title="ಪೂರ್ಣ PDF ಪುಟವನ್ನು ಪರದೆಗೆ ಹೊಂದಿಸಿ (Fit Full Page)"
+                          >
+                            <Maximize2 className="w-3 h-3" />
+                            <span>ಪೂರ್ಣ ಪುಟ</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setPdfViewMode('fit-width')}
+                            className={`px-2 py-1 rounded-md text-2xs font-bold border cursor-pointer whitespace-nowrap transition-colors ${
+                              pdfViewMode === 'fit-width'
+                                ? 'bg-indigo-600 text-white border-indigo-600'
+                                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                            }`}
+                            title="ಪುಟದ ಅಗಲಕ್ಕೆ ಹೊಂದಿಸಿ (Fit Width)"
+                          >
+                            ಅಗಲ
                           </button>
                         </div>
 
@@ -1865,7 +2194,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                           type="button"
                           disabled={isAutoFindingPage || !pdfDoc}
                           onClick={() => pdfDoc && locateExactPageInPdf(pdfDoc, activeSlot, true)}
-                          className="ml-1 px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-md text-2xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap disabled:opacity-50"
+                          className="ml-0.5 px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-md text-2xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap disabled:opacity-50"
                           title="ಈ ಪ್ರಶ್ನೆ ಇರುವ ನಿಖರವಾದ PDF ಪುಟವನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಹುಡುಕಿ"
                         >
                           {isAutoFindingPage ? (
@@ -1877,7 +2206,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                         </button>
 
                         {autoPageBadge && !isAutoFindingPage && (
-                          <span className="px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 text-3xs font-bold whitespace-nowrap">
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 text-3xs font-bold whitespace-nowrap">
                             📄 {autoPageBadge}
                           </span>
                         )}
@@ -1889,7 +2218,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                               const found = savedPdfs.find(p => p.id === e.target.value);
                               if (found) handleChooseSavedPdf(found);
                             }}
-                            className="ml-1 bg-white border border-slate-300 rounded-md px-2 py-1 text-2xs font-semibold text-slate-700 max-w-[140px] truncate cursor-pointer"
+                            className="bg-white border border-slate-300 rounded-md px-2 py-1 text-2xs font-semibold text-slate-700 max-w-[130px] truncate cursor-pointer"
                             title="ಉಳಿಸಿದ ಬೇರೆ PDF ಗೆ ಬದಲಿಸಿ"
                           >
                             <option value="">ಉಳಿಸಿದ PDF...</option>
@@ -1903,7 +2232,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                           </select>
                         )}
 
-                        <label className="ml-1.5 text-2xs font-semibold text-indigo-700 hover:underline cursor-pointer whitespace-nowrap">
+                        <label className="text-2xs font-semibold text-indigo-700 hover:underline cursor-pointer whitespace-nowrap">
                           ಹೊಸ PDF
                           <input
                             type="file"
@@ -1914,7 +2243,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                         </label>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         {cropRect && cropRect.w > 10 && cropRect.h > 10 && (
                           <button
                             type="button"
@@ -1923,9 +2252,9 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                               setPendingCanvas(null);
                               setPendingPreview(null);
                             }}
-                            className="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-md text-2xs font-semibold cursor-pointer whitespace-nowrap"
+                            className="px-2 py-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-md text-2xs font-semibold cursor-pointer whitespace-nowrap"
                           >
-                            ಆಯ್ಕೆ ತೆರವು (Clear)
+                            ಆಯ್ಕೆ ತೆರವು
                           </button>
                         )}
                         {pendingPreview && (
@@ -1933,35 +2262,29 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                             type="button"
                             disabled={isUploading}
                             onClick={() => saveCompressedPreviewToFirebase(pendingPreview, activeSlot)}
-                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-45 text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                            className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-45 text-white rounded-md text-2xs font-bold transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap"
                           >
                             {isUploading ? (
-                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              <RefreshCw className="w-3 h-3 animate-spin" />
                             ) : (
-                              <Cloud className="w-3.5 h-3.5" />
+                              <Cloud className="w-3 h-3" />
                             )}
                             <span>
                               {isUploading
-                                ? 'Firebase ಗೆ ಉಳಿಸಲಾಗುತ್ತಿದೆ...'
-                                : `Firebase ಗೆ ಉಳಿಸಿ (${pendingPreview.sizeKB} KB)`}
+                                ? 'ಉಳಿಸಲಾಗುತ್ತಿದೆ...'
+                                : `${slotDisplayLabel(activeSlot)} ಉಳಿಸಿ (${pendingPreview.sizeKB} KB)`}
                             </span>
                           </button>
                         )}
                       </div>
                     </div>
 
-                    {/* Interactive PDF Canvas Stage */}
+                    {/* Interactive Full-Page PDF Canvas Stage (zero max-w-full clamping — Zoom & Fit Page work cleanly!) */}
                     <div
                       ref={pdfScrollContainerRef}
-                      className="flex-1 min-h-0 overflow-auto p-4 flex flex-col items-center bg-slate-200/70"
+                      className="flex-1 min-h-0 overflow-auto p-2 bg-slate-200/80 flex"
                     >
-                      <div className="text-2xs text-slate-600 mb-2 flex items-center gap-2">
-                        <span className="font-medium truncate max-w-xs">{localPdfName}</span>
-                        <span aria-hidden="true">·</span>
-                        <span>ಚಿತ್ರದ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿ ಎಳೆಯಿರಿ — ಬಲಭಾಗದಲ್ಲಿ ತಕ್ಷಣ ಕ್ರಾಪ್ ಪ್ರಿವ್ಯೂ ಕಾಣಿಸುತ್ತದೆ</span>
-                      </div>
-
-                      <div className="relative inline-block shadow-md border border-slate-300 bg-white select-none">
+                      <div className="relative m-auto shrink-0 shadow-md border border-slate-300 bg-white select-none">
                         {isRenderingPage && (
                           <div className="absolute inset-0 z-20 bg-white/75 flex items-center justify-center gap-2 text-xs font-semibold text-indigo-700">
                             <RefreshCw className="w-4 h-4 animate-spin" />
@@ -1973,7 +2296,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                           onPointerDown={handlePointerDown}
                           onPointerMove={handlePointerMove}
                           onPointerUp={handlePointerUp}
-                          className="block max-w-full h-auto cursor-crosshair touch-none"
+                          className="block cursor-crosshair touch-none"
                         />
                         {overlayStyle && cropRect && cropRect.w > 4 && cropRect.h > 4 && (
                           <div
@@ -2001,9 +2324,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                   </div>
                   <div className="space-y-1.5">
                     <h4 className="text-sm font-bold text-slate-900">
-                      {activeSlot === 'question'
-                        ? 'ಪ್ರಶ್ನೆ ಚಿತ್ರ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ (Upload Question Diagram)'
-                        : 'ಉತ್ತರ ಚಿತ್ರ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ (Upload Answer Key Diagram)'}
+                      {slotDisplayLabel(activeSlot)} ಅಪ್‌ಲೋಡ್ ಮಾಡಿ
                     </h4>
                     <p className="text-xs text-slate-500 leading-relaxed">
                       PNG, JPG, WebP ಅಥವಾ SVG ಆಯ್ಕೆಮಾಡಿ. ಬಲಭಾಗದಲ್ಲಿ ಪ್ರಿವ್ಯೂ ಮತ್ತು KB ಗಾತ್ರ (10 KB / 20 KB / 50 KB) ಹೊಂದಿಸಿ Firebase ಗೆ ಉಳಿಸಬಹುದು — JSON ನಲ್ಲಿ URL ಮಾತ್ರ ಸೇರುತ್ತದೆ.
@@ -2048,7 +2369,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                 <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
                   <div className="space-y-1.5">
                     <label className="block text-xs font-bold text-slate-800">
-                      ಚಿತ್ರದ URL ({activeSlot === 'question' ? 'imageUrl' : 'answerImageUrl'})
+                      ಚಿತ್ರದ URL ({slotDisplayLabel(activeSlot)})
                     </label>
                     <input
                       type="text"
@@ -2059,37 +2380,39 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                     />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-slate-800">
-                      ಅಥವಾ ಗಣಿತ / ರೇಖಾಗಣಿತ SVG ಕೋಡ್ ({activeSlot === 'question' ? 'diagramSvg' : 'answerDiagramSvg'})
-                    </label>
-                    <textarea
-                      value={manualSvgInput}
-                      onChange={e => setManualSvgInput(e.target.value)}
-                      rows={6}
-                      placeholder="<svg viewBox='0 0 200 140' width='180'>...</svg>"
-                      className="w-full px-3 py-2 text-xs font-mono bg-slate-50 border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                    />
-                  </div>
+                  {(activeSlot === 'question' || activeSlot === 'answer') && (
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold text-slate-800">
+                        ಅಥವಾ ಗಣಿತ / ರೇಖಾಗಣಿತ SVG ಕೋಡ್ ({activeSlot === 'question' ? 'diagramSvg' : 'answerDiagramSvg'})
+                      </label>
+                      <textarea
+                        value={manualSvgInput}
+                        onChange={e => setManualSvgInput(e.target.value)}
+                        rows={6}
+                        placeholder="<svg viewBox='0 0 200 140' width='180'>...</svg>"
+                        className="w-full px-3 py-2 text-xs font-mono bg-slate-50 border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                  )}
 
                   <button
                     type="button"
                     onClick={handleApplyManualUrlOrSvg}
                     className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap"
                   >
-                    ಅನ್ವಯಿಸಿ (Apply to {activeSlot === 'question' ? 'Question' : 'Answer Key'})
+                    ಅನ್ವಯಿಸಿ ({slotDisplayLabel(activeSlot)})
                   </button>
                 </div>
               </div>
             )}
           </div>
 
-          {/* RIGHT ZONE (~38%): Live Cropped Preview + KB Optimizer + Attached Question/Answer Slots */}
-          <div className="lg:col-span-5 xl:col-span-4 flex flex-col min-h-0 bg-white">
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {/* RIGHT ZONE (~25-33%): Live Cropped Preview + KB Optimizer + Dual Question & Dual Answer Side-by-Side Slots */}
+          <div className="lg:col-span-4 xl:col-span-3 flex flex-col min-h-0 bg-white">
+            <div className="flex-1 overflow-y-auto p-3 space-y-3">
               {/* LIVE CROPPED / STAGED PREVIEW & KB SIZE CONTROL */}
               <div
-                className={`rounded-xl border-2 p-3.5 space-y-3 transition-colors ${
+                className={`rounded-xl border-2 p-3 space-y-2.5 transition-colors ${
                   pendingPreview
                     ? 'border-indigo-500 bg-indigo-50/40'
                     : 'border-slate-200 bg-slate-50/70'
@@ -2098,21 +2421,21 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
                     <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>ಚಿತ್ರದ ಗಾತ್ರ (KB) &amp; ಕ್ರಾಪ್ ಪ್ರಿವ್ಯೂ</span>
+                    <span>ಕ್ರಾಪ್ ಪ್ರಿವ್ಯೂ &amp; KB</span>
                   </div>
                   <span className="text-2xs font-mono font-bold text-indigo-700 tabular-nums">
                     ಗುರಿ: {targetSizeKB} KB
                   </span>
                 </div>
 
-                {/* Preset KB Buttons (10 KB, 20 KB, 35 KB, 50 KB, 100 KB) */}
-                <div className="flex flex-wrap items-center gap-1.5">
+                {/* Preset KB Buttons */}
+                <div className="flex flex-wrap items-center gap-1">
                   {SIZE_PRESETS_KB.map(kb => (
                     <button
                       key={kb}
                       type="button"
                       onClick={() => setTargetSizeKB(kb)}
-                      className={`px-2 py-1 rounded-md text-2xs font-bold tabular-nums transition-colors cursor-pointer border whitespace-nowrap ${
+                      className={`px-2 py-0.5 rounded-md text-2xs font-bold tabular-nums transition-colors cursor-pointer border whitespace-nowrap ${
                         targetSizeKB === kb
                           ? 'bg-indigo-600 text-white border-indigo-600'
                           : 'bg-white text-slate-700 border-slate-300 hover:border-indigo-400'
@@ -2123,51 +2446,44 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                   ))}
                 </div>
 
-                {/* Continuous KB Slider (5 KB to 150 KB) */}
-                <div className="space-y-1">
-                  <input
-                    type="range"
-                    min={5}
-                    max={150}
-                    step={5}
-                    value={targetSizeKB}
-                    onChange={e => setTargetSizeKB(Number(e.target.value))}
-                    className="w-full accent-indigo-600 cursor-pointer"
-                    aria-label="ಚಿತ್ರದ ಗರಿಷ್ಠ ಗಾತ್ರ (KB)"
-                  />
-                  <div className="flex justify-between text-3xs text-slate-500 font-mono tabular-nums">
-                    <span>5 KB (ಅತಿ ಚಿಕ್ಕದು)</span>
-                    <span>20 KB (ಶಿಫಾರಸು)</span>
-                    <span>150 KB (ಹೆಚ್ಚು ಸ್ಪಷ್ಟ)</span>
-                  </div>
-                </div>
+                {/* Continuous KB Slider */}
+                <input
+                  type="range"
+                  min={5}
+                  max={150}
+                  step={5}
+                  value={targetSizeKB}
+                  onChange={e => setTargetSizeKB(Number(e.target.value))}
+                  className="w-full accent-indigo-600 cursor-pointer"
+                  aria-label="ಚಿತ್ರದ ಗರಿಷ್ಠ ಗಾತ್ರ (KB)"
+                />
 
                 {/* Instant Cropped Image Live Preview */}
                 {pendingPreview ? (
-                  <div className="space-y-2.5 pt-2 border-t border-indigo-200/70">
+                  <div className="space-y-2 pt-2 border-t border-indigo-200/70">
                     <div className="flex items-center justify-between text-2xs">
                       <span className="font-bold text-indigo-900">
-                        ಕ್ರಾಪ್ ಮಾಡಿದ ಪ್ರಿವ್ಯೂ ({activeSlot === 'question' ? 'ಪ್ರಶ್ನೆ' : 'ಉತ್ತರ'}):
+                        {slotDisplayLabel(activeSlot)}:
                       </span>
                       <span className="font-mono font-bold text-emerald-700 tabular-nums">
                         {pendingPreview.sizeKB} KB · {pendingPreview.width}×{pendingPreview.height}
                       </span>
                     </div>
 
-                    <div className="rounded-lg border border-indigo-300 bg-white p-2 flex items-center justify-center min-h-28 max-h-48 overflow-hidden">
+                    <div className="rounded-lg border border-indigo-300 bg-white p-1.5 flex items-center justify-center min-h-24 max-h-40 overflow-hidden">
                       <img
                         src={pendingPreview.dataUrl}
                         alt="ಕ್ರಾಪ್ ಮಾಡಿದ ಚಿತ್ರದ ಪ್ರಿವ್ಯೂ"
-                        className="max-h-44 max-w-full object-contain"
+                        className="max-h-36 max-w-full object-contain"
                       />
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <button
                         type="button"
                         disabled={isUploading}
                         onClick={() => saveCompressedPreviewToFirebase(pendingPreview, activeSlot)}
-                        className="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
+                        className="flex-1 py-1.5 px-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg text-2xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
                       >
                         {isUploading ? (
                           <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -2189,263 +2505,448 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                           setPendingPreview(null);
                           setCropRect(null);
                         }}
-                        className="py-2 px-2.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 rounded-lg text-xs font-bold transition-colors cursor-pointer whitespace-nowrap"
-                        title="ಈ ಕ್ರಾಪ್ ರದ್ದುಗೊಳಿಸಿ ಮತ್ತೆ ಆಯ್ಕೆಮಾಡಿ"
+                        className="py-1.5 px-2 bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 rounded-lg text-2xs font-bold transition-colors cursor-pointer whitespace-nowrap"
                       >
                         ರದ್ದು
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-2xs text-slate-500 leading-relaxed border-t border-slate-200/80 pt-2">
-                    ಎಡಭಾಗದ PDF ಪುಟದಲ್ಲಿ ಚಿತ್ರದ ಮೇಲೆ ಎಳೆದು (Drag) ಕ್ರಾಪ್ ಮಾಡಿದ ತಕ್ಷಣ ಅದರ ಪ್ರಿವ್ಯೂ ಮತ್ತು ನಿಖರ KB ಗಾತ್ರ ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತದೆ.
+                  <p className="text-2xs text-slate-500 leading-snug border-t border-slate-200/80 pt-1.5">
+                    ಎಡಭಾಗದ ಪೂರ್ಣ PDF ಪುಟದಲ್ಲಿ ಚಿತ್ರದ ಮೇಲೆ ಮೌಸ್ ಎಳೆದು (Drag) ಕ್ರಾಪ್ ಮಾಡಿ — <strong className="text-slate-700">{slotDisplayLabel(activeSlot)}</strong> ಗೆ ಸೇರುತ್ತದೆ.
                   </p>
                 )}
               </div>
 
-              {/* Slot 1: Attached Question Paper Image Preview */}
+              {/* SECTION 1: Question Paper Images (1 & 2 Side-by-Side) */}
               <div
-                className={`rounded-xl border p-3.5 space-y-2.5 transition-colors ${
-                  activeSlot === 'question'
+                className={`rounded-xl border p-2.5 space-y-2 transition-colors ${
+                  activeSlot === 'question' || activeSlot === 'question2'
                     ? 'border-indigo-400 bg-indigo-50/20'
                     : 'border-slate-200 bg-slate-50/40'
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold text-slate-900">
+                    ೧. ಪ್ರಶ್ನೆ ಚಿತ್ರಗಳು (ಪಕ್ಕಪಕ್ಕದಲ್ಲಿ)
+                  </span>
                   <button
                     type="button"
-                    onClick={() => handleSwitchSlot('question')}
-                    className="text-xs font-bold text-slate-900 hover:text-indigo-700 cursor-pointer text-left"
+                    onClick={() => handleReplaceSlotImage('question2')}
+                    className={`px-2 py-0.5 rounded-md text-3xs font-bold border flex items-center gap-0.5 cursor-pointer whitespace-nowrap transition-colors ${
+                      activeSlot === 'question2'
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-white text-indigo-700 border-indigo-300 hover:bg-indigo-50'
+                    }`}
+                    title="ಪ್ರಶ್ನೆಗೆ 2ನೇ ಗ್ರಾಫ್ / ಚಿತ್ರ ಕ್ರಾಪ್ ಮಾಡಿ (ಪಕ್ಕಪಕ್ಕದಲ್ಲಿ ಫಿಟ್ ಆಗುತ್ತದೆ)"
                   >
-                    ೧. ಪ್ರಶ್ನೆ ಚಿತ್ರ (Question Image)
+                    <Plus className="w-3 h-3" />
+                    <span>{questionImageUrl2 ? '2ನೇ ಚಿತ್ರ ಬದಲಿಸಿ' : '2ನೇ ಚಿತ್ರ ಕ್ರಾಪ್'}</span>
                   </button>
-                  {questionImageUrl && slotMetaKB[questionImageUrl] && (
-                    <span className="text-3xs font-mono font-bold text-emerald-700 tabular-nums">
-                      {slotMetaKB[questionImageUrl]} KB · Firebase
-                    </span>
-                  )}
                 </div>
 
-                {questionImageUrl ? (
-                  <div className="space-y-2">
-                    {brokenPreviewSlots.question ? (
-                      <div className="h-28 rounded-lg border border-slate-200 bg-slate-100 flex flex-col items-center justify-center text-2xs text-slate-500 p-2 text-center">
-                        <ImageIcon className="w-5 h-5 mb-1 text-slate-400" />
-                        <span>ಚಿತ್ರ ಲೋಡ್ ಆಗಲಿಲ್ಲ — ಬದಲಾಯಿಸಿ ಅಥವಾ ಮರು-ಕ್ರಾಪ್ ಮಾಡಿ</span>
-                      </div>
-                    ) : (
-                      <div className="rounded-lg border border-slate-200 bg-white p-1.5 flex items-center justify-center">
-                        <img
-                          src={resolvedQuestionSrc}
-                          alt={questionDesc || 'ಪ್ರಶ್ನೆ ಚಿತ್ರ'}
-                          referrerPolicy="no-referrer"
-                          onError={() => handlePreviewImageError('question', questionImageUrl)}
-                          className="max-h-36 max-w-full object-contain"
+                {/* Dual Side-by-Side Grid for Question Image 1 & Question Image 2 */}
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Question Image 1 */}
+                  <div
+                    className={`rounded-lg border p-1.5 space-y-1.5 bg-white ${
+                      activeSlot === 'question' ? 'border-indigo-500 ring-1 ring-indigo-300' : 'border-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-3xs font-bold text-slate-700">
+                      <button
+                        type="button"
+                        onClick={() => handleSwitchSlot('question')}
+                        className="hover:text-indigo-700 cursor-pointer"
+                      >
+                        ಚಿತ್ರ 1
+                      </button>
+                      {questionImageUrl && slotMetaKB[questionImageUrl] && (
+                        <span className="font-mono text-emerald-700">{slotMetaKB[questionImageUrl]}KB</span>
+                      )}
+                    </div>
+
+                    {questionImageUrl ? (
+                      <>
+                        {brokenPreviewSlots.question ? (
+                          <div className="h-20 rounded border border-slate-200 bg-slate-100 flex items-center justify-center text-3xs text-slate-500 text-center p-1">
+                            ಲೋಡ್ ಆಗಲಿಲ್ಲ
+                          </div>
+                        ) : (
+                          <div className="h-24 rounded border border-slate-100 bg-slate-50/50 p-1 flex items-center justify-center">
+                            <img
+                              src={resolvedQuestionSrc}
+                              alt={questionDesc || 'ಪ್ರಶ್ನೆ ಚಿತ್ರ 1'}
+                              referrerPolicy="no-referrer"
+                              onError={() => handlePreviewImageError('question', questionImageUrl)}
+                              className="max-h-full max-w-full object-contain"
+                            />
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleReplaceSlotImage('question')}
+                            className="flex-1 py-1 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-3xs font-bold flex items-center justify-center gap-0.5 cursor-pointer"
+                            title="ಚಿತ್ರ 1 ಬದಲಿಸಿ"
+                          >
+                            <Replace className="w-3 h-3" />
+                            <span>ಬದಲಿಸಿ</span>
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isDeletingSlot === 'question'}
+                            onClick={() => handleDeleteSlotImage('question')}
+                            className="p-1 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded cursor-pointer disabled:opacity-50"
+                            title="ಚಿತ್ರ 1 ಡಿಲೀಟ್"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </>
+                    ) : questionDiagramSvg ? (
+                      <>
+                        <div
+                          className="h-24 overflow-hidden rounded border border-slate-100 bg-white p-1 flex items-center justify-center"
+                          dangerouslySetInnerHTML={{ __html: questionDiagramSvg }}
                         />
-                      </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleReplaceSlotImage('question')}
+                            className="flex-1 py-1 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-3xs font-bold cursor-pointer"
+                          >
+                            ಬದಲಿಸಿ
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSlotImage('question')}
+                            className="p-1 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded cursor-pointer"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleReplaceSlotImage('question')}
+                        className="w-full h-24 rounded border border-dashed border-slate-300 hover:border-indigo-400 hover:bg-indigo-50/40 flex flex-col items-center justify-center gap-1 text-3xs text-slate-500 cursor-pointer transition-colors"
+                      >
+                        <Crop className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>ಚಿತ್ರ 1 ಕ್ರಾಪ್</span>
+                      </button>
                     )}
+                  </div>
 
-                    <div className="text-3xs font-mono text-slate-500 truncate" title={questionImageUrl}>
-                      URL: {questionImageUrl}
+                  {/* Question Image 2 (Side-by-Side) */}
+                  <div
+                    className={`rounded-lg border p-1.5 space-y-1.5 bg-white ${
+                      activeSlot === 'question2' ? 'border-indigo-500 ring-1 ring-indigo-300' : 'border-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-3xs font-bold text-slate-700">
+                      <button
+                        type="button"
+                        onClick={() => handleSwitchSlot('question2')}
+                        className="hover:text-indigo-700 cursor-pointer"
+                      >
+                        ಚಿತ್ರ 2 (ಪಕ್ಕ)
+                      </button>
+                      {questionImageUrl2 && slotMetaKB[questionImageUrl2] && (
+                        <span className="font-mono text-emerald-700">{slotMetaKB[questionImageUrl2]}KB</span>
+                      )}
                     </div>
 
-                    {/* Explicit Replace & Delete Buttons */}
-                    <div className="flex items-center gap-2">
+                    {questionImageUrl2 ? (
+                      <>
+                        {brokenPreviewSlots.question2 ? (
+                          <div className="h-20 rounded border border-slate-200 bg-slate-100 flex items-center justify-center text-3xs text-slate-500 text-center p-1">
+                            ಲೋಡ್ ಆಗಲಿಲ್ಲ
+                          </div>
+                        ) : (
+                          <div className="h-24 rounded border border-slate-100 bg-slate-50/50 p-1 flex items-center justify-center">
+                            <img
+                              src={resolvedQuestionSrc2}
+                              alt="ಪ್ರಶ್ನೆ ಚಿತ್ರ 2"
+                              referrerPolicy="no-referrer"
+                              onError={() => handlePreviewImageError('question2', questionImageUrl2)}
+                              className="max-h-full max-w-full object-contain"
+                            />
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleReplaceSlotImage('question2')}
+                            className="flex-1 py-1 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-3xs font-bold flex items-center justify-center gap-0.5 cursor-pointer"
+                            title="ಚಿತ್ರ 2 ಬದಲಿಸಿ"
+                          >
+                            <Replace className="w-3 h-3" />
+                            <span>ಬದಲಿಸಿ</span>
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isDeletingSlot === 'question2'}
+                            onClick={() => handleDeleteSlotImage('question2')}
+                            className="p-1 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded cursor-pointer disabled:opacity-50"
+                            title="ಚಿತ್ರ 2 ಡಿಲೀಟ್"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </>
+                    ) : (
                       <button
                         type="button"
-                        onClick={() => handleReplaceSlotImage('question')}
-                        className="flex-1 py-1.5 px-2.5 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-300 rounded-lg text-2xs font-bold flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
+                        onClick={() => handleReplaceSlotImage('question2')}
+                        className="w-full h-24 rounded border border-dashed border-slate-300 hover:border-indigo-400 hover:bg-indigo-50/40 flex flex-col items-center justify-center gap-1 text-3xs text-slate-500 cursor-pointer transition-colors"
                       >
-                        <Replace className="w-3.5 h-3.5" />
-                        <span>ಬದಲಾಯಿಸಿ (Replace)</span>
+                        <Plus className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>+ 2ನೇ ಚಿತ್ರ</span>
                       </button>
-                      <button
-                        type="button"
-                        disabled={isDeletingSlot === 'question'}
-                        onClick={() => handleDeleteSlotImage('question')}
-                        className="flex-1 py-1.5 px-2.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 rounded-lg text-2xs font-bold flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap disabled:opacity-50"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>{isDeletingSlot === 'question' ? 'ಅಳಿಸಲಾಗುತ್ತಿದೆ...' : 'ಡಿಲೀಟ್ (Delete)'}</span>
-                      </button>
-                    </div>
+                    )}
                   </div>
-                ) : questionDiagramSvg ? (
-                  <div className="space-y-2">
-                    <div
-                      className="w-full max-h-36 overflow-hidden rounded-lg border border-slate-200 bg-white p-2 flex items-center justify-center"
-                      dangerouslySetInnerHTML={{ __html: questionDiagramSvg }}
-                    />
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleReplaceSlotImage('question')}
-                        className="flex-1 py-1.5 px-2.5 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-300 rounded-lg text-2xs font-bold flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
-                      >
-                        <Replace className="w-3.5 h-3.5" />
-                        <span>ಬದಲಾಯಿಸಿ</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteSlotImage('question')}
-                        className="flex-1 py-1.5 px-2.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 rounded-lg text-2xs font-bold flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>ಡಿಲೀಟ್</span>
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-20 rounded-lg border border-dashed border-slate-300 bg-white flex flex-col items-center justify-center text-2xs text-slate-400 text-center px-3">
-                    <span>ಪ್ರಶ್ನೆ ಚಿತ್ರ ಜೋಡಿಸಿಲ್ಲ</span>
-                  </div>
-                )}
+                </div>
 
                 <input
                   type="text"
                   value={questionDesc}
                   onChange={e => setQuestionDesc(e.target.value)}
                   placeholder="ಪ್ರಶ್ನೆ ಚಿತ್ರದ ವಿವರಣೆ / Alt Text (ಐಚ್ಛಿಕ)"
-                  className="w-full px-2.5 py-1.5 text-2xs bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+                  className="w-full px-2 py-1 text-2xs bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
                 />
               </div>
 
-              {/* Slot 2: Separate Answer Key Image Preview */}
+              {/* SECTION 2: Answer Key Images (1 & 2 Side-by-Side) */}
               <div
-                className={`rounded-xl border p-3.5 space-y-2.5 transition-colors ${
-                  activeSlot === 'answer'
+                className={`rounded-xl border p-2.5 space-y-2 transition-colors ${
+                  activeSlot === 'answer' || activeSlot === 'answer2'
                     ? 'border-emerald-500 bg-emerald-50/20'
                     : 'border-slate-200 bg-slate-50/40'
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold text-slate-900">
+                    ೨. ಉತ್ತರ ಚಿತ್ರಗಳು (ಪಕ್ಕಪಕ್ಕದಲ್ಲಿ)
+                  </span>
                   <button
                     type="button"
-                    onClick={() => handleSwitchSlot('answer')}
-                    className="text-xs font-bold text-slate-900 hover:text-emerald-700 cursor-pointer text-left"
+                    onClick={() => handleReplaceSlotImage('answer2')}
+                    className={`px-2 py-0.5 rounded-md text-3xs font-bold border flex items-center gap-0.5 cursor-pointer whitespace-nowrap transition-colors ${
+                      activeSlot === 'answer2'
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50'
+                    }`}
+                    title="ಉತ್ತರಕ್ಕೆ 2ನೇ ಗ್ರಾಫ್ / ಚಿತ್ರ ಕ್ರಾಪ್ ಮಾಡಿ (ಪಕ್ಕಪಕ್ಕದಲ್ಲಿ ಫಿಟ್ ಆಗುತ್ತದೆ)"
                   >
-                    ೨. ಉತ್ತರ ಪತ್ರಿಕೆ ಚಿತ್ರ (Answer Key Image)
+                    <Plus className="w-3 h-3" />
+                    <span>{answerImageUrl2 ? '2ನೇ ಚಿತ್ರ ಬದಲಿಸಿ' : '2ನೇ ಚಿತ್ರ ಕ್ರಾಪ್'}</span>
                   </button>
-                  {answerImageUrl && slotMetaKB[answerImageUrl] && (
-                    <span className="text-3xs font-mono font-bold text-emerald-700 tabular-nums">
-                      {slotMetaKB[answerImageUrl]} KB · Firebase
-                    </span>
-                  )}
                 </div>
 
-                {answerImageUrl ? (
-                  <div className="space-y-2">
-                    {brokenPreviewSlots.answer ? (
-                      <div className="h-28 rounded-lg border border-slate-200 bg-slate-100 flex flex-col items-center justify-center text-2xs text-slate-500 p-2 text-center">
-                        <ImageIcon className="w-5 h-5 mb-1 text-slate-400" />
-                        <span>ಉತ್ತರ ಚಿತ್ರ ಲೋಡ್ ಆಗಲಿಲ್ಲ</span>
-                      </div>
-                    ) : (
-                      <div className="rounded-lg border border-emerald-200 bg-white p-1.5 flex items-center justify-center">
-                        <img
-                          src={resolvedAnswerSrc}
-                          alt={answerDesc || 'ಉತ್ತರ ಚಿತ್ರ'}
-                          referrerPolicy="no-referrer"
-                          onError={() => handlePreviewImageError('answer', answerImageUrl)}
-                          className="max-h-36 max-w-full object-contain"
+                {/* Dual Side-by-Side Grid for Answer Image 1 & Answer Image 2 */}
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Answer Image 1 */}
+                  <div
+                    className={`rounded-lg border p-1.5 space-y-1.5 bg-white ${
+                      activeSlot === 'answer' ? 'border-emerald-500 ring-1 ring-emerald-300' : 'border-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-3xs font-bold text-slate-700">
+                      <button
+                        type="button"
+                        onClick={() => handleSwitchSlot('answer')}
+                        className="hover:text-emerald-700 cursor-pointer"
+                      >
+                        ಉತ್ತರ 1
+                      </button>
+                      {answerImageUrl && slotMetaKB[answerImageUrl] && (
+                        <span className="font-mono text-emerald-700">{slotMetaKB[answerImageUrl]}KB</span>
+                      )}
+                    </div>
+
+                    {answerImageUrl ? (
+                      <>
+                        {brokenPreviewSlots.answer ? (
+                          <div className="h-20 rounded border border-slate-200 bg-slate-100 flex items-center justify-center text-3xs text-slate-500 text-center p-1">
+                            ಲೋಡ್ ಆಗಲಿಲ್ಲ
+                          </div>
+                        ) : (
+                          <div className="h-24 rounded border border-emerald-100 bg-emerald-50/30 p-1 flex items-center justify-center">
+                            <img
+                              src={resolvedAnswerSrc}
+                              alt={answerDesc || 'ಉತ್ತರ ಚಿತ್ರ 1'}
+                              referrerPolicy="no-referrer"
+                              onError={() => handlePreviewImageError('answer', answerImageUrl)}
+                              className="max-h-full max-w-full object-contain"
+                            />
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleReplaceSlotImage('answer')}
+                            className="flex-1 py-1 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-3xs font-bold flex items-center justify-center gap-0.5 cursor-pointer"
+                            title="ಉತ್ತರ ಚಿತ್ರ 1 ಬದಲಿಸಿ"
+                          >
+                            <Replace className="w-3 h-3" />
+                            <span>ಬದಲಿಸಿ</span>
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isDeletingSlot === 'answer'}
+                            onClick={() => handleDeleteSlotImage('answer')}
+                            className="p-1 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded cursor-pointer disabled:opacity-50"
+                            title="ಉತ್ತರ ಚಿತ್ರ 1 ಡಿಲೀಟ್"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </>
+                    ) : answerDiagramSvg ? (
+                      <>
+                        <div
+                          className="h-24 overflow-hidden rounded border border-emerald-100 bg-white p-1 flex items-center justify-center"
+                          dangerouslySetInnerHTML={{ __html: answerDiagramSvg }}
                         />
-                      </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleReplaceSlotImage('answer')}
+                            className="flex-1 py-1 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-3xs font-bold cursor-pointer"
+                          >
+                            ಬದಲಿಸಿ
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSlotImage('answer')}
+                            className="p-1 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded cursor-pointer"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleReplaceSlotImage('answer')}
+                        className="w-full h-24 rounded border border-dashed border-slate-300 hover:border-emerald-400 hover:bg-emerald-50/40 flex flex-col items-center justify-center gap-1 text-3xs text-slate-500 cursor-pointer transition-colors"
+                      >
+                        <Crop className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>ಉತ್ತರ 1 ಕ್ರಾಪ್</span>
+                      </button>
                     )}
+                  </div>
 
-                    <div className="text-3xs font-mono text-slate-500 truncate" title={answerImageUrl}>
-                      URL: {answerImageUrl}
+                  {/* Answer Image 2 (Side-by-Side) */}
+                  <div
+                    className={`rounded-lg border p-1.5 space-y-1.5 bg-white ${
+                      activeSlot === 'answer2' ? 'border-emerald-500 ring-1 ring-emerald-300' : 'border-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-3xs font-bold text-slate-700">
+                      <button
+                        type="button"
+                        onClick={() => handleSwitchSlot('answer2')}
+                        className="hover:text-emerald-700 cursor-pointer"
+                      >
+                        ಉತ್ತರ 2 (ಪಕ್ಕ)
+                      </button>
+                      {answerImageUrl2 && slotMetaKB[answerImageUrl2] && (
+                        <span className="font-mono text-emerald-700">{slotMetaKB[answerImageUrl2]}KB</span>
+                      )}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    {answerImageUrl2 ? (
+                      <>
+                        {brokenPreviewSlots.answer2 ? (
+                          <div className="h-20 rounded border border-slate-200 bg-slate-100 flex items-center justify-center text-3xs text-slate-500 text-center p-1">
+                            ಲೋಡ್ ಆಗಲಿಲ್ಲ
+                          </div>
+                        ) : (
+                          <div className="h-24 rounded border border-emerald-100 bg-emerald-50/30 p-1 flex items-center justify-center">
+                            <img
+                              src={resolvedAnswerSrc2}
+                              alt="ಉತ್ತರ ಚಿತ್ರ 2"
+                              referrerPolicy="no-referrer"
+                              onError={() => handlePreviewImageError('answer2', answerImageUrl2)}
+                              className="max-h-full max-w-full object-contain"
+                            />
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleReplaceSlotImage('answer2')}
+                            className="flex-1 py-1 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-3xs font-bold flex items-center justify-center gap-0.5 cursor-pointer"
+                            title="ಉತ್ತರ ಚಿತ್ರ 2 ಬದಲಿಸಿ"
+                          >
+                            <Replace className="w-3 h-3" />
+                            <span>ಬದಲಿಸಿ</span>
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isDeletingSlot === 'answer2'}
+                            onClick={() => handleDeleteSlotImage('answer2')}
+                            className="p-1 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded cursor-pointer disabled:opacity-50"
+                            title="ಉತ್ತರ ಚಿತ್ರ 2 ಡಿಲೀಟ್"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </>
+                    ) : (
                       <button
                         type="button"
-                        onClick={() => handleReplaceSlotImage('answer')}
-                        className="flex-1 py-1.5 px-2.5 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-lg text-2xs font-bold flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
+                        onClick={() => handleReplaceSlotImage('answer2')}
+                        className="w-full h-24 rounded border border-dashed border-slate-300 hover:border-emerald-400 hover:bg-emerald-50/40 flex flex-col items-center justify-center gap-1 text-3xs text-slate-500 cursor-pointer transition-colors"
                       >
-                        <Replace className="w-3.5 h-3.5" />
-                        <span>ಬದಲಾಯಿಸಿ (Replace)</span>
+                        <Plus className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>+ 2ನೇ ಚಿತ್ರ</span>
                       </button>
-                      <button
-                        type="button"
-                        disabled={isDeletingSlot === 'answer'}
-                        onClick={() => handleDeleteSlotImage('answer')}
-                        className="flex-1 py-1.5 px-2.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 rounded-lg text-2xs font-bold flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap disabled:opacity-50"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>{isDeletingSlot === 'answer' ? 'ಅಳಿಸಲಾಗುತ್ತಿದೆ...' : 'ಡಿಲೀಟ್ (Delete)'}</span>
-                      </button>
-                    </div>
+                    )}
                   </div>
-                ) : answerDiagramSvg ? (
-                  <div className="space-y-2">
-                    <div
-                      className="w-full max-h-36 overflow-hidden rounded-lg border border-emerald-200 bg-white p-2 flex items-center justify-center"
-                      dangerouslySetInnerHTML={{ __html: answerDiagramSvg }}
-                    />
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleReplaceSlotImage('answer')}
-                        className="flex-1 py-1.5 px-2.5 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-lg text-2xs font-bold flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
-                      >
-                        <Replace className="w-3.5 h-3.5" />
-                        <span>ಬದಲಾಯಿಸಿ</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteSlotImage('answer')}
-                        className="flex-1 py-1.5 px-2.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 rounded-lg text-2xs font-bold flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>ಡಿಲೀಟ್</span>
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-16 rounded-lg border border-dashed border-slate-300 bg-white flex items-center justify-center text-2xs text-slate-400 text-center px-3">
-                    ಪ್ರತ್ಯೇಕ ಉತ್ತರ ಚಿತ್ರ ಜೋಡಿಸಿಲ್ಲ (ಐಚ್ಛಿಕ)
-                  </div>
-                )}
+                </div>
 
                 <input
                   type="text"
                   value={answerDesc}
                   onChange={e => setAnswerDesc(e.target.value)}
                   placeholder="ಉತ್ತರ ಚಿತ್ರದ ವಿವರಣೆ (ಐಚ್ಛಿಕ)"
-                  className="w-full px-2.5 py-1.5 text-2xs bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+                  className="w-full px-2 py-1 text-2xs bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
             </div>
 
-            {/* Bottom Save & Next Footer */}
-            <div className="p-3 border-t border-slate-200 bg-slate-50/90 flex flex-wrap items-center justify-between gap-2 shrink-0">
-              <div className="flex items-center gap-1.5">
-                {onNavigatePrev && (
-                  <button
-                    type="button"
-                    disabled={!hasPrevQuestion || isSavingFinal || isUploading || isNavigatingQuestion}
-                    onClick={() => handleMoveQuestion('prev', false)}
-                    className="px-2.5 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 disabled:opacity-40 rounded-lg transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap"
-                    title="ಹಿಂದಿನ ಪ್ರಶ್ನೆ (Alt + ←)"
-                  >
-                    <ChevronLeft className="w-3.5 h-3.5" />
-                    <span>ಹಿಂದಿನ</span>
-                  </button>
-                )}
+            {/* Bottom Save, No-Image & Next Footer */}
+            <div className="p-2.5 border-t border-slate-200 bg-slate-50/95 space-y-2 shrink-0">
+              <div className="flex items-center justify-between gap-1.5">
+                <button
+                  type="button"
+                  disabled={busyAction}
+                  onClick={handleMarkImageNotRequired}
+                  className="px-2.5 py-1.5 text-2xs font-bold text-rose-700 bg-rose-50 border border-rose-300 hover:bg-rose-100 rounded-lg transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap disabled:opacity-45"
+                >
+                  <Ban className="w-3 h-3" />
+                  <span>ಚಿತ್ರ ಅಗತ್ಯವಿಲ್ಲ</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200/70 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+                  className="px-2.5 py-1.5 text-2xs font-semibold text-slate-600 hover:bg-slate-200/70 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
                 >
                   ಮುಚ್ಚಿ
                 </button>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
-                  disabled={isSavingFinal || isUploading || isNavigatingQuestion}
+                  disabled={busyAction}
                   onClick={handleFinalSave}
-                  className={`px-3.5 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap disabled:opacity-50 ${
+                  className={`flex-1 py-2 px-2.5 text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap disabled:opacity-50 ${
                     hasNextQuestion && onNavigateNext
                       ? 'bg-white border border-indigo-300 text-indigo-700 hover:bg-indigo-50'
                       : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs'
@@ -2462,9 +2963,9 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                 {hasNextQuestion && onNavigateNext && (
                   <button
                     type="button"
-                    disabled={isSavingFinal || isUploading || isNavigatingQuestion}
+                    disabled={busyAction}
                     onClick={() => handleMoveQuestion('next', hasUnsavedChanges)}
-                    className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                    className="flex-1 py-2 px-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
                     title="ಈ ಪ್ರಶ್ನೆಯ ಬದಲಾವಣೆ ಉಳಿಸಿ ನೇರವಾಗಿ ಮುಂದಿನ ಪ್ರಶ್ನೆಗೆ ಹೋಗಿ (Alt + →)"
                   >
                     {isNavigatingQuestion ? (
@@ -2475,7 +2976,7 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
                         ? 'ಉಳಿಸಲಾಗುತ್ತಿದೆ...'
                         : hasUnsavedChanges
                           ? 'ಉಳಿಸಿ & ಮುಂದಿನ →'
-                          : 'ಮುಂದಿನ ಪ್ರಶ್ನೆ →'}
+                          : 'ಮುಂದಿನ →'}
                     </span>
                   </button>
                 )}
@@ -2487,3 +2988,4 @@ export const QuestionImageModal: React.FC<QuestionImageModalProps> = ({
     </div>
   );
 };
+

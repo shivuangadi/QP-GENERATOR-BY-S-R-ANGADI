@@ -37,7 +37,7 @@ import {
   signOutStudent,
   saveQuestionBankToFirebase,
 } from './services/firebase.ts';
-import { listAllSavedQuestionBanks, loadSavedQuestionBank } from './services/pdfVault.ts';
+import { listAllSavedQuestionBanks, loadSavedQuestionBank, SavedBankSummary } from './services/pdfVault.ts';
 import {
   smartMergeQuestionBanks,
   parseUploadedJsonToQuestionBank,
@@ -56,8 +56,11 @@ import { QuestionBankExplorer } from './components/QuestionBankExplorer.tsx';
 import { BluePrintView } from './components/BluePrintView.tsx';
 import { JsonGuideModal } from './components/JsonGuideModal.tsx';
 import { SectionConfigModal } from './components/SectionConfigModal.tsx';
-import { AiJsonGenerator } from './components/AiJsonGenerator.tsx';
+import { AiJsonGenerator, RebuildTargetInfo } from './components/AiJsonGenerator.tsx';
 import { OnlineTestView } from './components/OnlineTestView.tsx';
+import { OfflineIndicator } from './components/OfflineIndicator.tsx';
+import { VisualSelectionFlow, SelectionStep } from './components/VisualSelectionFlow.tsx';
+import { useDynamicBankStats, filterChaptersBySemester } from './utils/bankStats.ts';
 
 import {
   AlertTriangle,
@@ -105,17 +108,22 @@ function loadStoredTeacherSession(): AppUserSession | null {
 }
 
 export default function App() {
-  // User session & strict Firebase-verified Admin state
+  // User session & strict server/Firebase-verified Admin state (Bearer token kept strictly in React memory)
   const [userSession, setUserSession] = useState<AppUserSession | null>(() => loadStoredTeacherSession());
   const [firebaseAdminVerified, setFirebaseAdminVerified] = useState<boolean>(false);
+  const [adminToken, setAdminToken] = useState<string | null>(null);
+  const [serverAdminVerified, setServerAdminVerified] = useState<boolean>(false);
 
-  // Cryptographically verified admin check (never trusted from client storage or form input)
+  // Cryptographically verified admin check (never trusted from client storage or unverified form input)
   const isAdmin = Boolean(
     userSession &&
       userSession.role === 'admin' &&
-      firebaseAdminVerified &&
-      isVerifiedAdminUser(auth.currentUser)
+      ((firebaseAdminVerified && isVerifiedAdminUser(auth.currentUser)) ||
+        (serverAdminVerified && Boolean(adminToken)))
   );
+
+  // Target subject for Fresh LBA PDF Rebuild (e.g., replacing flawed built-in Class 6 subjects)
+  const [rebuildTarget, setRebuildTarget] = useState<RebuildTargetInfo | null>(null);
 
   // Navigation view state: starts on 'home' before login, 'setup' if a teacher session is already active
   const [activeView, setActiveView] = useState<AppViewMode>(() =>
@@ -147,10 +155,20 @@ export default function App() {
   const [targetQuestionsCount, setTargetQuestionsCount] = useState<number>(24);
   const [examDateOrYear, setExamDateOrYear] = useState<string>('2026-27');
 
+  // Progressive visual card step inside Question Paper Setup (Semester -> Class -> Subject -> Configure)
+  const [setupStep, setSetupStep] = useState<SelectionStep>('semester');
+
   // Active loaded Question Bank
   const [currentBank, setCurrentBank] = useState<QuestionBank | null>(null);
   const [isLoadingBank, setIsLoadingBank] = useState<boolean>(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Live dynamic per-bank question & MCQ statistics across all built-in, server, and Firebase banks
+  const { statsMap: bankStatsMap, isScanning: isScanningBankStats } = useDynamicBankStats(
+    availableFiles,
+    currentBank,
+    selectedFileId
+  );
 
   // Selected Chapters
   const [selectedChapterIds, setSelectedChapterIds] = useState<string[]>([]);
@@ -223,7 +241,7 @@ export default function App() {
       } else {
         setFirebaseAdminVerified(false);
         setUserSession(prev => {
-          if (prev && (prev.role === 'admin' || prev.authMethod === 'google')) {
+          if (prev && prev.authMethod === 'google') {
             return null;
           }
           return prev;
@@ -233,6 +251,40 @@ export default function App() {
 
     return () => unsubscribe();
   }, []);
+
+  // Verify in-memory server Bearer token whenever set
+  useEffect(() => {
+    if (!adminToken) {
+      setServerAdminVerified(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await fetch('/api/admin/auth/verify', {
+          headers: { Authorization: `Bearer ${adminToken}` },
+          cache: 'no-store',
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!cancelled) {
+          if (resp.ok && data?.valid) {
+            setServerAdminVerified(true);
+          } else {
+            setServerAdminVerified(false);
+            setAdminToken(null);
+            setUserSession(prev => (prev?.authMethod === 'admin_credentials' ? null : prev));
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          setServerAdminVerified(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [adminToken]);
 
   // Strict RBAC route guard:
   // 1) Before login, only 'home' and 'online_test' are accessible.
@@ -257,13 +309,29 @@ export default function App() {
   }, [userSession, isAdmin, activeView, isJsonGuideOpen]);
 
   const handleAuthenticated = useCallback((session: AppUserSession) => {
-    const verifiedAdmin = session.role === 'admin' && isVerifiedAdminUser(auth.currentUser);
+    const firebaseAdmin = session.role === 'admin' && isVerifiedAdminUser(auth.currentUser);
+    const serverCredAdmin =
+      session.role === 'admin' &&
+      session.authMethod === 'admin_credentials' &&
+      typeof session.adminToken === 'string' &&
+      session.adminToken.length > 10;
+
+    const verifiedAdmin = firebaseAdmin || serverCredAdmin;
+    const { adminToken: incomingToken, ...sessionWithoutToken } = session;
     const safeSession: AppUserSession = {
-      ...session,
+      ...sessionWithoutToken,
       role: verifiedAdmin ? 'admin' : 'teacher',
     };
 
-    setFirebaseAdminVerified(verifiedAdmin);
+    setFirebaseAdminVerified(firebaseAdmin);
+    if (serverCredAdmin && incomingToken) {
+      setAdminToken(incomingToken);
+      setServerAdminVerified(true);
+    } else {
+      setAdminToken(null);
+      setServerAdminVerified(false);
+    }
+
     setUserSession(safeSession);
     if (safeSession.schoolName.trim()) {
       setSchoolName(safeSession.schoolName.trim());
@@ -308,18 +376,30 @@ export default function App() {
     } catch {
       // ignore
     }
+    if (adminToken) {
+      try {
+        await fetch('/api/admin/auth/logout', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${adminToken}` },
+        });
+      } catch {
+        // ignore
+      }
+    }
     try {
       await signOutStudent();
     } catch {
       // ignore
     }
+    setAdminToken(null);
+    setServerAdminVerified(false);
     setFirebaseAdminVerified(false);
     setUserSession(null);
     setGeneratedPaper(null);
     setIsJsonGuideOpen(false);
     setActiveView('home');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  }, [adminToken]);
 
   // 1. Initial Load: Fetch Index and initial Question Bank (Maths Class 6 by default as in screenshot)
   const loadInitialBank = useCallback(async () => {
@@ -530,15 +610,7 @@ export default function App() {
     (part: 'sem1' | 'sem2' | 'all') => {
       setSemesterPart(part);
       if (!currentBank) return;
-
-      let chs = currentBank.chapters;
-      if (part === 'sem1') {
-        const filtered = currentBank.chapters.filter(c => c.semester === 1);
-        if (filtered.length > 0) chs = filtered;
-      } else if (part === 'sem2') {
-        const filtered = currentBank.chapters.filter(c => c.semester === 2);
-        if (filtered.length > 0) chs = filtered;
-      }
+      const chs = filterChaptersBySemester(currentBank.chapters, part);
       setSelectedChapterIds(chs.map(c => c.chapterId));
     },
     [currentBank]
@@ -566,37 +638,16 @@ export default function App() {
       }
 
       setSemesterPart(newPart);
-
-      let chs = currentBank.chapters;
-      if (newPart === 'sem1') {
-        const filtered = currentBank.chapters.filter(c => c.semester === 1);
-        if (filtered.length > 0) chs = filtered;
-      } else if (newPart === 'sem2') {
-        const filtered = currentBank.chapters.filter(c => c.semester === 2);
-        if (filtered.length > 0) chs = filtered;
-      }
+      const chs = filterChaptersBySemester(currentBank.chapters, newPart);
       setSelectedChapterIds(chs.map(c => c.chapterId));
     },
     [currentBank, semesterPart]
   );
 
-  // Chapters to display based on semester part (with resilient fallback so never empty)
+  // Chapters to display based on semester part (1:1 match with dynamic Subject card counts)
   const visibleChapters = useMemo(() => {
     if (!currentBank) return [];
-    let list: Chapter[] = [];
-    if (semesterPart === 'sem1') {
-      list = currentBank.chapters.filter(c => c.semester === 1);
-    } else if (semesterPart === 'sem2') {
-      list = currentBank.chapters.filter(c => c.semester === 2);
-    } else {
-      list = currentBank.chapters;
-    }
-
-    // Resilience: if filtered semester has 0 chapters, fall back to all chapters
-    if (list.length === 0 && currentBank.chapters.length > 0) {
-      return currentBank.chapters;
-    }
-    return list;
+    return filterChaptersBySemester(currentBank.chapters, semesterPart);
   }, [currentBank, semesterPart]);
 
   // Available question counts per format for the selected subject and chapters
@@ -978,8 +1029,10 @@ export default function App() {
               return {
                 ...gq,
                 imageUrl: latest.imageUrl,
+                imageUrl2: latest.imageUrl2,
                 diagramSvg: latest.diagramSvg,
                 answerImageUrl: latest.answerImageUrl,
+                answerImageUrl2: latest.answerImageUrl2,
                 answerDiagramSvg: latest.answerDiagramSvg,
                 hasDiagram: latest.hasDiagram,
                 diagramDescription: latest.diagramDescription,
@@ -1070,7 +1123,10 @@ export default function App() {
           // Fallback to availableFiles below
         }
 
-        const bestIndexEntry = pickBestMatchingBankCandidate(availableFiles, bank);
+        const nonBuiltinIndexFiles = availableFiles.filter(
+          f => !(f.path.startsWith('/assets/aistudio/') && !f.isUserGenerated)
+        );
+        const bestIndexEntry = pickBestMatchingBankCandidate(nonBuiltinIndexFiles, bank);
         if (
           bestIndexEntry &&
           (!existingFull || (bestIndexEntry.totalChapters || 0) > existingFull.chapters.length)
@@ -1193,9 +1249,9 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50/75 via-teal-50/35 to-sky-50/65 flex flex-col font-kannada antialiased text-slate-900">
+    <div className="min-h-screen bg-[#16120f] bg-[radial-gradient(ellipse_at_top,_rgba(128,82,36,0.22),_transparent_58%),radial-gradient(ellipse_at_bottom_right,_rgba(34,74,48,0.16),_transparent_55%)] flex flex-col font-kannada antialiased text-[#f5efe6]">
       
-      {/* Strict 3-Zone Institutional TopBar */}
+      {/* Strict 3-Zone Institutional Saffron TopBar */}
       <TopBar
         schoolName={schoolName}
         userRole={userSession ? (isAdmin ? 'admin' : 'teacher') : null}
@@ -1212,16 +1268,16 @@ export default function App() {
         
         {/* Error Notification */}
         {generationError && (
-          <div className="mb-5 p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-900 flex items-start gap-3 no-print">
-            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+          <div className="mb-5 p-4 bg-rose-950/80 border border-rose-400/35 rounded-xl text-rose-100 flex items-start gap-3 no-print shadow-lg">
+            <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
             <div className="flex-1 text-xs sm:text-sm">
-              <strong className="font-bold block mb-1">ಪ್ರಶ್ನೆಗಳ ಕೊರತೆ (Notice):</strong>
-              <div className="whitespace-pre-line text-rose-800 leading-relaxed">{generationError}</div>
+              <strong className="font-bold block mb-1 text-rose-200">ಪ್ರಶ್ನೆಗಳ ಕೊರತೆ (Notice):</strong>
+              <div className="whitespace-pre-line text-rose-100/90 leading-relaxed">{generationError}</div>
             </div>
             <button
               type="button"
               onClick={() => setGenerationError(null)}
-              className="text-rose-500 hover:text-rose-800 p-1 rounded cursor-pointer"
+              className="text-rose-300 hover:text-white p-1 rounded cursor-pointer"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
@@ -1230,16 +1286,16 @@ export default function App() {
         )}
 
         {loadError && activeView !== 'home' && (
-          <div className="mb-5 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 flex flex-wrap items-center justify-between gap-3 no-print">
+          <div className="mb-5 p-4 bg-amber-950/80 border border-amber-400/35 rounded-xl text-amber-100 flex flex-wrap items-center justify-between gap-3 no-print shadow-lg">
             <div className="flex items-start gap-3 flex-1">
-              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
               <div className="text-xs sm:text-sm font-semibold">{loadError}</div>
             </div>
             <button
               type="button"
               onClick={loadInitialBank}
               disabled={isLoadingBank}
-              className="px-3.5 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+              className="px-3.5 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-50 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoadingBank ? 'animate-spin' : ''}`} />
               <span>ಪುನಃ ಪ್ರಯತ್ನಿಸಿ</span>
@@ -1249,42 +1305,44 @@ export default function App() {
 
         {/* VIEW 0: Professional Home Page (School Registration + Guide + Pre-Login Online Test) */}
         {activeView === 'home' && (
-          <HomePortalView
-            defaultSchoolName={schoolName}
-            defaultMedium={medium}
-            totalSubjectsCount={availableFiles.length}
-            onAuthenticated={handleAuthenticated}
-            onOpenOnlineTest={() => setActiveView('online_test')}
-          />
+          <div className="text-slate-900">
+            <HomePortalView
+              defaultSchoolName={schoolName}
+              defaultMedium={medium}
+              totalSubjectsCount={availableFiles.length}
+              onAuthenticated={handleAuthenticated}
+              onOpenOnlineTest={() => setActiveView('online_test')}
+            />
+          </div>
         )}
 
         {/* VIEW 1: Generator Setup Dashboard (Logged-in Teachers & Verified Admin) */}
         {userSession && activeView === 'setup' && (
           <div className="space-y-5">
-            {/* Colorful Registered School Context Header */}
-            <div className="bg-gradient-to-r from-emerald-50 via-white to-sky-50 border border-emerald-200 rounded-2xl px-4 py-3.5 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+            {/* Warm Espresso Registered School Context Header */}
+            <div className="bg-[#231d18]/95 border border-amber-200/15 rounded-2xl px-4 py-3.5 shadow-lg flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-600 to-amber-700 text-white flex items-center justify-center shrink-0 shadow-md border border-amber-300/30">
                   {isAdmin ? (
-                    <ShieldCheck className="w-5 h-5 text-amber-300" />
+                    <ShieldCheck className="w-5 h-5 text-amber-200" />
                   ) : (
-                    <Building2 className="w-5 h-5 text-amber-200" />
+                    <Building2 className="w-5 h-5 text-amber-100" />
                   )}
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-extrabold text-emerald-950 truncate">
+                    <span className="text-sm font-extrabold text-[#faf4ec] truncate">
                       {schoolName}
                     </span>
-                    <span className="text-xs text-emerald-400">·</span>
-                    <span className="text-xs font-semibold text-teal-800 truncate">
+                    <span className="text-xs text-amber-300/50">·</span>
+                    <span className="text-xs font-semibold text-amber-200/90 truncate">
                       {userSession.teacherName || userSession.email}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 mt-0.5">
+                  <p className="text-xs text-[#bfb09d] mt-0.5">
                     {isAdmin
-                      ? 'ಅಡ್ಮಿನ್ ಮೋಡ್: ಪ್ರಶ್ನೆ ಪತ್ರಿಕೆ ರಚನೆ, ಪ್ರಶ್ನೆ ಭಂಡಾರ, AI JSON ಮತ್ತು 6–10ನೇ ತರಗತಿ ಚಿತ್ರಗಳ ನಿರ್ವಹಣೆ ಲಭ್ಯವಿದೆ.'
-                      : 'ತರಗತಿ, ವಿಷಯ, ಪಾಠಗಳು, ಪ್ರಶ್ನೆಗಳ ಸಂಖ್ಯೆ, ಅಂಕಗಳು ಮತ್ತು ಪ್ರಶ್ನೆ ಪ್ರಕಾರಗಳನ್ನು ಆಯ್ಕೆ ಮಾಡಿ ಪ್ರಶ್ನೆ ಪತ್ರಿಕೆ ಹಾಗೂ ನೀಲನಕಾಶೆ ರಚಿಸಿ.'}
+                      ? 'ಅಡ್ಮಿನ್ ಮೋಡ್: ಸೆಮಿಸ್ಟರ್ → ತರಗತಿ → ವಿಷಯ ಆಯ್ಕೆ ಮಾಡಿ ಪ್ರಶ್ನೆ ಪತ್ರಿಕೆ, ನೀಲನಕ್ಷೆ, AI JSON ಹಾಗೂ ಚಿತ್ರ ನಿರ್ವಹಣೆ ಮಾಡಿ.'
+                      : 'ಸೆಮಿಸ್ಟರ್ → ತರಗತಿ → ವಿಷಯ ಕಾರ್ಡ್‌ಗಳನ್ನು ಆಯ್ಕೆ ಮಾಡಿ ಪ್ರಶ್ನೆ ಪತ್ರಿಕೆ ಹಾಗೂ 5-ಹಂತದ ನೀಲನಕ್ಷೆ ರಚಿಸಿ.'}
                   </p>
                 </div>
               </div>
@@ -1293,7 +1351,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setActiveView('explorer')}
-                  className="px-3.5 py-2 text-xs font-bold text-white bg-indigo-700 hover:bg-indigo-800 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-xs"
+                  className="px-3.5 py-2 text-xs font-bold text-[#1f160c] bg-[#f7e7b4] hover:bg-[#faeec7] rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-sm"
                 >
                   <ImageIcon className="w-3.5 h-3.5" />
                   <span>6ನೇ ತರಗತಿ / ಎಲ್ಲಾ ವಿಷಯಗಳ ಚಿತ್ರ ನಿರ್ವಹಣೆ</span>
@@ -1301,125 +1359,150 @@ export default function App() {
               )}
             </div>
 
-            {/* Custom Sections Active Banner */}
-            {customSections && customSections.length > 0 && (
-              <div className="px-4 py-3 bg-indigo-50/70 border border-indigo-200 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs font-semibold text-indigo-950">
-                <div className="flex items-center gap-2">
-                  <Sliders className="w-4 h-4 text-indigo-700 shrink-0" />
-                  <span className="tabular-nums">
-                    ವಿಶೇಷ ವಿಭಾಗಗಳ ಹೊಂದಾಣಿಕೆ ಸಕ್ರಿಯವಾಗಿದೆ:{' '}
-                    <strong className="text-indigo-800">{customSections.length} ವಿಭಾಗಗಳು</strong> ·{' '}
-                    <strong className="text-indigo-800">{targetQuestionsCount} ಪ್ರಶ್ನೆಗಳು</strong> ·{' '}
-                    <strong className="text-emerald-800">{targetMarks} ಅಂಕಗಳು</strong>
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsSectionConfigOpen(true)}
-                    className="px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-800 rounded-lg border border-indigo-200 transition-colors cursor-pointer whitespace-nowrap"
-                  >
-                    ಬದಲಾಯಿಸಿ
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCustomSections(null);
-                      setTargetMarks(40);
-                      setTargetQuestionsCount(24);
-                    }}
-                    className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
-                  >
-                    ಮರುಹೊಂದಿಸಿ
-                  </button>
+            {/* Progressive Visual Card Flow: Semester -> Class (1-10) -> Subject */}
+            <VisualSelectionFlow
+              mode="setup"
+              activeStep={setupStep}
+              onChangeStep={setSetupStep}
+              semester={semesterPart}
+              onSelectSemester={handleSemesterPartChange}
+              selectedGradeKey={extractGradeKey(grade)}
+              onSelectGradeKey={gk => handleGradeChange(canonicalGradeLabel(gk))}
+              selectedFileId={selectedFileId}
+              onSelectFileId={handleSelectFile}
+              availableFiles={availableFiles}
+              statsMap={bankStatsMap}
+              isScanningStats={isScanningBankStats}
+              configureStepLabel="ಪಾಠ & ಪತ್ರಿಕೆ ರಚನೆ"
+            />
+
+            {/* Step 4: Full Configuration Workspace (Chapters, Formats, Exam Setup, Blueprint & Generate) */}
+            {setupStep === 'configure' && (
+              <div className="space-y-5">
+                {/* Custom Sections Active Banner */}
+                {customSections && customSections.length > 0 && (
+                  <div className="px-4 py-3 bg-[#2a2117] border border-amber-300/30 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs font-semibold text-amber-100">
+                    <div className="flex items-center gap-2">
+                      <Sliders className="w-4 h-4 text-amber-300 shrink-0" />
+                      <span className="tabular-nums">
+                        ವಿಶೇಷ ವಿಭಾಗಗಳ ಹೊಂದಾಣಿಕೆ ಸಕ್ರಿಯವಾಗಿದೆ:{' '}
+                        <strong className="text-amber-300">{customSections.length} ವಿಭಾಗಗಳು</strong> ·{' '}
+                        <strong className="text-amber-300">{targetQuestionsCount} ಪ್ರಶ್ನೆಗಳು</strong> ·{' '}
+                        <strong className="text-emerald-300">{targetMarks} ಅಂಕಗಳು</strong>
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsSectionConfigOpen(true)}
+                        className="px-2.5 py-1 bg-[#3a2d20] hover:bg-[#493827] text-amber-200 rounded-lg border border-amber-300/25 transition-colors cursor-pointer whitespace-nowrap"
+                      >
+                        ಬದಲಾಯಿಸಿ
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCustomSections(null);
+                          setTargetMarks(40);
+                          setTargetQuestionsCount(24);
+                        }}
+                        className="px-2.5 py-1 bg-[#1b1612] hover:bg-[#2a221b] text-[#d6c8b7] border border-amber-200/15 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+                      >
+                        ಮರುಹೊಂದಿಸಿ
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                  {/* Left Column: 1. ಪರೀಕ್ಷಾ ವಿವರಗಳು (Setup) */}
+                  <div className="lg:col-span-4">
+                    <SetupPanel
+                      schoolName={schoolName}
+                      setSchoolName={setSchoolName}
+                      medium={medium}
+                      setMedium={setMedium}
+                      grade={grade}
+                      setGrade={handleGradeChange}
+                      selectedFileId={selectedFileId}
+                      setSelectedFileId={handleSelectFile}
+                      availableFiles={availableFiles}
+                      semesterPart={semesterPart}
+                      setSemesterPart={handleSemesterPartChange}
+                      paperModel={paperModel}
+                      setPaperModel={setPaperModel}
+                      examType={examType}
+                      setExamType={handleExamTypeChange}
+                      targetMarks={targetMarks}
+                      setTargetMarks={setTargetMarks}
+                      targetQuestionsCount={targetQuestionsCount}
+                      setTargetQuestionsCount={setTargetQuestionsCount}
+                      examDateOrYear={examDateOrYear}
+                      setExamDateOrYear={setExamDateOrYear}
+                      onGenerate={handleGeneratePaper}
+                      onFreshSet={handleGeneratePaper}
+                      isGenerating={isGenerating}
+                      onViewBlueprint={handleOpenBlueprint}
+                      onOpenSectionConfig={() => setIsSectionConfigOpen(true)}
+                      onOpenVisualCards={() => setSetupStep('subject')}
+                      isAdmin={isAdmin}
+                      onOpenExplorer={isAdmin ? () => setActiveView('explorer') : undefined}
+                      onOpenJsonGuide={isAdmin ? () => setIsJsonGuideOpen(true) : undefined}
+                      onOpenAiGenerator={isAdmin ? () => setActiveView('ai_generator') : undefined}
+                      onImportJsonFile={isAdmin ? handleImportJsonFile : undefined}
+                      isImportingJson={isImportingJson}
+                    />
+                  </div>
+
+                  {/* Right Column: 2. ಪಾಠಗಳ ಆಯ್ಕೆ + 3. ಪ್ರಶ್ನೆ ಪ್ರಕಾರಗಳು */}
+                  <div className="lg:col-span-8 space-y-6">
+                    <ChapterSelectionPanel
+                      chapters={visibleChapters}
+                      selectedChapterIds={selectedChapterIds}
+                      onChangeSelectedChapters={setSelectedChapterIds}
+                    />
+
+                    <QuestionFormatsPanel
+                      selectedFormatIds={selectedFormatIds}
+                      onChangeSelectedFormats={ids => {
+                        setSelectedFormatIds(ids);
+                        setCustomSections(null);
+                      }}
+                      formatQuestionCounts={formatCounts}
+                      onOpenSectionConfig={() => setIsSectionConfigOpen(true)}
+                      subject={currentBank?.metadata.subject}
+                      subjectCode={currentBank?.metadata.subjectCode as string}
+                    />
+                  </div>
                 </div>
               </div>
             )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              {/* Left Column: 1. ಪರೀಕ್ಷಾ ವಿವರಗಳು (Setup) */}
-              <div className="lg:col-span-4">
-                <SetupPanel
-                  schoolName={schoolName}
-                  setSchoolName={setSchoolName}
-                  medium={medium}
-                  setMedium={setMedium}
-                  grade={grade}
-                  setGrade={handleGradeChange}
-                  selectedFileId={selectedFileId}
-                  setSelectedFileId={handleSelectFile}
-                  availableFiles={availableFiles}
-                  semesterPart={semesterPart}
-                  setSemesterPart={handleSemesterPartChange}
-                  paperModel={paperModel}
-                  setPaperModel={setPaperModel}
-                  examType={examType}
-                  setExamType={handleExamTypeChange}
-                  targetMarks={targetMarks}
-                  setTargetMarks={setTargetMarks}
-                  targetQuestionsCount={targetQuestionsCount}
-                  setTargetQuestionsCount={setTargetQuestionsCount}
-                  examDateOrYear={examDateOrYear}
-                  setExamDateOrYear={setExamDateOrYear}
-                  onGenerate={handleGeneratePaper}
-                  onFreshSet={handleGeneratePaper}
-                  isGenerating={isGenerating}
-                  onViewBlueprint={handleOpenBlueprint}
-                  onOpenSectionConfig={() => setIsSectionConfigOpen(true)}
-                  isAdmin={isAdmin}
-                  onOpenExplorer={isAdmin ? () => setActiveView('explorer') : undefined}
-                  onOpenJsonGuide={isAdmin ? () => setIsJsonGuideOpen(true) : undefined}
-                  onOpenAiGenerator={isAdmin ? () => setActiveView('ai_generator') : undefined}
-                  onImportJsonFile={isAdmin ? handleImportJsonFile : undefined}
-                  isImportingJson={isImportingJson}
-                />
-              </div>
-
-              {/* Right Column: 2. ಪಾಠಗಳ ಆಯ್ಕೆ + 3. ಪ್ರಶ್ನೆ ಪ್ರಕಾರಗಳು */}
-              <div className="lg:col-span-8 space-y-6">
-                <ChapterSelectionPanel
-                  chapters={visibleChapters}
-                  selectedChapterIds={selectedChapterIds}
-                  onChangeSelectedChapters={setSelectedChapterIds}
-                />
-
-                <QuestionFormatsPanel
-                  selectedFormatIds={selectedFormatIds}
-                  onChangeSelectedFormats={ids => {
-                    setSelectedFormatIds(ids);
-                    setCustomSections(null);
-                  }}
-                  formatQuestionCounts={formatCounts}
-                  onOpenSectionConfig={() => setIsSectionConfigOpen(true)}
-                  subject={currentBank?.metadata.subject}
-                  subjectCode={currentBank?.metadata.subjectCode as string}
-                />
-              </div>
-            </div>
           </div>
         )}
 
         {/* VIEW 2: Generated Question Paper & Answer Key Preview */}
         {userSession && activeView === 'preview' && generatedPaper && currentBank && (
           <div className="space-y-6">
-            {/* Top Toolbar for Preview */}
-            <div className="bg-gradient-to-r from-emerald-50 via-white to-sky-50 rounded-2xl border border-emerald-200 p-4 shadow-xs flex flex-wrap items-center justify-between gap-4 no-print font-kannada">
+            {/* Top Toolbar for Preview (Warm Dark Espresso Bar; A4 Sheets below stay crisp white for printing) */}
+            <div className="bg-[#231d18] rounded-2xl border border-amber-200/15 p-4 shadow-xl flex flex-wrap items-center justify-between gap-4 no-print font-kannada">
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setActiveView('setup')}
-                  className="px-3.5 py-2 rounded-xl font-bold text-xs bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-200 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                  className="px-3.5 py-2 rounded-xl font-bold text-xs bg-[#191410] hover:bg-[#2f2720] text-amber-100 border border-amber-200/20 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>ಸೆಟಪ್‌ಗೆ ಹಿಂತಿರುಗಿ</span>
                 </button>
 
-                <div className="flex items-center gap-1 bg-emerald-100/70 p-1 rounded-xl text-xs font-bold border border-emerald-200/80">
+                <div className="flex items-center gap-1 bg-[#18130f] p-1 rounded-xl text-xs font-bold border border-amber-200/15">
                   <button
                     type="button"
                     onClick={() => setPreviewSubMode('paper')}
                     className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
-                      previewSubMode === 'paper' ? 'bg-white text-indigo-700 shadow-xs' : 'text-emerald-900'
+                      previewSubMode === 'paper'
+                        ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-xs'
+                        : 'text-[#d3c4b2] hover:text-white'
                     }`}
                   >
                     ಪ್ರಶ್ನೆ ಪತ್ರಿಕೆ ಮಾತ್ರ
@@ -1428,7 +1511,9 @@ export default function App() {
                     type="button"
                     onClick={() => setPreviewSubMode('answers')}
                     className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
-                      previewSubMode === 'answers' ? 'bg-white text-emerald-700 shadow-xs' : 'text-emerald-900'
+                      previewSubMode === 'answers'
+                        ? 'bg-emerald-700 text-white shadow-xs'
+                        : 'text-[#d3c4b2] hover:text-white'
                     }`}
                   >
                     ಉತ್ತರ ಪತ್ರಿಕೆ ಮಾತ್ರ
@@ -1437,7 +1522,9 @@ export default function App() {
                     type="button"
                     onClick={() => setPreviewSubMode('both')}
                     className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
-                      previewSubMode === 'both' ? 'bg-white text-slate-900 shadow-xs' : 'text-emerald-900'
+                      previewSubMode === 'both'
+                        ? 'bg-[#3b3026] text-amber-200 shadow-xs'
+                        : 'text-[#d3c4b2] hover:text-white'
                     }`}
                   >
                     ಎರಡೂ (Both)
@@ -1449,16 +1536,16 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleRegenerate}
-                  className="px-3.5 py-2 text-xs font-bold text-sky-900 bg-sky-100 hover:bg-sky-200 border border-sky-300 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                  className="px-3.5 py-2 text-xs font-bold text-amber-100 bg-[#2e241b] hover:bg-[#3c2f23] border border-amber-300/30 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-300" />
                   <span>ಹೊಸ ಸಂಯೋಜನೆ</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="px-4 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-xs"
+                  className="px-4 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-600 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-md"
                 >
                   <Printer className="w-4 h-4" />
                   <span>ಮುದ್ರಣ / PDF</span>
@@ -1466,11 +1553,11 @@ export default function App() {
               </div>
             </div>
 
-            {/* Paper Preview Render */}
+            {/* Paper Preview Render (Print-Safe Crisp White A4) */}
             {(previewSubMode === 'paper' || previewSubMode === 'both') && (
-              <div className="space-y-4">
+              <div className="space-y-4 text-slate-900">
                 {previewSubMode === 'both' && (
-                  <div className="font-bold text-sm text-slate-800 pb-2 border-b border-slate-300 no-print">
+                  <div className="font-bold text-sm text-amber-200 pb-2 border-b border-amber-200/20 no-print">
                     ೧. ವಿದ್ಯಾರ್ಥಿಗಳ ಪ್ರಶ್ನೆ ಪತ್ರಿಕೆ (Student Question Paper)
                   </div>
                 )}
@@ -1485,11 +1572,11 @@ export default function App() {
               </div>
             )}
 
-            {/* Answer Key Render */}
+            {/* Answer Key Render (Print-Safe Crisp White A4) */}
             {(previewSubMode === 'answers' || previewSubMode === 'both') && (
-              <div className={`space-y-4 ${previewSubMode === 'both' ? 'mt-12 pt-8 border-t-2 border-slate-300' : ''}`}>
+              <div className={`space-y-4 text-slate-900 ${previewSubMode === 'both' ? 'mt-12 pt-8 border-t-2 border-amber-200/20' : ''}`}>
                 {previewSubMode === 'both' && (
-                  <div className="font-bold text-sm text-emerald-800 pb-2 border-b border-emerald-300 no-print">
+                  <div className="font-bold text-sm text-emerald-300 pb-2 border-b border-emerald-300/25 no-print">
                     ೨. ಅಧಿಕೃತ ಕೀಲಿ ಉತ್ತರ ಮತ್ತು ಮೌಲ್ಯಮಾಪನ ಸೂಚಿ (Official Answer Key)
                   </div>
                 )}
@@ -1506,47 +1593,67 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setActiveView('setup')}
-                className="px-3.5 py-2 rounded-lg font-bold text-xs bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 rounded-lg font-bold text-xs bg-[#231d18] border border-amber-200/20 hover:bg-[#312820] text-amber-100 transition-colors flex items-center gap-1.5 cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>ಸೆಟಪ್‌ಗೆ ಹಿಂತಿರುಗಿ</span>
               </button>
             </div>
-            <QuestionBankExplorer
+            <div className="text-slate-900">
+              <QuestionBankExplorer
+                bank={currentBank}
+                availableFiles={availableFiles}
+                grade={grade}
+                setGrade={handleGradeChange}
+                medium={medium}
+                setMedium={setMedium}
+                selectedFileId={selectedFileId}
+                onSelectFile={handleSelectFile}
+                onUpdateBank={handleUpdateCurrentBank}
+                onOpenSavedBank={handleOpenSavedBankInExplorer}
+                onDeleteSavedBank={handleDeleteSavedBank}
+                onRebuildBank={(bankSummary: SavedBankSummary) => {
+                  setRebuildTarget({
+                    gradeKey: bankSummary.gradeKey || '6',
+                    grade: bankSummary.grade || canonicalGradeLabel(bankSummary.gradeKey || '6'),
+                    subject: bankSummary.subject,
+                    subjectCode:
+                      bankSummary.subjectCode || deduceSubjectCode(undefined, bankSummary.subject),
+                  });
+                  setActiveView('ai_generator');
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* VIEW 4: Official 5-Stage Blue Print View (Print-Safe Crisp White A4) */}
+        {userSession && activeView === 'blueprint' && activeBlueprint && (
+          <div className="text-slate-900">
+            <BluePrintView
+              blueprint={activeBlueprint}
               bank={currentBank}
-              availableFiles={availableFiles}
-              grade={grade}
-              setGrade={handleGradeChange}
-              medium={medium}
-              setMedium={setMedium}
-              selectedFileId={selectedFileId}
-              onSelectFile={handleSelectFile}
-              onUpdateBank={handleUpdateCurrentBank}
-              onOpenSavedBank={handleOpenSavedBankInExplorer}
-              onDeleteSavedBank={handleDeleteSavedBank}
+              paper={generatedPaper}
+              onUpdatePaper={setGeneratedPaper}
+              onBackToSetup={() => setActiveView('setup')}
+              onViewPaper={generatedPaper ? () => setActiveView('preview') : undefined}
             />
           </div>
         )}
 
-        {/* VIEW 4: Official 5-Stage Blue Print View */}
-        {userSession && activeView === 'blueprint' && activeBlueprint && (
-          <BluePrintView
-            blueprint={activeBlueprint}
-            bank={currentBank}
-            paper={generatedPaper}
-            onUpdatePaper={setGeneratedPaper}
-            onBackToSetup={() => setActiveView('setup')}
-            onViewPaper={generatedPaper ? () => setActiveView('preview') : undefined}
-          />
-        )}
-
         {/* VIEW 5: AI-Powered JSON Question Bank Generator (STRICTLY ADMIN-ONLY; preserves state while mounted) */}
         {isAdmin && (
-          <div style={{ display: activeView === 'ai_generator' ? 'block' : 'none' }}>
+          <div style={{ display: activeView === 'ai_generator' ? 'block' : 'none' }} className="text-slate-900">
             <AiJsonGenerator
               onBackToApp={() => setActiveView('setup')}
               onLoadGeneratedBank={handleLoadGeneratedBank}
               onDeleteSavedBank={handleDeleteSavedBank}
+              rebuildTarget={rebuildTarget}
+              onClearRebuildTarget={() => setRebuildTarget(null)}
+              onOpenInImageExplorer={(bank, entry) => {
+                handleLoadGeneratedBank(bank, entry, false);
+                setActiveView('explorer');
+              }}
             />
           </div>
         )}
@@ -1559,6 +1666,8 @@ export default function App() {
             initialBank={currentBank}
             schoolName={schoolName}
             onBackToSetup={() => setActiveView(userSession ? 'setup' : 'home')}
+            sharedBankStats={bankStatsMap}
+            isScanningStats={isScanningBankStats}
           />
         )}
 
@@ -1566,38 +1675,45 @@ export default function App() {
 
       {/* JSON File Model & Creation Guide Modal (STRICTLY ADMIN-ONLY) */}
       {isAdmin && (
-        <JsonGuideModal
-          isOpen={isJsonGuideOpen}
-          onClose={() => setIsJsonGuideOpen(false)}
-        />
+        <div className="text-slate-900">
+          <JsonGuideModal
+            isOpen={isJsonGuideOpen}
+            onClose={() => setIsJsonGuideOpen(false)}
+          />
+        </div>
       )}
 
       {/* Section Configurator Modal (vibhagavaru prashnegalannu hondisuva option) */}
       {userSession && (
-        <SectionConfigModal
-          isOpen={isSectionConfigOpen}
-          onClose={() => setIsSectionConfigOpen(false)}
-          sections={
-            customSections ||
-            (currentBank
-              ? buildBlueprintsFromSelectedFormats(
-                  currentBank,
-                  selectedFormatIds,
-                  selectedChapterIds,
-                  targetMarks,
-                  targetQuestionsCount
-                )
-              : [])
-          }
-          targetMarks={targetMarks}
-          targetQuestionsCount={targetQuestionsCount}
-          onApplySections={(newSections, updatedMarks, updatedCount) => {
-            setCustomSections(newSections);
-            setTargetMarks(updatedMarks);
-            setTargetQuestionsCount(updatedCount);
-          }}
-        />
+        <div className="text-slate-900">
+          <SectionConfigModal
+            isOpen={isSectionConfigOpen}
+            onClose={() => setIsSectionConfigOpen(false)}
+            sections={
+              customSections ||
+              (currentBank
+                ? buildBlueprintsFromSelectedFormats(
+                    currentBank,
+                    selectedFormatIds,
+                    selectedChapterIds,
+                    targetMarks,
+                    targetQuestionsCount
+                  )
+                : [])
+            }
+            targetMarks={targetMarks}
+            targetQuestionsCount={targetQuestionsCount}
+            onApplySections={(newSections, updatedMarks, updatedCount) => {
+              setCustomSections(newSections);
+              setTargetMarks(updatedMarks);
+              setTargetQuestionsCount(updatedCount);
+            }}
+          />
+        </div>
       )}
+
+      {/* PWA Offline Status Toast */}
+      <OfflineIndicator />
 
       {/* Saffron (ಕೇಸರಿ) Footer */}
       <footer className="no-print mt-12 py-6 border-t border-orange-500/60 bg-gradient-to-r from-orange-700 via-amber-600 to-orange-700 text-center text-xs text-orange-50 font-kannada shadow-inner">

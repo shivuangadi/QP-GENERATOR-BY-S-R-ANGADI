@@ -26,6 +26,7 @@ interface SavedJsonBanksTableProps {
   openButtonLabel?: string;
   onOpenBank: (bank: SavedBankSummary) => void;
   onDeleteBank: (bank: SavedBankSummary) => Promise<void> | void;
+  onRebuildBank?: (bank: SavedBankSummary) => void;
 }
 
 function getDuplicateGroupKey(bank: SavedBankSummary): string {
@@ -56,6 +57,7 @@ export const SavedJsonBanksTable: React.FC<SavedJsonBanksTableProps> = ({
   openButtonLabel = 'ತೆರೆಯಿರಿ & ಚಿತ್ರ',
   onOpenBank,
   onDeleteBank,
+  onRebuildBank,
 }) => {
   const [filterMode, setFilterMode] = useState<'all' | 'duplicates'>('all');
   const [selectedClassKey, setSelectedClassKey] = useState<string>('all');
@@ -311,8 +313,8 @@ export const SavedJsonBanksTable: React.FC<SavedJsonBanksTableProps> = ({
                     {/* Column 1: Delete Button BEFORE Class & Subject */}
                     <td className="py-2.5 pl-4 pr-3 whitespace-nowrap align-middle">
                       {isBuiltin ? (
-                        <span className="text-3xs font-semibold text-slate-400">
-                          ಅಧಿಕೃತ ಮೂಲ
+                        <span className="inline-flex items-center px-2 py-0.5 rounded bg-orange-50 border border-orange-200 text-3xs font-bold text-orange-800">
+                          ಇನ್‌ಬಿಲ್ಟ್ (Class 6)
                         </span>
                       ) : isConfirming ? (
                         <div className="flex items-center gap-1">
@@ -411,17 +413,31 @@ export const SavedJsonBanksTable: React.FC<SavedJsonBanksTableProps> = ({
                       )}
                     </td>
 
-                    {/* Column 7: Open Action */}
+                    {/* Column 7: Open / Rebuild Actions */}
                     <td className="py-2.5 pl-3 pr-4 text-right whitespace-nowrap align-middle">
-                      <button
-                        type="button"
-                        disabled={isLoadingOpen || isDeleting}
-                        onClick={() => onOpenBank(bank)}
-                        className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-2xs font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-                      >
-                        <Crop className="w-3.5 h-3.5 shrink-0" />
-                        <span>{openButtonLabel}</span>
-                      </button>
+                      <div className="inline-flex items-center justify-end gap-1.5">
+                        {onRebuildBank && (isBuiltin || bank.gradeKey === '6') && (
+                          <button
+                            type="button"
+                            disabled={isLoadingOpen || isDeleting}
+                            onClick={() => onRebuildBank(bank)}
+                            title="ಹಳೆಯ ಇನ್‌ಬಿಲ್ಟ್ ತೆಗೆದುಹಾಕಿ LBA PDF ನಿಂದ AI JSON ಮರುರಚಿಸಿ"
+                            className="px-2.5 py-1.5 bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white text-2xs font-bold rounded-lg transition-colors inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shadow-2xs"
+                          >
+                            <RefreshCw className="w-3 h-3 shrink-0" />
+                            <span>PDF ನಿಂದ ಮರುರಚಿಸಿ</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          disabled={isLoadingOpen || isDeleting}
+                          onClick={() => onOpenBank(bank)}
+                          className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-2xs font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                        >
+                          <Crop className="w-3.5 h-3.5 shrink-0" />
+                          <span>{openButtonLabel}</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

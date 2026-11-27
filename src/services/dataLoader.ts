@@ -13,6 +13,7 @@ import {
   STANDARD_QUESTION_FORMATS,
 } from '../types/questionBank.ts';
 import { getQuestionBanksFromFirebase } from './firebase.ts';
+import { formatBankMathExpressions } from '../utils/mathTextSanitizer.ts';
 
 // In-memory cache for loaded banks
 const bankCache = new Map<string, QuestionBank>();
@@ -988,7 +989,8 @@ export function ensureUniqueQuestionIds(bank: QuestionBank): QuestionBank {
     return ch;
   });
 
-  return mutated ? { ...bank, chapters } : bank;
+  const idNormalized = mutated ? { ...bank, chapters } : bank;
+  return formatBankMathExpressions(idNormalized);
 }
 
 /**
@@ -1230,10 +1232,21 @@ export async function fetchBankIndex(): Promise<BankIndex> {
     const existingIsLocalOnly = Boolean(existing?.path.startsWith('local://'));
     const incomingIsFirebase = normalizedEntry.path.startsWith('firebase://');
     const existingIsFirebase = Boolean(existing?.path.startsWith('firebase://'));
+    const incomingIsBuiltinStatic =
+      normalizedEntry.path.startsWith('/assets/aistudio/') && !normalizedEntry.isUserGenerated;
+    const existingIsBuiltinStatic = Boolean(
+      existing && existing.path.startsWith('/assets/aistudio/') && !existing.isUserGenerated
+    );
 
     let shouldReplace = false;
     if (!existing) {
       shouldReplace = true;
+    } else if (existingIsBuiltinStatic && !incomingIsBuiltinStatic && !incomingIsLocalOnly) {
+      // ANY freshly rebuilt / cloud-saved / server-saved bank ALWAYS replaces a built-in static Class 6 bank!
+      shouldReplace = true;
+    } else if (incomingIsBuiltinStatic && !existingIsBuiltinStatic && !existingIsLocalOnly) {
+      // Never let a built-in static Class 6 bank overwrite a rebuilt / user-generated bank!
+      shouldReplace = false;
     } else if (existingIsLocalOnly && !incomingIsLocalOnly && incomingImages >= existingImages) {
       shouldReplace = true;
     } else if (incomingImages > existingImages && (!incomingIsLocalOnly || existingImages === 0)) {
@@ -1242,8 +1255,18 @@ export async function fetchBankIndex(): Promise<BankIndex> {
     } else if (existingImages > incomingImages && (!existingIsLocalOnly || incomingImages === 0)) {
       // Never let a lower-image bank overwrite a higher-image bank!
       shouldReplace = false;
+    } else if (
+      incomingImages === existingImages &&
+      !incomingIsLocalOnly &&
+      !existingIsLocalOnly &&
+      Boolean(incomingCreatedAt) &&
+      Boolean(existingCreatedAt) &&
+      incomingCreatedAt !== existingCreatedAt
+    ) {
+      // When image counts are equal, ALWAYS prefer the most recently updated bank (whether Server Disk or Firebase)!
+      shouldReplace = incomingCreatedAt > existingCreatedAt;
     } else if (incomingIsFirebase && !existingIsFirebase && incomingCount >= Math.floor(existingCount * 0.7)) {
-      // Prefer cloud-saved edited bank over raw static/disk file when image & question counts are comparable
+      // Prefer cloud-saved edited bank over raw static/disk file when timestamps are absent and counts are comparable
       shouldReplace = true;
     } else if (existingIsFirebase && !incomingIsFirebase && existingCount >= Math.floor(incomingCount * 0.7)) {
       shouldReplace = false;

@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { GoogleGenAI, ThinkingLevel, Type } from '@google/genai';
 import {
@@ -70,6 +71,350 @@ app.get('/api/health', (req, res) => {
     hasGeminiKey: Boolean(process.env.GEMINI_API_KEY),
     port: PORT,
   });
+});
+
+// ============================================================================
+// SERVER-SIDE ADMIN AUTHENTICATION (Env Override + Atomic First-Run scrypt Setup)
+// ============================================================================
+const serverPrivateDataDir = path.join(__dirname, '.data');
+if (!fs.existsSync(serverPrivateDataDir)) {
+  fs.mkdirSync(serverPrivateDataDir, { recursive: true });
+}
+const adminAuthStorePath = path.join(serverPrivateDataDir, 'admin-auth.json');
+
+interface ClaimedAdminCredentialRecord {
+  version: 1;
+  username: string;
+  salt: string;
+  passwordHash: string;
+  claimedAt: string;
+}
+
+const ADMIN_SESSION_SECRET =
+  (process.env.ADMIN_SESSION_SECRET || '').trim() || crypto.randomBytes(32).toString('hex');
+const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+const activeAdminSessions = new Map<string, { username: string; expiresAt: number }>();
+const adminLoginAttempts = new Map<string, { count: number; resetAt: number }>();
+
+let cachedClaimedAdmin: ClaimedAdminCredentialRecord | null | undefined = undefined;
+
+function timingSafeStringEqual(a: string, b: string): boolean {
+  const hashA = crypto.createHash('sha256').update(a, 'utf8').digest();
+  const hashB = crypto.createHash('sha256').update(b, 'utf8').digest();
+  return crypto.timingSafeEqual(hashA, hashB);
+}
+
+function hashAdminPasswordScrypt(password: string, saltHex?: string): { salt: string; hash: string } {
+  const salt = saltHex || crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(password, salt, 64, { N: 16384, r: 8, p: 1 }).toString('hex');
+  return { salt, hash };
+}
+
+function verifyAdminPasswordScrypt(password: string, salt: string, expectedHashHex: string): boolean {
+  try {
+    const derived = crypto.scryptSync(password, salt, 64, { N: 16384, r: 8, p: 1 });
+    const expected = Buffer.from(expectedHashHex, 'hex');
+    if (derived.length !== expected.length) return false;
+    return crypto.timingSafeEqual(derived, expected);
+  } catch {
+    return false;
+  }
+}
+
+function getEnvAdminCredentials(): { username: string; password: string } | null {
+  const username = (process.env.ADMIN_USERNAME || '').trim();
+  const password = (process.env.ADMIN_PASSWORD || '').trim();
+  if (username.length >= 2 && password.length >= 4) {
+    return { username, password };
+  }
+  return null;
+}
+
+function loadClaimedAdminRecord(): ClaimedAdminCredentialRecord | null {
+  if (cachedClaimedAdmin !== undefined) return cachedClaimedAdmin;
+  try {
+    if (!fs.existsSync(adminAuthStorePath)) {
+      cachedClaimedAdmin = null;
+      return null;
+    }
+    const parsed = JSON.parse(fs.readFileSync(adminAuthStorePath, 'utf8'));
+    if (
+      parsed &&
+      typeof parsed.username === 'string' &&
+      typeof parsed.salt === 'string' &&
+      typeof parsed.passwordHash === 'string' &&
+      parsed.username.trim().length >= 2 &&
+      parsed.salt.length >= 16 &&
+      parsed.passwordHash.length >= 64
+    ) {
+      cachedClaimedAdmin = {
+        version: 1,
+        username: parsed.username.trim(),
+        salt: parsed.salt,
+        passwordHash: parsed.passwordHash,
+        claimedAt: String(parsed.claimedAt || ''),
+      };
+      return cachedClaimedAdmin;
+    }
+  } catch {
+    // Ignore malformed file
+  }
+  cachedClaimedAdmin = null;
+  return null;
+}
+
+function getAdminAuthConfigStatus(): {
+  configured: boolean;
+  source: 'env' | 'claimed' | 'unclaimed';
+  needsSetup: boolean;
+} {
+  if (getEnvAdminCredentials()) {
+    return { configured: true, source: 'env', needsSetup: false };
+  }
+  if (loadClaimedAdminRecord()) {
+    return { configured: true, source: 'claimed', needsSetup: false };
+  }
+  return { configured: false, source: 'unclaimed', needsSetup: true };
+}
+
+function issueAdminBearerToken(username: string): string {
+  // Prune expired sessions opportunistically
+  const now = Date.now();
+  for (const [sid, info] of activeAdminSessions.entries()) {
+    if (info.expiresAt <= now) {
+      activeAdminSessions.delete(sid);
+    }
+  }
+
+  const sid = crypto.randomBytes(24).toString('hex');
+  const expiresAt = now + ADMIN_SESSION_TTL_MS;
+  activeAdminSessions.set(sid, { username, expiresAt });
+
+  const payloadB64 = Buffer.from(JSON.stringify({ sid, username, exp: expiresAt }), 'utf8').toString('base64url');
+  const sigB64 = crypto
+    .createHmac('sha256', ADMIN_SESSION_SECRET)
+    .update(payloadB64)
+    .digest('base64url');
+
+  return `${payloadB64}.${sigB64}`;
+}
+
+function verifyAdminBearerToken(authHeader?: string): { sid: string; username: string } | null {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+  const token = authHeader.slice(7).trim();
+  const dotIdx = token.indexOf('.');
+  if (dotIdx <= 0) return null;
+
+  const payloadB64 = token.slice(0, dotIdx);
+  const sigB64 = token.slice(dotIdx + 1);
+  if (!payloadB64 || !sigB64) return null;
+
+  const expectedSigB64 = crypto
+    .createHmac('sha256', ADMIN_SESSION_SECRET)
+    .update(payloadB64)
+    .digest('base64url');
+
+  if (!timingSafeStringEqual(sigB64, expectedSigB64)) return null;
+
+  try {
+    const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'));
+    if (
+      !payload ||
+      typeof payload.sid !== 'string' ||
+      typeof payload.username !== 'string' ||
+      typeof payload.exp !== 'number'
+    ) {
+      return null;
+    }
+    if (payload.exp <= Date.now()) {
+      activeAdminSessions.delete(payload.sid);
+      return null;
+    }
+    const active = activeAdminSessions.get(payload.sid);
+    if (!active || active.expiresAt <= Date.now() || active.username !== payload.username) {
+      return null;
+    }
+    return { sid: payload.sid, username: payload.username };
+  } catch {
+    return null;
+  }
+}
+
+app.get('/api/admin/auth/status', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  return res.json(getAdminAuthConfigStatus());
+});
+
+app.post('/api/admin/auth/setup', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const status = getAdminAuthConfigStatus();
+  if (status.configured) {
+    return res.status(403).json({
+      ok: false,
+      error: 'ಅಡ್ಮಿನ್ ಲಾಗಿನ್ ಈಗಾಗಲೇ ಸೆಟ್ ಆಗಿದೆ. ದಯವಿಟ್ಟು ಲಾಗಿನ್ ಫಾರ್ಮ್ ಬಳಸಿ.',
+    });
+  }
+
+  const rawUsername = req.body?.username;
+  const rawPassword = req.body?.password;
+  if (typeof rawUsername !== 'string' || typeof rawPassword !== 'string') {
+    return res.status(400).json({
+      ok: false,
+      error: 'ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ ಯೂಸರ್ ನೇಮ್ ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್ ನಮೂದಿಸಿ.',
+    });
+  }
+
+  const username = rawUsername.trim();
+  const password = rawPassword;
+
+  if (username.length < 2 || username.length > 64) {
+    return res.status(400).json({
+      ok: false,
+      error: 'ಯೂಸರ್ ನೇಮ್ ಕನಿಷ್ಠ 2 ಅಕ್ಷರಗಳಿರಬೇಕು.',
+    });
+  }
+  if (password.length < 4 || password.length > 128) {
+    return res.status(400).json({
+      ok: false,
+      error: 'ಪಾಸ್‌ವರ್ಡ್ ಕನಿಷ್ಠ 4 ಅಕ್ಷರಗಳಿರಬೇಕು.',
+    });
+  }
+
+  const { salt, hash } = hashAdminPasswordScrypt(password);
+  const record: ClaimedAdminCredentialRecord = {
+    version: 1,
+    username,
+    salt,
+    passwordHash: hash,
+    claimedAt: new Date().toISOString(),
+  };
+
+  try {
+    // Atomic exclusive file creation prevents concurrent double-claim races
+    fs.writeFileSync(adminAuthStorePath, JSON.stringify(record, null, 2), {
+      encoding: 'utf8',
+      flag: 'wx',
+      mode: 0o600,
+    });
+    cachedClaimedAdmin = record;
+  } catch (err: any) {
+    if (err?.code === 'EEXIST') {
+      cachedClaimedAdmin = undefined;
+      loadClaimedAdminRecord();
+      return res.status(403).json({
+        ok: false,
+        error: 'ಅಡ್ಮಿನ್ ಲಾಗಿನ್ ಈಗಾಗಲೇ ಸೆಟ್ ಆಗಿದೆ. ದಯವಿಟ್ಟು ಲಾಗಿನ್ ಫಾರ್ಮ್ ಬಳಸಿ.',
+      });
+    }
+    return res.status(500).json({
+      ok: false,
+      error: 'ಅಡ್ಮಿನ್ ಲಾಗಿನ್ ಉಳಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+    });
+  }
+
+  const token = issueAdminBearerToken(username);
+  return res.json({
+    ok: true,
+    token,
+    username,
+    source: 'claimed',
+  });
+});
+
+app.post('/api/admin/auth/login', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const clientIp = String(req.ip || req.socket.remoteAddress || 'unknown');
+  const now = Date.now();
+  const attemptState = adminLoginAttempts.get(clientIp);
+  if (attemptState && attemptState.resetAt > now && attemptState.count >= 15) {
+    return res.status(429).json({
+      ok: false,
+      error: 'ಹಲವು ವಿಫಲ ಪ್ರಯತ್ನಗಳು ಕಂಡುಬಂದಿವೆ. ದಯವಿಟ್ಟು ಕೆಲವು ನಿಮಿಷಗಳ ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+    });
+  }
+
+  const rawUsername = req.body?.username;
+  const rawPassword = req.body?.password;
+  if (typeof rawUsername !== 'string' || typeof rawPassword !== 'string') {
+    return res.status(400).json({
+      ok: false,
+      error: 'ದಯವಿಟ್ಟು ಯೂಸರ್ ನೇಮ್ ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್ ನಮೂದಿಸಿ.',
+    });
+  }
+
+  const username = rawUsername.trim();
+  const password = rawPassword;
+
+  if (!username || !password || username.length > 64 || password.length > 128) {
+    return res.status(400).json({
+      ok: false,
+      error: 'ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ ಯೂಸರ್ ನೇಮ್ ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್ ನಮೂದಿಸಿ.',
+    });
+  }
+
+  const envCreds = getEnvAdminCredentials();
+  let authenticated = false;
+  let source: 'env' | 'claimed' = 'env';
+
+  if (envCreds) {
+    // Environment secrets always override any claimed credential
+    const userOk = timingSafeStringEqual(username, envCreds.username);
+    const passOk = timingSafeStringEqual(password, envCreds.password);
+    authenticated = userOk && passOk;
+    source = 'env';
+  } else {
+    const claimed = loadClaimedAdminRecord();
+    if (!claimed) {
+      return res.status(409).json({
+        ok: false,
+        needsSetup: true,
+        error: 'ಮೊದಲು ಅಡ್ಮಿನ್ ಯೂಸರ್ ನೇಮ್ ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್ ಸೆಟ್ ಮಾಡಿ.',
+      });
+    }
+    const userOk = timingSafeStringEqual(username, claimed.username);
+    const passOk = verifyAdminPasswordScrypt(password, claimed.salt, claimed.passwordHash);
+    authenticated = userOk && passOk;
+    source = 'claimed';
+  }
+
+  if (!authenticated) {
+    const nextCount = attemptState && attemptState.resetAt > now ? attemptState.count + 1 : 1;
+    adminLoginAttempts.set(clientIp, {
+      count: nextCount,
+      resetAt: attemptState && attemptState.resetAt > now ? attemptState.resetAt : now + 10 * 60 * 1000,
+    });
+    return res.status(401).json({
+      ok: false,
+      error: 'ತಪ್ಪಾದ ಯೂಸರ್ ನೇಮ್ ಅಥವಾ ಪಾಸ್‌ವರ್ಡ್. ದಯವಿಟ್ಟು ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+    });
+  }
+
+  adminLoginAttempts.delete(clientIp);
+  const token = issueAdminBearerToken(username);
+  return res.json({
+    ok: true,
+    token,
+    username,
+    source,
+  });
+});
+
+app.get('/api/admin/auth/verify', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const verified = verifyAdminBearerToken(req.headers.authorization);
+  if (!verified) {
+    return res.status(401).json({ ok: false, valid: false });
+  }
+  return res.json({ ok: true, valid: true, username: verified.username });
+});
+
+app.post('/api/admin/auth/logout', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const verified = verifyAdminBearerToken(req.headers.authorization);
+  if (verified) {
+    activeAdminSessions.delete(verified.sid);
+  }
+  return res.json({ ok: true });
 });
 
 /**
@@ -429,13 +774,15 @@ Target Question Pages in this slice: ${questionPages || 'Entire Chapter'} ${chun
 Target Answer Key Pages included in this slice: ${answerPages || 'Back of chapter or end of book'}
 ${pageMapText}
 CRITICAL RULES FOR 100% FIDELITY TO THE LBA PDF BOOK:
-1. ZERO-OMISSION EXHAUSTIVE EXTRACTION:
-   - Scan EVERY single question page in this slice from top-left to bottom-right (including multi-column layouts, tables, boxed exercises, and questions near the bottom margin).
-   - Extract EVERY SINGLE numbered question and sub-question — every MCQ, fill-in-the-blank, true/false, analogy, match-the-following, 1M/2M/3M/4M/5M problem, proof, derivation, and diagram-based question. NEVER truncate or stop early!
-   - Extract ONLY questions that appear on the Target Question Pages (${questionPages || 'this slice'}), NOT questions from Answer Key pages.
-2. EXACT PRINTED PDF SERIAL NUMBERS (CRITICAL — NEVER RENUMBER FROM 1!):
-   - Copy the EXACT question number printed on the PDF page into BOTH "question_number" (integer) AND "printedSerial" (exact string label as printed in the book, e.g., "38", "42", "12(a)", "15(i)").
-   - If this PDF page starts at question 38, the first extracted item MUST have "question_number": 38 and "printedSerial": "38" — NEVER reset to 1!
+1. ZERO-OMISSION EXHAUSTIVE EXTRACTION & STRICT QUESTION-VS-ANSWER SEPARATION:
+   - Scan EVERY single question page in this slice strictly from top-to-bottom (including multi-column layouts, tables, boxed exercises, prose, poetry, grammar, and questions near the bottom margin).
+   - Extract EVERY SINGLE numbered question and sub-question in the EXACT order printed on the Target Question Pages (${questionPages || 'this slice'}).
+   - STRICT ANTI-CONTAMINATION RULE: NEVER extract entries from the Answer Key pages as new questions — even when the Answer Key pages reprint both questions and answers! NEVER put the answer text into the "question" field (question and answer MUST NEVER be identical).
+   - STRICT MCQ STEM RULE: For EVERY Multiple Choice Question (MCQ), you MUST include the complete question stem / sentence / instruction in the "question" field (e.g., "The part of speech of the underlined word is..."). NEVER output an MCQ with only options or with an answer like "Ans) c) mother" or "1.A) a, the" as the question!
+   - UNDERLINED WORDS RULE: Whenever the PDF underlines a word or phrase inside a question (for example: "The part of speech of the underlined word is", "Frame a question to get the underlined word as answer", "Replace the underlined phrase"), you MUST wrap the exact underlined word/phrase in <u>...</u> HTML tags inside the "question" string (e.g., "His <u>judgment</u> was appreciated by everyone."). NEVER omit the underline!
+2. EXACT ORDER & CONTINUOUS SERIAL NUMBERS:
+   - Output questions strictly in the EXACT top-to-bottom order printed on the Target Question Pages.
+   - If the chapter restarts numbering at 1 for different main sections (e.g., I. MCQ 1, 2, 3... II. Answer in one sentence 1, 2, 3... Poem I. 1, 2, 3...), assign CONTINUOUS sequential numbers (1, 2, 3, ..., N) across the chapter so every question has a unique continuous serial in "question_number" and "printedSerial". If the PDF already uses continuous numbers (e.g., 38, 39, 40...), preserve those exact numbers.
    - Do NOT prepend the serial number again inside the "question" text itself if it is already captured in "printedSerial".
 3. COMPLETE VERBATIM FULL ANSWERS — NEVER SUMMARIZE OR SHORTEN!:
    - Copy the ENTIRE detailed official answer from the Answer Key pages WORD-FOR-WORD and STEP-BY-STEP!
@@ -519,14 +866,25 @@ Do not output markdown codeblocks outside the JSON.`;
 
   const parsed = parseGeminiJson(text);
 
-  // Server-side safety pass: fix any caret superscripts/subscripts (x^2 -> x²) AND degree-symbol OCR errors (600 -> 60°)
+  // Server-side safety pass: fix math typography AND strip obvious Answer-Key-as-Question contamination
   if (Array.isArray(parsed?.questions)) {
-    parsed.questions = parsed.questions.map((q: any) =>
-      sanitizeQuestionMathText(
-        { ...q, chapterName: q.chapterName || chapterName },
-        subjectHint
-      )
-    );
+    parsed.questions = parsed.questions
+      .filter((q: any) => {
+        const qText = String(q?.question || '').trim();
+        const aText = String(q?.answer || '').trim();
+        if (!qText) return false;
+        // Drop raw Answer-Key-only lines mistakenly extracted as questions
+        if (/^(?:Answers?\s+[IVX0-9]|Ans\)\s*[a-d]\))/i.test(qText)) return false;
+        // Drop items where answer text was pasted identically into both question and answer
+        if (aText.length >= 20 && qText.toLowerCase() === aText.toLowerCase()) return false;
+        return true;
+      })
+      .map((q: any) =>
+        sanitizeQuestionMathText(
+          { ...q, chapterName: q.chapterName || chapterName },
+          subjectHint
+        )
+      );
     parsed.extractedQuestionsCount = parsed.questions.length;
   }
 
@@ -1646,16 +2004,53 @@ function escapeEmailHtml(input: unknown): string {
     .replace(/'/g, '&#39;');
 }
 
-function getEmailDeliveryProvider(): { configured: boolean; provider: 'resend' | 'smtp' | 'none' } {
-  if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.trim().length > 5) {
-    return { configured: true, provider: 'resend' };
-  }
+function isLikelyPlaceholderSecret(value: string): boolean {
+  const lower = value.toLowerCase();
+  return (
+    !value ||
+    lower.includes('placeholder') ||
+    lower.includes('your_') ||
+    lower.includes('your-') ||
+    lower.includes('changeme') ||
+    lower.includes('replace_me') ||
+    lower.includes('example') ||
+    /^re_x+$/i.test(value) ||
+    /^x{6,}$/i.test(value) ||
+    /^<.*>$/.test(value)
+  );
+}
+
+function getEmailProviderDetails(): {
+  configured: boolean;
+  provider: 'resend' | 'smtp' | 'none';
+  hasResend: boolean;
+  hasSmtp: boolean;
+} {
+  const resendKey = (process.env.RESEND_API_KEY || '').trim();
+  const hasResend =
+    resendKey.length >= 16 &&
+    /^re_[A-Za-z0-9_]{12,}$/.test(resendKey) &&
+    !isLikelyPlaceholderSecret(resendKey);
+
   const smtpUser = (process.env.SMTP_USER || '').trim();
   const smtpPass = (process.env.SMTP_PASS || '').trim();
-  if (smtpUser && smtpPass) {
-    return { configured: true, provider: 'smtp' };
+  const hasSmtp =
+    Boolean(smtpUser && smtpPass) &&
+    !isLikelyPlaceholderSecret(smtpUser) &&
+    !isLikelyPlaceholderSecret(smtpPass);
+
+  if (hasResend) {
+    return { configured: true, provider: 'resend', hasResend, hasSmtp };
   }
-  return { configured: false, provider: 'none' };
+  if (hasSmtp) {
+    return { configured: true, provider: 'smtp', hasResend, hasSmtp };
+  }
+  return { configured: false, provider: 'none', hasResend: false, hasSmtp: false };
+}
+
+function getEmailDeliveryProvider(): { configured: boolean; provider: 'resend' | 'smtp' | 'none' } {
+  const { configured, provider } = getEmailProviderDetails();
+  return { configured, provider };
 }
 
 /**
@@ -1722,7 +2117,7 @@ app.post('/api/online-test/send-report', async (req, res) => {
       };
     });
 
-    const providerStatus = getEmailDeliveryProvider();
+    const providerStatus = getEmailProviderDetails();
     if (!providerStatus.configured) {
       return res.json({
         ok: true,
@@ -1730,7 +2125,7 @@ app.post('/api/online-test/send-report', async (req, res) => {
         reason: 'not_configured',
         provider: 'none',
         message:
-          'ಸ್ವಯಂಚಾಲಿತ ಇಮೇಲ್ ಕಳುಹಿಸಲು SMTP_USER / SMTP_PASS ಅಥವಾ RESEND_API_KEY ಸೆಟ್ಟಿಂಗ್ಸ್ (Secrets) ನಲ್ಲಿ ಸೇರಿಸಬೇಕು. ಅಲ್ಲಿಯವರೆಗೆ ಕೆಳಗಿನ "ಇಮೇಲ್ ಆ್ಯಪ್‌ನಲ್ಲಿ ಕಳುಹಿಸಿ" ಅಥವಾ "PDF ಮುದ್ರಿಸಿ" ಆಯ್ಕೆಯನ್ನು ಬಳಸಿ.',
+          'ಸ್ವಯಂಚಾಲಿತ ಇಮೇಲ್ ಕಳುಹಿಸಲು SMTP_USER / SMTP_PASS ಅಥವಾ ಮಾನ್ಯವಾದ RESEND_API_KEY ಸೆಟ್ಟಿಂಗ್ಸ್ (Secrets) ನಲ್ಲಿ ಸೇರಿಸಬೇಕು. ಅಲ್ಲಿಯವರೆಗೆ ಕೆಳಗಿನ "ಇಮೇಲ್ ಆ್ಯಪ್‌ನಲ್ಲಿ ಕಳುಹಿಸಿ" ಅಥವಾ "PDF ಮುದ್ರಿಸಿ" ಆಯ್ಕೆಯನ್ನು ಬಳಸಿ.',
       });
     }
 
@@ -1849,7 +2244,10 @@ app.post('/api/online-test/send-report', async (req, res) => {
     ].filter(Boolean);
     const textBody = plainTextLines.join('\n');
 
-    if (providerStatus.provider === 'resend') {
+    let resendAuthFailed = false;
+    let resendErrorDetail = '';
+
+    if (providerStatus.hasResend) {
       const apiKey = process.env.RESEND_API_KEY!.trim();
       const fromAddress = (process.env.SMTP_FROM || 'Online Test <onboarding@resend.dev>').trim();
       const resendResp = await fetch('https://api.resend.com/emails', {
@@ -1866,21 +2264,53 @@ app.post('/api/online-test/send-report', async (req, res) => {
           text: textBody,
         }),
       });
-      if (!resendResp.ok) {
-        const errText = await resendResp.text();
-        console.error('Resend API delivery error:', errText);
-        return res.status(502).json({
-          ok: false,
-          emailSent: false,
+      if (resendResp.ok) {
+        return res.json({
+          ok: true,
+          emailSent: true,
           provider: 'resend',
-          error: 'ಇಮೇಲ್ ಕಳುಹಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು RESEND_API_KEY / SMTP_FROM ಪರಿಶೀಲಿಸಿ.',
+          message: `ನಿಮ್ಮ ಇಮೇಲ್ (${studentEmail}) ಗೆ ಫಲಿತಾಂಶ ಮತ್ತು ಉತ್ತರ ಪತ್ರಿಕೆಯ ಪ್ರತಿ ಯಶಸ್ವಿಯಾಗಿ ಕಳುಹಿಸಲಾಗಿದೆ.`,
         });
       }
+
+      const errText = await resendResp.text().catch(() => '');
+      resendAuthFailed = resendResp.status === 401 || resendResp.status === 403;
+      resendErrorDetail = errText;
+      console.warn(
+        `Resend email delivery unavailable (HTTP ${resendResp.status})${providerStatus.hasSmtp ? '; falling back to SMTP.' : '.'}`
+      );
+
+      if (!providerStatus.hasSmtp) {
+        if (resendAuthFailed) {
+          return res.json({
+            ok: true,
+            emailSent: false,
+            reason: 'not_configured',
+            provider: 'resend',
+            message:
+              'RESEND_API_KEY ಅಮಾನ್ಯವಾಗಿದೆ ಅಥವಾ ಇನ್ನೂ ಸರಿಯಾಗಿ ಕಾನ್ಫಿಗರ್ ಆಗಿಲ್ಲ. ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ Resend API ಕೀ ಅಥವಾ SMTP ವಿವರಗಳನ್ನು ಸೇರಿಸಿ; ಅಲ್ಲಿಯವರೆಗೆ ಕೆಳಗಿನ "ಇಮೇಲ್ ಆ್ಯಪ್‌ನಲ್ಲಿ ಕಳುಹಿಸಿ" ಅಥವಾ "PDF ಉಳಿಸಿ" ಆಯ್ಕೆಯನ್ನು ಬಳಸಿ.',
+          });
+        }
+        return res.json({
+          ok: false,
+          emailSent: false,
+          reason: 'delivery_failed',
+          provider: 'resend',
+          error:
+            'ಇಮೇಲ್ ಕಳುಹಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು RESEND_API_KEY / SMTP_FROM ಪರಿಶೀಲಿಸಿ ಅಥವಾ ಕೆಳಗಿನ ಇಮೇಲ್ ಆ್ಯಪ್ / PDF ಆಯ್ಕೆ ಬಳಸಿ.',
+        });
+      }
+    }
+
+    if (!providerStatus.hasSmtp) {
       return res.json({
         ok: true,
-        emailSent: true,
-        provider: 'resend',
-        message: `ನಿಮ್ಮ ಇಮೇಲ್ (${studentEmail}) ಗೆ ಫಲಿತಾಂಶ ಮತ್ತು ಉತ್ತರ ಪತ್ರಿಕೆಯ ಪ್ರತಿ ಯಶಸ್ವಿಯಾಗಿ ಕಳುಹಿಸಲಾಗಿದೆ.`,
+        emailSent: false,
+        reason: 'not_configured',
+        provider: 'none',
+        message: resendErrorDetail
+          ? 'ಇಮೇಲ್ ಸೇವೆ ಸರಿಯಾಗಿ ಕಾನ್ಫಿಗರ್ ಆಗಿಲ್ಲ. ಕೆಳಗಿನ "ಇಮೇಲ್ ಆ್ಯಪ್‌ನಲ್ಲಿ ಕಳುಹಿಸಿ" ಅಥವಾ "PDF ಉಳಿಸಿ" ಬಟನ್ ಬಳಸಿ.'
+          : 'ಸ್ವಯಂಚಾಲಿತ ಇಮೇಲ್ ಕಳುಹಿಸುವ ಸೇವೆ ಕಾನ್ಫಿಗರ್ ಆಗಿಲ್ಲ. ಕೆಳಗಿನ "ಇಮೇಲ್ ಆ್ಯಪ್‌ನಲ್ಲಿ ಕಳುಹಿಸಿ" ಅಥವಾ "PDF ಉಳಿಸಿ" ಬಟನ್ ಬಳಸಿ.',
       });
     }
 
@@ -1916,11 +2346,23 @@ app.post('/api/online-test/send-report', async (req, res) => {
       message: `ನಿಮ್ಮ ಇಮೇಲ್ (${studentEmail}) ಗೆ ಫಲಿತಾಂಶ ಮತ್ತು ಉತ್ತರ ಪತ್ರಿಕೆಯ ಪ್ರತಿ ಯಶಸ್ವಿಯಾಗಿ ಕಳುಹಿಸಲಾಗಿದೆ.`,
     });
   } catch (error: any) {
-    console.error('Error sending online test report email:', error?.message || error);
-    return res.status(500).json({
+    const code = String(error?.code || '');
+    console.warn('Online test report email delivery warning:', error?.message || error);
+    if (code === 'EAUTH' || code === 'EENVELOPE') {
+      return res.json({
+        ok: true,
+        emailSent: false,
+        reason: 'not_configured',
+        message:
+          'SMTP ಲಾಗಿನ್ ವಿವರಗಳು ಅಮಾನ್ಯವಾಗಿವೆ. ದಯವಿಟ್ಟು SMTP_USER / SMTP_PASS ಪರಿಶೀಲಿಸಿ ಅಥವಾ ಕೆಳಗಿನ "ಇಮೇಲ್ ಆ್ಯಪ್‌ನಲ್ಲಿ ಕಳುಹಿಸಿ" / "PDF ಉಳಿಸಿ" ಆಯ್ಕೆ ಬಳಸಿ.',
+      });
+    }
+    return res.json({
       ok: false,
       emailSent: false,
-      error: 'ಇಮೇಲ್ ಕಳುಹಿಸುವಾಗ ದೋಷ ಸಂಭವಿಸಿದೆ. ದಯವಿಟ್ಟು SMTP ವಿವರಗಳನ್ನು ಪರಿಶೀಲಿಸಿ ಅಥವಾ ಕೆಳಗಿನ ಮುದ್ರಣ/ಇಮೇಲ್ ಆಯ್ಕೆ ಬಳಸಿ.',
+      reason: 'delivery_failed',
+      error:
+        'ಇಮೇಲ್ ಕಳುಹಿಸುವಾಗ ದೋಷ ಸಂಭವಿಸಿದೆ. ದಯವಿಟ್ಟು SMTP ವಿವರಗಳನ್ನು ಪರಿಶೀಲಿಸಿ ಅಥವಾ ಕೆಳಗಿನ ಮುದ್ರಣ/ಇಮೇಲ್ ಆಯ್ಕೆ ಬಳಸಿ.',
     });
   }
 });
@@ -1948,9 +2390,34 @@ async function startServer() {
     const vite = await createServer({
       server: {
         middlewareMode: true,
+        hmr: false,
+        ws: false,
         host: '0.0.0.0',
         port: PORT,
       },
+      plugins: [
+        {
+          name: 'disable-hmr-client-ws',
+          enforce: 'post',
+          transform(code, id) {
+            if (id.includes('vite/dist/client/client.mjs') || id.endsWith('/@vite/client')) {
+              return code
+                .replace(
+                  'transport.connect(createHMRHandler(handleMessage));',
+                  '/* HMR WebSocket disabled in middleware mode */'
+                )
+                .replace(
+                  'else throw new SendBeforeConnectError("send was called before connect");',
+                  'else return;'
+                )
+                .replace(
+                  'else throw new SendBeforeConnectError("invoke was called before connect");',
+                  'else return;'
+                );
+            }
+          },
+        },
+      ],
       appType: 'spa',
     });
     app.use(vite.middlewares);

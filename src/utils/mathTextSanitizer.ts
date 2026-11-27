@@ -391,6 +391,7 @@ export function normalizeLatexMathSymbols(text: string): string {
   // Normalize LaTeX fraction & delimiter variants while PRESERVING \frac{num}{den}
   // so <MathText /> renders authentic textbook stacked vertical fractions
   out = out
+    .replace(/\u000crac\s*\{/g, '\\frac{')
     .replace(/\\(?:dfrac|tfrac|cfrac)\s*\{/g, '\\frac{')
     .replace(/\\left\s*([([{|])/g, '$1')
     .replace(/\\right\s*([\])}|])/g, '$1')
@@ -431,39 +432,116 @@ export function normalizeLatexMathSymbols(text: string): string {
 }
 
 /**
- * Convert raw caret superscripts (x^2 -> x², (a+b)^2 -> (a+b)², cm^2 -> cm², 10^-5 -> 10⁻⁵, 2^{n+1} -> 2ⁿ⁺¹)
- * and safe chemical/math subscripts (H_2O -> H₂O, CO_2 -> CO₂, x_1 -> x₁) into authentic Unicode superscripts/subscripts
- * so stored JSON files match the printed LBA textbook cleanly.
+ * Parse a simple fraction inside an exponent like "2/5", "-1/4", "+3/2", "m/n", "3x/2"
+ * into `{ sign, num, den }`, or return null if it is not a clean single fraction.
+ */
+export function parseSimpleFractionExponent(
+  rawExp: string
+): { sign: string; num: string; den: string } | null {
+  const trimmed = rawExp.trim();
+  if (!trimmed || !trimmed.includes('/')) return null;
+
+  // Strip a single redundant outer pair of parentheses if balanced, e.g. "(2/5)" -> "2/5"
+  let inner = trimmed;
+  if (inner.startsWith('(') && inner.endsWith(')')) {
+    let depth = 0;
+    let wrapsAll = true;
+    for (let i = 0; i < inner.length; i++) {
+      if (inner[i] === '(') depth++;
+      else if (inner[i] === ')') depth--;
+      if (depth === 0 && i < inner.length - 1) {
+        wrapsAll = false;
+        break;
+      }
+    }
+    if (wrapsAll) {
+      inner = inner.slice(1, -1).trim();
+    }
+  }
+
+  // Match optional leading sign + clean numerator / clean denominator (no stray slashes or spaces around sentences)
+  const fracMatch = inner.match(
+    /^([+-])?\s*([A-Za-z0-9.√π²³⁴⁵⁶⁷⁸⁹⁰]+(?:\s*[+-]\s*[A-Za-z0-9.√π²³⁴⁵⁶⁷⁸⁹⁰]+)?)\s*\/\s*([A-Za-z0-9.√π²³⁴⁵⁶⁷⁸⁹⁰]+(?:\s*[+-]\s*[A-Za-z0-9.√π²³⁴⁵⁶⁷⁸⁹⁰]+)?)$/
+  );
+  if (!fracMatch) return null;
+
+  const sign = fracMatch[1] || '';
+  const num = fracMatch[2].trim();
+  const den = fracMatch[3].trim();
+  if (!num || !den || num.length > 16 || den.length > 16) return null;
+  return { sign, num, den };
+}
+
+/**
+ * Convert raw caret superscripts:
+ *  - Fractional exponents: (32)^(2/5) -> (32)^{\frac{2}{5}}, 9^(3/2) -> 9^{\frac{3}{2}}, x^(-2/3) -> x^{-\frac{2}{3}}
+ *  - Parenthesized exponents: (ab)^(-2) -> (ab)⁻², 2^(n+1) -> 2ⁿ⁺¹, x^(3+y) -> x³⁺ʸ
+ *  - Braced exponents: x^{2} -> x², 10^{-5} -> 10⁻⁵, a^{2/5} -> a^{\frac{2}{5}}
+ *  - Unbraced exponents: x^2 -> x², a^2b² -> a²b², a^-2b⁻² -> a⁻²b⁻², cm^2 -> cm², 90^° -> 90°
+ * and safe chemical/math subscripts (H_2O -> H₂O, CO_2 -> CO₂, x_1 -> x₁) into clean textbook math
+ * so stored JSON files and rendered equations match printed textbooks cleanly.
  */
 export function formatMathSuperSubUnicode(text: string): string {
   if (!text || typeof text !== 'string') return text;
   let out = normalizeLatexMathSymbols(text);
 
-  // 1. Braced superscripts: x^{2}, 10^{-5}, a^{m+n}
-  out = out.replace(/([^\s])\^\{([^}]+)\}/g, (match, base: string, exp: string) => {
+  // 0. Fix explicit caret degree markers like 90^°, 1^°, x^° -> 90°, 1°, x°
+  out = out.replace(/([^\s(])\^\s*[°º]/g, '$1°');
+
+  // 1. Parenthesized superscripts: (32)^(2/5), 9^(3/2), 9 ^ (3/2), (ab)^(-2), 2^(n+1), (√(x³))^(2/3)
+  //    Strictly requires a valid non-delimiter base token before `^` (never touches Hindi "( ^ )")
+  out = out.replace(/([^\s([{-])[ \t]*\^[ \t]*\(([^()]{1,40})\)/g, (match, base: string, exp: string) => {
+    const cleanExp = exp.trim();
+    if (!cleanExp) return match;
+    if (cleanExp === '°' || cleanExp === 'º' || cleanExp === '\\circ') {
+      return `${base}°`;
+    }
+    const frac = parseSimpleFractionExponent(cleanExp);
+    if (frac) {
+      return `${base}^{${frac.sign}\\frac{${frac.num}}{${frac.den}}}`;
+    }
+    const mapped = tryMapAllChars(cleanExp, PLAIN_TO_UNICODE_SUP);
+    if (mapped) {
+      return `${base}${mapped}`;
+    }
+    return `${base}^{${cleanExp}}`;
+  });
+
+  // 2. Braced superscripts: x^{2}, 10^{-5}, a^{m+n}, (32)^{2/5}, (32)^{\frac{2}{5}}
+  out = out.replace(/([^\s([{-])[ \t]*\^[ \t]*\{([^{}]+)\}/g, (match, base: string, exp: string) => {
     const cleanExp = exp.trim();
     if (cleanExp === '°' || cleanExp === 'º' || cleanExp === '\\circ') {
       return `${base}°`;
+    }
+    const frac = parseSimpleFractionExponent(cleanExp);
+    if (frac) {
+      return `${base}^{${frac.sign}\\frac{${frac.num}}{${frac.den}}}`;
     }
     const mapped = tryMapAllChars(cleanExp, PLAIN_TO_UNICODE_SUP);
     return mapped ? `${base}${mapped}` : match;
   });
 
-  // 2. Unbraced superscripts: x^2, cm^2, m^3, 10^-5, a^n, (a+b)^2
-  out = out.replace(/([^\s])\^(-?\d+|[a-zA-Z])(?![a-zA-Z0-9])/g, (match, base: string, exp: string) => {
+  // 3a. Unbraced numeric superscripts (including immediately before variables like a^2b², a^-2b⁻², x^2y^3)
+  out = out.replace(/([^\s([{-])\^(-?\d+)(?![0-9])/g, (match, base: string, exp: string) => {
     const mapped = tryMapAllChars(exp, PLAIN_TO_UNICODE_SUP);
     return mapped ? `${base}${mapped}` : match;
   });
 
-  // 3. Braced subscripts: H_{2}O, log_{10}, a_{n-1}
+  // 3b. Unbraced single-letter superscripts: a^n, x^m
+  out = out.replace(/([^\s([{-])\^([a-zA-Z])(?![a-zA-Z0-9])/g, (match, base: string, exp: string) => {
+    const mapped = tryMapAllChars(exp, PLAIN_TO_UNICODE_SUP);
+    return mapped ? `${base}${mapped}` : match;
+  });
+
+  // 4. Braced subscripts: H_{2}O, log_{10}, a_{n-1}
   out = out.replace(/([^\s])_\{([^}]+)\}/g, (match, base: string, sub: string) => {
     const mapped = tryMapAllChars(sub.trim(), PLAIN_TO_UNICODE_SUB);
     return mapped ? `${base}${mapped}` : match;
   });
 
-  // 4. Safe chemical/math unbraced subscripts (H_2O, H_2SO_4, Ca(OH)_2, CO_2, x_1, a_n) — strictly skip URLs/paths
+  // 5. Safe chemical/math unbraced subscripts (H_2O, H_2SO_4, Ca(OH)_2, CO_2, x_1, a_n) — strictly skip URLs/paths
   if (out.includes('_') && !/https?:\/\/|\/api\//i.test(out)) {
-    // 4a. Chemical formulas where an uppercase element symbol or closing ')' is followed by _digits (e.g. H_2O, H_2CO_3, Al_2(SO_4)_3)
+    // 5a. Chemical formulas where an uppercase element symbol or closing ')' is followed by _digits (e.g. H_2O, H_2CO_3, Al_2(SO_4)_3)
     out = out.replace(
       /([A-Z][a-z]?|\))_([0-9]{1,3})(?=$|[^a-z0-9_])/g,
       (match, base: string, sub: string) => {
@@ -471,7 +549,7 @@ export function formatMathSuperSubUnicode(text: string): string {
         return mapped ? `${base}${mapped}` : match;
       }
     );
-    // 4b. Math variable / log subscripts (e.g. x_1, y_2, a_n, log_10) without touching snake_case identifiers
+    // 5b. Math variable / log subscripts (e.g. x_1, y_2, a_n, log_10) without touching snake_case identifiers
     out = out.replace(
       /(^|[^a-zA-Z0-9_/])([A-Za-z]{1,3})_([0-9]{1,3}|[a-zA-Z])(?=$|[^a-zA-Z0-9_])/g,
       (match, prefix: string, base: string, sub: string) => {
@@ -482,6 +560,37 @@ export function formatMathSuperSubUnicode(text: string): string {
   }
 
   return out;
+}
+
+/**
+ * Lightweight math superscript/subscript normalizer for an entire QuestionBank
+ * (safe for ALL subjects; transforms caret exponents like (32)^(2/5) -> (32)^{\frac{2}{5}},
+ * (ab)^(-2) -> (ab)⁻², a^2b² -> a²b², 90^° -> 90° without altering unrelated prose).
+ */
+export function formatBankMathExpressions(bank: QuestionBank): QuestionBank {
+  if (!bank || !Array.isArray(bank.chapters)) return bank;
+  return {
+    ...bank,
+    chapters: bank.chapters.map(ch => ({
+      ...ch,
+      questions: (ch.questions || []).map(q => ({
+        ...q,
+        question: typeof q.question === 'string' ? formatMathSuperSubUnicode(q.question) : q.question,
+        answer: typeof q.answer === 'string' ? formatMathSuperSubUnicode(q.answer) : q.answer,
+        ...(Array.isArray(q.options)
+          ? { options: q.options.map(opt => formatMathSuperSubUnicode(String(opt ?? ''))) }
+          : {}),
+        ...(Array.isArray(q.items)
+          ? {
+              items: q.items.map(it => ({
+                left: formatMathSuperSubUnicode(String(it.left ?? '')),
+                right: formatMathSuperSubUnicode(String(it.right ?? '')),
+              })),
+            }
+          : {}),
+      })),
+    })),
+  };
 }
 
 /**

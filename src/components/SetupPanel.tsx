@@ -62,6 +62,7 @@ interface SetupPanelProps {
   onOpenExplorer?: () => void;
   onImportJsonFile?: (file: File) => void | Promise<void>;
   isImportingJson?: boolean;
+  onOpenVisualCards?: () => void;
 }
 
 export const SetupPanel: React.FC<SetupPanelProps> = ({
@@ -97,6 +98,7 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
   onOpenExplorer,
   onImportJsonFile,
   isImportingJson,
+  onOpenVisualCards,
 }) => {
   // Dynamically compile available grades without ANY duplicate entries
   const gradeOptions = useMemo(() => {
@@ -148,37 +150,47 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
   }, [availableFiles, grade]);
 
   return (
-    <div className="bg-white rounded-2xl border border-emerald-200 shadow-sm overflow-hidden font-kannada">
-      {/* Colorful Emerald Header Band */}
-      <div className="bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800 px-5 py-3.5 flex items-center justify-between text-white">
+    <div className="bg-[#231d18] rounded-2xl border border-amber-200/15 shadow-xl overflow-hidden font-kannada">
+      {/* Warm Espresso-Botanical Header Band */}
+      <div className="bg-gradient-to-r from-[#2c4734] via-[#243d2c] to-[#1e3124] border-b border-amber-200/15 px-5 py-3.5 flex items-center justify-between text-white">
         <div className="flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-amber-300 shrink-0" />
-          <h2 className="text-sm sm:text-base font-extrabold tracking-tight">
+          <h2 className="text-sm sm:text-base font-extrabold tracking-tight text-[#f8f1e7]">
             1. ಪರೀಕ್ಷಾ ವಿವರಗಳು
           </h2>
         </div>
-        <span className="text-xs font-bold text-emerald-100">ಹಂತ 1</span>
+        {onOpenVisualCards ? (
+          <button
+            type="button"
+            onClick={onOpenVisualCards}
+            className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-black/25 hover:bg-black/40 border border-amber-200/25 text-amber-200 transition-colors cursor-pointer"
+          >
+            ಕಾರ್ಡ್ ಆಯ್ಕೆ
+          </button>
+        ) : (
+          <span className="text-xs font-bold text-amber-200/90">ಹಂತ 1</span>
+        )}
       </div>
 
       <div className="p-5 sm:p-6 space-y-4">
       {/* Field 1: School Name */}
       <div className="space-y-1.5">
-        <div className="flex items-center justify-between text-xs font-bold text-emerald-950">
+        <div className="flex items-center justify-between text-xs font-bold text-[#e9dccb]">
           <label htmlFor="setup-school-name">ಶಾಲೆಯ ಹೆಸರು (ಪತ್ರಿಕೆ ಶೀರ್ಷಿಕೆ)</label>
-          <span className="text-[11px] text-emerald-700 font-semibold">ನೋಂದಾಯಿತ ಶಾಲೆ</span>
+          <span className="text-[11px] text-amber-300 font-semibold">ನೋಂದಾಯಿತ ಶಾಲೆ</span>
         </div>
         <input
           id="setup-school-name"
           type="text"
           value={schoolName}
           onChange={e => setSchoolName(e.target.value)}
-          className="w-full bg-emerald-50/40 text-slate-900 font-bold text-xs rounded-xl px-3.5 py-2.5 border border-emerald-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-600 uppercase"
+          className="w-full bg-[#191410] text-[#faf4ec] font-bold text-xs rounded-xl px-3.5 py-2.5 border border-amber-200/20 focus:bg-[#14100d] focus:outline-none focus:ring-2 focus:ring-amber-400/35 focus:border-amber-400/60 uppercase"
         />
       </div>
 
       {/* Field 2: Teaching Medium */}
       <div className="space-y-1.5">
-        <label htmlFor="setup-medium" className="block text-xs font-bold text-emerald-950">
+        <label htmlFor="setup-medium" className="block text-xs font-bold text-[#e9dccb]">
           ಬೋಧನಾ ಮಾಧ್ಯಮ
         </label>
         <div className="relative">
@@ -186,12 +198,12 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
             id="setup-medium"
             value={medium}
             onChange={e => setMedium(e.target.value)}
-            className="w-full appearance-none bg-white border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 pr-10 focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-600 focus:outline-none cursor-pointer"
+            className="w-full appearance-none bg-[#191410] border border-amber-200/20 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#faf4ec] pr-10 focus:ring-2 focus:ring-amber-400/35 focus:border-amber-400/60 focus:outline-none cursor-pointer"
           >
-            <option value="ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)">ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)</option>
-            <option value="English Medium">English Medium</option>
+            <option value="ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)" className="bg-[#1e1814] text-[#faf4ec]">ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)</option>
+            <option value="English Medium" className="bg-[#1e1814] text-[#faf4ec]">English Medium</option>
           </select>
-          <ChevronDown className="w-4 h-4 text-emerald-600 absolute right-3 top-3 pointer-events-none" />
+          <ChevronDown className="w-4 h-4 text-amber-300 absolute right-3 top-3 pointer-events-none" />
         </div>
       </div>
 
@@ -199,7 +211,7 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
       <div className="space-y-2">
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label htmlFor="setup-grade" className="block text-xs font-bold text-emerald-950">
+            <label htmlFor="setup-grade" className="block text-xs font-bold text-[#e9dccb]">
               ತರಗತಿ (Class)
             </label>
             <div className="relative">
@@ -207,25 +219,25 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
                 id="setup-grade"
                 value={activeGradeLabel}
                 onChange={e => setGrade(canonicalGradeLabel(extractGradeKey(e.target.value)))}
-                className="w-full appearance-none bg-sky-50/50 border border-sky-200 rounded-xl px-3 py-2.5 text-xs font-bold text-sky-950 pr-8 focus:bg-white focus:ring-2 focus:ring-sky-500/25 focus:border-sky-600 focus:outline-none cursor-pointer"
+                className="w-full appearance-none bg-[#191410] border border-amber-200/20 rounded-xl px-3 py-2.5 text-xs font-bold text-[#faf4ec] pr-8 focus:ring-2 focus:ring-amber-400/35 focus:border-amber-400/60 focus:outline-none cursor-pointer"
               >
                 {gradeOptions.map(g => (
-                  <option key={g} value={g}>
+                  <option key={g} value={g} className="bg-[#1e1814] text-[#faf4ec]">
                     {g}
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 text-sky-600 absolute right-2.5 top-3 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 text-amber-300 absolute right-2.5 top-3 pointer-events-none" />
             </div>
           </div>
 
           <div className="space-y-1.5">
             <label
               htmlFor="setup-subject"
-              className="text-xs font-bold text-emerald-950 flex items-center justify-between"
+              className="text-xs font-bold text-[#e9dccb] flex items-center justify-between"
             >
               <span>ವಿಷಯ (Subject)</span>
-              <span className="text-[11px] text-emerald-700 font-semibold tabular-nums">
+              <span className="text-[11px] text-emerald-300 font-semibold tabular-nums">
                 {filteredFiles.length} ಲಭ್ಯ
               </span>
             </label>
@@ -234,27 +246,27 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
                 id="setup-subject"
                 value={selectedFileId}
                 onChange={e => setSelectedFileId(e.target.value)}
-                className="w-full appearance-none bg-emerald-50/60 border border-emerald-500 rounded-xl px-3 py-2.5 text-xs font-bold text-emerald-950 pr-8 focus:bg-white focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-700 focus:outline-none cursor-pointer"
+                className="w-full appearance-none bg-[#1d2c24] border border-emerald-400/45 rounded-xl px-3 py-2.5 text-xs font-bold text-[#f7f2ea] pr-8 focus:ring-2 focus:ring-emerald-400/35 focus:border-emerald-400 focus:outline-none cursor-pointer"
               >
                 {filteredFiles.map(file => (
-                  <option key={file.id} value={file.id}>
+                  <option key={file.id} value={file.id} className="bg-[#1e1814] text-[#faf4ec]">
                     {formatDropdownSubjectLabel(file, filteredFiles)}
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 text-emerald-700 absolute right-2.5 top-3 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 text-emerald-300 absolute right-2.5 top-3 pointer-events-none" />
             </div>
           </div>
         </div>
 
         {/* Admin-only alert when no direct bank exists for grade */}
         {isAdmin && !hasSpecificFilesForGrade && onOpenAiGenerator && (
-          <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between gap-2 text-2xs text-amber-900">
+          <div className="p-2.5 bg-amber-950/60 border border-amber-400/30 rounded-xl flex items-center justify-between gap-2 text-2xs text-amber-100">
             <span>ಈ ತರಗತಿಗೆ ಅಧಿಕೃತ ಬ್ಯಾಂಕ್ ಉಳಿಸಿಲ್ಲವೇ?</span>
             <button
               type="button"
               onClick={onOpenAiGenerator}
-              className="px-2.5 py-1 bg-amber-200 hover:bg-amber-300 text-amber-950 font-bold rounded-lg transition-colors flex items-center gap-1 shrink-0 cursor-pointer whitespace-nowrap"
+              className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-[#1b140d] font-bold rounded-lg transition-colors flex items-center gap-1 shrink-0 cursor-pointer whitespace-nowrap"
             >
               <Sparkles className="w-3 h-3" />
               <span>AI ಮೂಲಕ ರಚಿಸಿ</span>
@@ -265,7 +277,7 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
 
       {/* Field 4: Part / Semester */}
       <div className="space-y-1.5">
-        <label htmlFor="setup-semester" className="block text-xs font-bold text-emerald-950">
+        <label htmlFor="setup-semester" className="block text-xs font-bold text-[#e9dccb]">
           ಭಾಗ / ಸೆಮಿಸ್ಟರ್
         </label>
         <div className="relative">
@@ -273,19 +285,19 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
             id="setup-semester"
             value={semesterPart}
             onChange={e => setSemesterPart(e.target.value as 'sem1' | 'sem2' | 'all')}
-            className="w-full appearance-none bg-white border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 pr-10 focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-600 focus:outline-none cursor-pointer"
+            className="w-full appearance-none bg-[#191410] border border-amber-200/20 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#faf4ec] pr-10 focus:ring-2 focus:ring-amber-400/35 focus:border-amber-400/60 focus:outline-none cursor-pointer"
           >
-            <option value="sem2">ಭಾಗ 2 (Semester 2 · FA-3, FA-4)</option>
-            <option value="sem1">ಭಾಗ 1 (Semester 1 · FA-1, FA-2)</option>
-            <option value="all">ಸಂಪೂರ್ಣ ಪಠ್ಯಕ್ರಮ (Full Syllabus · Annual)</option>
+            <option value="sem1" className="bg-[#1e1814] text-[#faf4ec]">ಮೊದಲನೇ ಸೆಮಿಸ್ಟರ್ (Sem 1 · ಜೂನ್–ಅಕ್ಟೋಬರ್)</option>
+            <option value="sem2" className="bg-[#1e1814] text-[#faf4ec]">ಎರಡನೇ ಸೆಮಿಸ್ಟರ್ (Sem 2 · ನವೆಂಬರ್–ಮಾರ್ಚ್)</option>
+            <option value="all" className="bg-[#1e1814] text-[#faf4ec]">ಪೂರ್ಣ ವರ್ಷ (Full Syllabus · Annual)</option>
           </select>
-          <ChevronDown className="w-4 h-4 text-emerald-600 absolute right-3 top-3 pointer-events-none" />
+          <ChevronDown className="w-4 h-4 text-amber-300 absolute right-3 top-3 pointer-events-none" />
         </div>
       </div>
 
       {/* Field 5: Paper Model */}
       <div className="space-y-1.5">
-        <label htmlFor="setup-model" className="block text-xs font-bold text-emerald-950">
+        <label htmlFor="setup-model" className="block text-xs font-bold text-[#e9dccb]">
           ಪತ್ರಿಕೆಯ ಮಾದರಿ
         </label>
         <div className="relative">
@@ -293,19 +305,19 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
             id="setup-model"
             value={paperModel}
             onChange={e => setPaperModel(e.target.value as 'paper' | 'answers' | 'both')}
-            className="w-full appearance-none bg-white border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 pr-10 focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-600 focus:outline-none cursor-pointer"
+            className="w-full appearance-none bg-[#191410] border border-amber-200/20 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#faf4ec] pr-10 focus:ring-2 focus:ring-amber-400/35 focus:border-amber-400/60 focus:outline-none cursor-pointer"
           >
-            <option value="paper">ಕೇವಲ ಪ್ರಶ್ನೆಪತ್ರಿಕೆ (Question Paper Only)</option>
-            <option value="answers">ಕೇವಲ ಉತ್ತರ ಪತ್ರಿಕೆ (Answer Key Only)</option>
-            <option value="both">ಎರಡೂ (Question Paper &amp; Answer Key)</option>
+            <option value="paper" className="bg-[#1e1814] text-[#faf4ec]">ಕೇವಲ ಪ್ರಶ್ನೆಪತ್ರಿಕೆ (Question Paper Only)</option>
+            <option value="answers" className="bg-[#1e1814] text-[#faf4ec]">ಕೇವಲ ಉತ್ತರ ಪತ್ರಿಕೆ (Answer Key Only)</option>
+            <option value="both" className="bg-[#1e1814] text-[#faf4ec]">ಎರಡೂ (Question Paper &amp; Answer Key)</option>
           </select>
-          <ChevronDown className="w-4 h-4 text-emerald-600 absolute right-3 top-3 pointer-events-none" />
+          <ChevronDown className="w-4 h-4 text-amber-300 absolute right-3 top-3 pointer-events-none" />
         </div>
       </div>
 
       {/* Field 6: Examination Pattern */}
       <div className="space-y-1.5">
-        <label htmlFor="setup-exam-type" className="block text-xs font-bold text-emerald-950">
+        <label htmlFor="setup-exam-type" className="block text-xs font-bold text-[#e9dccb]">
           ಪರೀಕ್ಷಾ ವಿಧಾನ
         </label>
         <div className="relative">
@@ -313,27 +325,27 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
             id="setup-exam-type"
             value={examType}
             onChange={e => setExamType(e.target.value)}
-            className="w-full appearance-none bg-white border border-emerald-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 pr-10 focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-600 focus:outline-none cursor-pointer"
+            className="w-full appearance-none bg-[#191410] border border-amber-200/20 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#faf4ec] pr-10 focus:ring-2 focus:ring-amber-400/35 focus:border-amber-400/60 focus:outline-none cursor-pointer"
           >
-            <option value="ಸಂಕಲನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-1 (SA-1 ಮಧ್ಯವಾರ್ಷಿಕ)">
+            <option value="ಸಂಕಲನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-1 (SA-1 ಮಧ್ಯವಾರ್ಷಿಕ)" className="bg-[#1e1814] text-[#faf4ec]">
               ಸಂಕಲನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-1 (SA-1 ಮಧ್ಯವಾರ್ಷಿಕ)
             </option>
-            <option value="ಸಂಕಲನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-2 (SA-2 ವಾರ್ಷಿಕ)">
+            <option value="ಸಂಕಲನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-2 (SA-2 ವಾರ್ಷಿಕ)" className="bg-[#1e1814] text-[#faf4ec]">
               ಸಂಕಲನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-2 (SA-2 ವಾರ್ಷಿಕ)
             </option>
-            <option value="ರಚನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-1 (FA-1)">ರಚನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-1 (FA-1)</option>
-            <option value="ರಚನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-2 (FA-2)">ರಚನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-2 (FA-2)</option>
-            <option value="ರಚನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-3 (FA-3)">ರಚನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-3 (FA-3)</option>
-            <option value="ರಚನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-4 (FA-4)">ರಚನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-4 (FA-4)</option>
+            <option value="ರಚನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-1 (FA-1)" className="bg-[#1e1814] text-[#faf4ec]">ರಚನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-1 (FA-1)</option>
+            <option value="ರಚನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-2 (FA-2)" className="bg-[#1e1814] text-[#faf4ec]">ರಚನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-2 (FA-2)</option>
+            <option value="ರಚನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-3 (FA-3)" className="bg-[#1e1814] text-[#faf4ec]">ರಚನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-3 (FA-3)</option>
+            <option value="ರಚನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-4 (FA-4)" className="bg-[#1e1814] text-[#faf4ec]">ರಚನಾತ್ಮಕ ಮೌಲ್ಯಮಾಪನ-4 (FA-4)</option>
           </select>
-          <ChevronDown className="w-4 h-4 text-emerald-600 absolute right-3 top-3 pointer-events-none" />
+          <ChevronDown className="w-4 h-4 text-amber-300 absolute right-3 top-3 pointer-events-none" />
         </div>
       </div>
 
       {/* Field 7: Marks, Questions Count, Date */}
       <div className="grid grid-cols-3 gap-2.5">
         <div className="space-y-1">
-          <label htmlFor="setup-marks" className="block text-[11px] font-bold text-emerald-900">
+          <label htmlFor="setup-marks" className="block text-[11px] font-bold text-emerald-300">
             ಅಂಕಗಳು
           </label>
           <input
@@ -347,19 +359,19 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
               setTargetMarks(val);
               setTargetQuestionsCount(getRecommendedQuestionCount(val));
             }}
-            className="w-full bg-emerald-50/70 text-emerald-950 font-extrabold text-sm rounded-xl px-3 py-2 text-center border border-emerald-300 tabular-nums focus:bg-white focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-600 focus:outline-none"
+            className="w-full bg-[#1a2921] text-emerald-100 font-extrabold text-sm rounded-xl px-3 py-2 text-center border border-emerald-400/35 tabular-nums focus:ring-2 focus:ring-emerald-400/35 focus:border-emerald-400 focus:outline-none"
           />
         </div>
 
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <label htmlFor="setup-qcount" className="block text-[11px] font-bold text-sky-900">
+            <label htmlFor="setup-qcount" className="block text-[11px] font-bold text-amber-300">
               ಪ್ರಶ್ನೆಗಳು
             </label>
             <button
               type="button"
               onClick={() => setTargetQuestionsCount(getRecommendedQuestionCount(targetMarks))}
-              className="text-[10px] font-bold text-sky-700 hover:underline cursor-pointer"
+              className="text-[10px] font-bold text-amber-200 hover:underline cursor-pointer"
               title="ಅಂಕಗಳಿಗೆ ತಕ್ಕಂತೆ ಪ್ರಶ್ನೆಗಳ ಸಂಖ್ಯೆಯನ್ನು ಸ್ವಯಂ ಲೆಕ್ಕಾಚಾರ ಮಾಡಿ"
             >
               ಸ್ವಯಂ
@@ -372,12 +384,12 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
             max={60}
             value={targetQuestionsCount}
             onChange={e => setTargetQuestionsCount(parseInt(e.target.value, 10) || 24)}
-            className="w-full bg-sky-50/70 text-sky-950 font-extrabold text-sm rounded-xl px-3 py-2 text-center border border-sky-300 tabular-nums focus:bg-white focus:ring-2 focus:ring-sky-500/25 focus:border-sky-600 focus:outline-none"
+            className="w-full bg-[#2a2117] text-amber-100 font-extrabold text-sm rounded-xl px-3 py-2 text-center border border-amber-400/35 tabular-nums focus:ring-2 focus:ring-amber-400/35 focus:border-amber-400 focus:outline-none"
           />
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="setup-date" className="block text-[11px] font-bold text-amber-900">
+          <label htmlFor="setup-date" className="block text-[11px] font-bold text-[#d7c7b4]">
             ಶೈಕ್ಷಣಿಕ ವರ್ಷ
           </label>
           <input
@@ -385,21 +397,21 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
             type="text"
             value={examDateOrYear}
             onChange={e => setExamDateOrYear(e.target.value)}
-            className="w-full bg-amber-50/70 text-amber-950 font-bold text-xs rounded-xl px-2 py-2.5 text-center border border-amber-300 tabular-nums focus:bg-white focus:ring-2 focus:ring-amber-500/25 focus:border-amber-600 focus:outline-none"
+            className="w-full bg-[#191410] text-[#f7efe5] font-bold text-xs rounded-xl px-2 py-2.5 text-center border border-amber-200/20 tabular-nums focus:ring-2 focus:ring-amber-400/35 focus:border-amber-400/60 focus:outline-none"
           />
         </div>
       </div>
 
       {/* Zero-Repeat Mode Strip */}
-      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-xs font-semibold text-emerald-900 min-w-0">
-          <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
+      <div className="bg-[#1b2b22] border border-emerald-400/25 rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-xs font-semibold text-emerald-100 min-w-0">
+          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
           <span className="truncate">ಪ್ರತಿ ಬಾರಿಯೂ ಹೊಸ ಪ್ರಶ್ನೆಗಳ ಸಂಯೋಜನೆ</span>
         </div>
         <button
           type="button"
           onClick={onFreshSet}
-          className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-white text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition-colors shrink-0 inline-flex items-center gap-1 whitespace-nowrap cursor-pointer"
+          className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-[#273e31] text-emerald-100 border border-emerald-400/30 hover:bg-emerald-700 transition-colors shrink-0 inline-flex items-center gap-1 whitespace-nowrap cursor-pointer"
         >
           <RefreshCw className="w-3 h-3" />
           <span>ಹೊಸ ಸೆಟ್</span>
@@ -410,13 +422,13 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
       <button
         type="button"
         onClick={onOpenSectionConfig}
-        className="w-full py-2.5 px-3.5 bg-amber-50/80 hover:bg-amber-100 text-amber-950 border border-amber-200 rounded-xl font-bold text-xs flex items-center justify-between transition-colors cursor-pointer"
+        className="w-full py-2.5 px-3.5 bg-[#2d231a] hover:bg-[#382b1f] text-amber-100 border border-amber-300/25 rounded-xl font-bold text-xs flex items-center justify-between transition-colors cursor-pointer"
       >
         <span className="flex items-center gap-2">
-          <SlidersHorizontal className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+          <SlidersHorizontal className="w-3.5 h-3.5 text-amber-300 shrink-0" />
           <span>ವಿಭಾಗವಾರು ಪ್ರಶ್ನೆಗಳ ಹೊಂದಾಣಿಕೆ</span>
         </span>
-        <span className="text-[11px] font-bold text-amber-800 whitespace-nowrap">ಹೊಂದಿಸಿ</span>
+        <span className="text-[11px] font-bold text-amber-300 whitespace-nowrap">ಹೊಂದಿಸಿ</span>
       </button>
 
       {/* Primary Action: Generate Question Paper */}
@@ -424,26 +436,26 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
         type="button"
         disabled={isGenerating}
         onClick={onGenerate}
-        className="w-full min-h-[48px] py-3 px-4 bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800 hover:from-emerald-800 hover:to-teal-900 text-white font-extrabold text-sm rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+        className="w-full min-h-[48px] py-3 px-4 bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-sm rounded-xl shadow-lg border border-emerald-400/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
       >
         <Zap className="w-4 h-4 text-amber-300" />
         <span>ಪ್ರಶ್ನೆ ಪತ್ರಿಕೆ ರಚಿಸಿ (Generate Paper)</span>
       </button>
 
-      {/* Secondary Action: Official 5-Stage Blueprint */}
+      {/* Prominent Action: Official 5-Stage Blueprint */}
       <button
         type="button"
         onClick={onViewBlueprint}
-        className="w-full min-h-[44px] py-2.5 px-3.5 bg-gradient-to-r from-sky-50 to-indigo-50 hover:from-sky-100 hover:to-indigo-100 text-sky-950 border border-sky-300 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+        className="w-full min-h-[46px] py-3 px-4 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 hover:from-orange-500 hover:to-amber-500 text-white border border-amber-300/40 rounded-xl font-extrabold text-xs sm:text-sm shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
       >
-        <FileSpreadsheet className="w-4 h-4 text-sky-700" />
-        <span>5-ಹಂತದ ಅಧಿಕೃತ ನೀಲನಕಾಶೆ (Blue Print)</span>
+        <FileSpreadsheet className="w-4 h-4 text-white shrink-0" />
+        <span>ನೀಲನಕ್ಷೆ ತೆರೆಯಿರಿ (5-ಹಂತದ Blue Print)</span>
       </button>
 
       {/* ADMIN / DEVELOPER ONLY SECTION: Strictly hidden from regular school/teacher users */}
       {isAdmin && (
-        <div className="pt-4 mt-2 border-t border-emerald-100 space-y-2.5">
-          <div className="text-[11px] font-bold text-indigo-700 tracking-wide">
+        <div className="pt-4 mt-2 border-t border-amber-200/15 space-y-2.5">
+          <div className="text-[11px] font-bold text-amber-300 tracking-wide">
             ಅಡ್ಮಿನ್ / ಡೆವಲಪರ್ ಸಾಧನಗಳು
           </div>
 
@@ -451,18 +463,18 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
             <button
               type="button"
               onClick={onOpenExplorer}
-              className="w-full py-2.5 px-3 bg-white hover:bg-indigo-50 text-slate-900 border border-slate-300 rounded-xl font-bold text-xs transition-colors flex items-center justify-between cursor-pointer"
+              className="w-full py-2.5 px-3 bg-[#1a1511] hover:bg-[#2a221b] text-[#f5ede2] border border-amber-200/20 rounded-xl font-bold text-xs transition-colors flex items-center justify-between cursor-pointer"
             >
               <span className="flex items-center gap-2">
-                <ImageIcon className="w-4 h-4 text-indigo-700 shrink-0" />
+                <ImageIcon className="w-4 h-4 text-amber-300 shrink-0" />
                 <span>ಪ್ರಶ್ನೆ ಭಂಡಾರ &amp; ಚಿತ್ರ ನಿರ್ವಹಣೆ (6–10ನೇ ತರಗತಿ)</span>
               </span>
-              <span className="text-[11px] text-indigo-700 font-bold">ತೆರೆಯಿರಿ</span>
+              <span className="text-[11px] text-amber-300 font-bold">ತೆರೆಯಿರಿ</span>
             </button>
           )}
 
           {onImportJsonFile && (
-            <label className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-50 hover:bg-indigo-50 text-indigo-700 border border-dashed border-indigo-300 rounded-xl text-2xs font-bold transition-colors cursor-pointer">
+            <label className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-[#1b1612] hover:bg-[#29211a] text-amber-200 border border-dashed border-amber-300/35 rounded-xl text-2xs font-bold transition-colors cursor-pointer">
               {isImportingJson ? (
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
               ) : (
@@ -492,9 +504,9 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
               <button
                 type="button"
                 onClick={onOpenAiGenerator}
-                className="py-2 px-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-xl font-bold text-2xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
+                className="py-2 px-2.5 bg-[#2a2118] hover:bg-[#382b1f] text-amber-200 border border-amber-300/25 rounded-xl font-bold text-2xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
               >
-                <Sparkles className="w-3.5 h-3.5 text-indigo-700 shrink-0" />
+                <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
                 <span className="truncate">AI JSON ಕ್ರಿಯೇಟರ್</span>
               </button>
             )}
@@ -503,9 +515,9 @@ export const SetupPanel: React.FC<SetupPanelProps> = ({
               <button
                 type="button"
                 onClick={onOpenJsonGuide}
-                className="py-2 px-2.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 rounded-xl font-bold text-2xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
+                className="py-2 px-2.5 bg-[#1b1612] hover:bg-[#2a221b] text-[#e6d8c7] border border-amber-200/20 rounded-xl font-bold text-2xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
               >
-                <BookOpen className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                <BookOpen className="w-3.5 h-3.5 text-amber-200/80 shrink-0" />
                 <span className="truncate">JSON ಗೈಡ್</span>
               </button>
             )}

@@ -92,6 +92,7 @@ import {
   normalizeQuestionFingerprint,
   areQuestionsDuplicates,
   deduplicateQuestionBank,
+  hasRepeatingOrRestartingSerials,
   parseUploadedJsonToQuestionBank,
   pickBestMatchingBankCandidate,
   formatMergeSummaryKannada,
@@ -99,10 +100,20 @@ import {
 } from '../utils/bankMerger.ts';
 import { MathText } from './MathText.tsx';
 
+export interface RebuildTargetInfo {
+  gradeKey: string;
+  grade: string;
+  subject: string;
+  subjectCode: string;
+}
+
 interface AiJsonGeneratorProps {
   onBackToApp: () => void;
   onLoadGeneratedBank: (bank: QuestionBank, entry: IndexEntry, navigateToSetup?: boolean) => void;
   onDeleteSavedBank?: (deletedId: string) => void;
+  rebuildTarget?: RebuildTargetInfo | null;
+  onClearRebuildTarget?: () => void;
+  onOpenInImageExplorer?: (bank: QuestionBank, entry: IndexEntry) => void;
 }
 
 interface DetectedChapter {
@@ -250,9 +261,16 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
   onBackToApp,
   onLoadGeneratedBank,
   onDeleteSavedBank,
+  rebuildTarget = null,
+  onClearRebuildTarget,
+  onOpenInImageExplorer,
 }) => {
   // Wizard steps: 1: upload & scan, 2: chapters & process, 3: verify & download
   const [step, setStep] = useState<1 | 2 | 3>(1);
+
+  // Fresh Replace Mode (prevents merging flawed built-in Class 6 questions back in during rebuild)
+  const [replaceExistingMode, setReplaceExistingMode] = useState<boolean>(false);
+  const [activeRebuildTarget, setActiveRebuildTarget] = useState<RebuildTargetInfo | null>(null);
 
   // File state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -441,8 +459,8 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
   const [editingImageTarget, setEditingImageTarget] = useState<{
     chapterId: string;
     question: QuestionItem;
-    initialSlot?: 'question' | 'answer';
-    queue?: Array<{ chapterId: string; questionId: string; defaultSlot: 'question' | 'answer' }>;
+    initialSlot?: 'question' | 'question2' | 'answer' | 'answer2';
+    queue?: Array<{ chapterId: string; questionId: string; defaultSlot: 'question' | 'question2' | 'answer' | 'answer2' }>;
     queueIndex?: number;
     queueLabel?: string;
   } | null>(null);
@@ -563,6 +581,47 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
       }
     });
   }, []);
+
+  // Start a clean Fresh Rebuild for a Class 6 (or any) subject from LBA PDF
+  const startFreshRebuildWorkflow = React.useCallback((target: RebuildTargetInfo) => {
+    setActiveRebuildTarget(target);
+    setReplaceExistingMode(true);
+    setStep(1);
+    setSelectedFile(null);
+    setFileBuffer(null);
+    setActivePdfId(null);
+    setFileName('');
+    setTotalPages(0);
+    setFileSizeMB('0');
+    setDetectedDoc(null);
+    setGeneratedBank(null);
+    setRawJsonString('');
+    setExtractedChaptersCache({});
+    setScanError(null);
+    setSaveSuccessMessage(null);
+    try {
+      localStorage.removeItem('ai_json_gen_draft');
+      localStorage.removeItem('ai_json_gen_extracted_cache');
+      localStorage.removeItem('ai_json_gen_bank');
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    if (rebuildTarget) {
+      startFreshRebuildWorkflow(rebuildTarget);
+    }
+  }, [rebuildTarget, startFreshRebuildWorkflow]);
+
+  const handleStartRebuildForBank = (bank: SavedBankSummary) => {
+    startFreshRebuildWorkflow({
+      gradeKey: bank.gradeKey || '6',
+      grade: bank.grade || canonicalGradeLabel(bank.gradeKey || '6'),
+      subject: bank.subject,
+      subjectCode: bank.subjectCode || deduceSubjectCode(undefined, bank.subject),
+    });
+  };
 
   // Persist draft (including permanent activePdfId) to localStorage on changes
   React.useEffect(() => {
@@ -945,69 +1004,73 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
         let mergeBanner: string | undefined;
         let mergedIntoExisting = false;
 
-        // Search all saved banks (Firebase + Server Disk) AND currently open bank — pick the comprehensive all-units file!
+        // Search all NON-builtin saved banks (Firebase + Server Disk) AND currently open bank
+        // (NEVER merge flawed built-in Class 6 questions, and skip merge in Fresh Replace Mode!)
         try {
-          const allSaved = await listAllSavedQuestionBanks();
-          const candidateList: Array<{
-            id?: string;
-            grade?: string;
-            gradeKey?: string;
-            subject?: string;
-            subjectCode?: string;
-            medium?: string;
-            totalChapters?: number;
-            totalQuestions?: number;
-            summary?: SavedBankSummary;
-            inMemoryBank?: QuestionBank;
-          }> = allSaved.map(sb => ({
-            id: sb.id,
-            grade: sb.grade,
-            gradeKey: sb.gradeKey,
-            subject: sb.subject,
-            subjectCode: sb.subjectCode,
-            medium: sb.medium,
-            totalChapters: sb.totalChapters,
-            totalQuestions: sb.totalQuestions,
-            summary: sb,
-          }));
+          if (!replaceExistingMode) {
+            const allSaved = await listAllSavedQuestionBanks();
+            const nonBuiltinSaved = allSaved.filter(sb => sb.source !== 'builtin');
+            const candidateList: Array<{
+              id?: string;
+              grade?: string;
+              gradeKey?: string;
+              subject?: string;
+              subjectCode?: string;
+              medium?: string;
+              totalChapters?: number;
+              totalQuestions?: number;
+              summary?: SavedBankSummary;
+              inMemoryBank?: QuestionBank;
+            }> = nonBuiltinSaved.map(sb => ({
+              id: sb.id,
+              grade: sb.grade,
+              gradeKey: sb.gradeKey,
+              subject: sb.subject,
+              subjectCode: sb.subjectCode,
+              medium: sb.medium,
+              totalChapters: sb.totalChapters,
+              totalQuestions: sb.totalQuestions,
+              summary: sb,
+            }));
 
-          if (generatedBank && generatedBank.chapters && generatedBank.chapters.length > 0) {
-            candidateList.push({
-              id: generatedBank.metadata.id,
-              grade: generatedBank.metadata.grade,
-              gradeKey: generatedBank.metadata.gradeKey ? String(generatedBank.metadata.gradeKey) : undefined,
-              subject: generatedBank.metadata.subject,
-              subjectCode: generatedBank.metadata.subjectCode,
-              medium: generatedBank.metadata.medium,
-              totalChapters: generatedBank.chapters.length,
-              totalQuestions: generatedBank.chapters.reduce((s, c) => s + (c.questions?.length || 0), 0),
-              inMemoryBank: generatedBank,
-            });
-          }
+            if (generatedBank && generatedBank.chapters && generatedBank.chapters.length > 0) {
+              candidateList.push({
+                id: generatedBank.metadata.id,
+                grade: generatedBank.metadata.grade,
+                gradeKey: generatedBank.metadata.gradeKey ? String(generatedBank.metadata.gradeKey) : undefined,
+                subject: generatedBank.metadata.subject,
+                subjectCode: generatedBank.metadata.subjectCode,
+                medium: generatedBank.metadata.medium,
+                totalChapters: generatedBank.chapters.length,
+                totalQuestions: generatedBank.chapters.reduce((s, c) => s + (c.questions?.length || 0), 0),
+                inMemoryBank: generatedBank,
+              });
+            }
 
-          const bestMatch = pickBestMatchingBankCandidate(candidateList, incomingBank);
-          let existingFullBank: QuestionBank | null = null;
-          if (bestMatch?.summary) {
-            existingFullBank = await loadSavedQuestionBank(bestMatch.summary);
-          } else if (bestMatch?.inMemoryBank) {
-            existingFullBank = bestMatch.inMemoryBank;
-          }
+            const bestMatch = pickBestMatchingBankCandidate(candidateList, incomingBank);
+            let existingFullBank: QuestionBank | null = null;
+            if (bestMatch?.summary) {
+              existingFullBank = await loadSavedQuestionBank(bestMatch.summary);
+            } else if (bestMatch?.inMemoryBank) {
+              existingFullBank = bestMatch.inMemoryBank;
+            }
 
-          if (existingFullBank && existingFullBank.chapters && existingFullBank.chapters.length > 0) {
-            const { mergedBank, stats } = smartMergeQuestionBanks(existingFullBank, incomingBank);
-            finalBank = ensureUniqueQuestionIds({
-              ...mergedBank,
-              metadata: {
-                ...mergedBank.metadata,
-                id: existingFullBank.metadata.id || bestMatch?.id || incomingBank.metadata.id,
-                grade: canonicalGradeLabel(gKey),
-                gradeKey: gKey,
-                subjectCode: sCode,
-                subject: existingFullBank.metadata.subject || cleanSubject,
-              },
-            });
-            mergedIntoExisting = true;
-            mergeBanner = formatMergeSummaryKannada(stats);
+            if (existingFullBank && existingFullBank.chapters && existingFullBank.chapters.length > 0) {
+              const { mergedBank, stats } = smartMergeQuestionBanks(existingFullBank, incomingBank);
+              finalBank = ensureUniqueQuestionIds({
+                ...mergedBank,
+                metadata: {
+                  ...mergedBank.metadata,
+                  id: existingFullBank.metadata.id || bestMatch?.id || incomingBank.metadata.id,
+                  grade: canonicalGradeLabel(gKey),
+                  gradeKey: gKey,
+                  subjectCode: sCode,
+                  subject: existingFullBank.metadata.subject || cleanSubject,
+                },
+              });
+              mergedIntoExisting = true;
+              mergeBanner = formatMergeSummaryKannada(stats);
+            }
           }
         } catch (mergeErr) {
           console.warn('Direct JSON upload smart merge lookup skipped:', mergeErr);
@@ -2141,6 +2204,16 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
       }
     }
 
+    // If serial numbers restart across main sections (e.g., Prose #1, Grammar #1, Poem #1),
+    // assign continuous 1..N serial numbers while preserving exact PDF top-to-bottom order.
+    const finalQList = hasRepeatingOrRestartingSerials(qList)
+      ? qList.map((item, idx) => ({
+          ...item,
+          questionNumber: idx + 1,
+          printedSerial: String(idx + 1),
+        }))
+      : qList;
+
     return {
       chapterId: ch.chapterId,
       chapterNumber: ch.chapterNumber,
@@ -2149,7 +2222,7 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
       printedPages: ch.printedPages,
       questionPages: ch.questionPages,
       answerPages: ch.answerPages || effectiveAnswerPages || undefined,
-      questions: qList,
+      questions: finalQList,
     };
   };
 
@@ -2544,7 +2617,7 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
     chapterId: string,
     question: QuestionItem,
     queueSource: QuestionItem[],
-    explicitSlot?: 'question' | 'answer',
+    explicitSlot?: 'question' | 'question2' | 'answer' | 'answer2',
     queueLabel?: string
   ) => {
     const list =
@@ -2606,10 +2679,18 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
         ? {
             ...q,
             imageUrl: update.imageUrl,
+            imageUrl2: update.imageUrl2,
             diagramSvg: update.diagramSvg,
             answerImageUrl: update.answerImageUrl,
+            answerImageUrl2: update.answerImageUrl2,
             answerDiagramSvg: update.answerDiagramSvg,
             hasDiagram: update.hasDiagram,
+            needsImage:
+              update.needsImage !== undefined
+                ? update.needsImage
+                : update.hasDiagram
+                  ? true
+                  : q.needsImage,
             diagramDescription: update.diagramDescription,
             answerDiagramDescription: update.answerDiagramDescription,
             objective: update.hasDiagram && !q.objective ? 'ಕೌಶಲ' : q.objective,
@@ -2642,7 +2723,11 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
       return updatedBank;
     });
 
-    setSaveSuccessMessage('ಚಿತ್ರವನ್ನು Firebase ನಲ್ಲಿ ಉಳಿಸಿ, URL ಅನ್ನು ಪ್ರಶ್ನೆಗೆ ಜೋಡಿಸಲಾಗಿದೆ!');
+    setSaveSuccessMessage(
+      update.needsImage === false
+        ? 'ಈ ಪ್ರಶ್ನೆಗೆ "ಚಿತ್ರ ಅಗತ್ಯವಿಲ್ಲ" ಎಂದು ಗುರುತಿಸಲಾಗಿದೆ.'
+        : 'ಚಿತ್ರವನ್ನು Firebase ನಲ್ಲಿ ಉಳಿಸಿ, URL ಅನ್ನು ಪ್ರಶ್ನೆಗೆ ಜೋಡಿಸಲಾಗಿದೆ!'
+    );
     setTimeout(() => setSaveSuccessMessage(null), 4000);
   };
 
@@ -2650,9 +2735,16 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
   const handleDeleteAiQuestionImage = async (
     chapterId: string,
     questionItem: QuestionItem,
-    slot: 'question' | 'answer'
+    slot: 'question' | 'question2' | 'answer' | 'answer2'
   ) => {
-    const urlToRemove = slot === 'question' ? questionItem.imageUrl : questionItem.answerImageUrl;
+    const urlToRemove =
+      slot === 'question'
+        ? questionItem.imageUrl
+        : slot === 'question2'
+          ? questionItem.imageUrl2
+          : slot === 'answer'
+            ? questionItem.answerImageUrl
+            : questionItem.answerImageUrl2;
     const imageId = extractImageIdFromUrl(urlToRemove);
     if (imageId) {
       deleteQuestionImageFromFirebase(imageId).catch(() => {});
@@ -2664,12 +2756,19 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
       const next: QuestionItem = {
         ...q,
         imageUrl: slot === 'question' ? undefined : q.imageUrl,
+        imageUrl2: slot === 'question2' ? undefined : q.imageUrl2,
         diagramSvg: slot === 'question' ? undefined : q.diagramSvg,
         answerImageUrl: slot === 'answer' ? undefined : q.answerImageUrl,
+        answerImageUrl2: slot === 'answer2' ? undefined : q.answerImageUrl2,
         answerDiagramSvg: slot === 'answer' ? undefined : q.answerDiagramSvg,
       };
       next.hasDiagram = Boolean(
-        next.imageUrl || next.diagramSvg || next.answerImageUrl || next.answerDiagramSvg
+        next.imageUrl ||
+          next.imageUrl2 ||
+          next.diagramSvg ||
+          next.answerImageUrl ||
+          next.answerImageUrl2 ||
+          next.answerDiagramSvg
       );
       return next;
     };
@@ -2794,36 +2893,53 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
     });
 
     try {
-      const allSaved = await listAllSavedQuestionBanks();
-      const matchingSummary = pickBestMatchingBankCandidate(allSaved, preparedIncoming);
+      // NEVER smart-merge into flawed built-in Class 6 files, and skip merge completely in Fresh Replace Mode!
+      if (!replaceExistingMode) {
+        const allSaved = await listAllSavedQuestionBanks();
+        const nonBuiltinSaved = allSaved.filter(sb => sb.source !== 'builtin');
+        const matchingSummary = pickBestMatchingBankCandidate(nonBuiltinSaved, preparedIncoming);
 
-      if (matchingSummary) {
-        const existingFullBank = await loadSavedQuestionBank(matchingSummary);
-        if (existingFullBank && existingFullBank.chapters && existingFullBank.chapters.length > 0) {
-          const { mergedBank, stats } = smartMergeQuestionBanks(existingFullBank, preparedIncoming);
-          const ensured = ensureUniqueQuestionIds({
-            ...mergedBank,
-            metadata: {
-              ...mergedBank.metadata,
-              id: existingFullBank.metadata.id || matchingSummary.id,
-              grade: canonicalGradeLabel(resolvedGradeKey),
-              gradeKey: resolvedGradeKey,
-              subjectCode: resolvedSubjectCode,
-            },
-          });
-          return {
-            bankToSave: ensured,
-            mergeStats: stats,
-            mergedIntoExisting: true,
-          };
+        if (matchingSummary) {
+          const existingFullBank = await loadSavedQuestionBank(matchingSummary);
+          if (existingFullBank && existingFullBank.chapters && existingFullBank.chapters.length > 0) {
+            const { mergedBank, stats } = smartMergeQuestionBanks(existingFullBank, preparedIncoming);
+            const ensured = ensureUniqueQuestionIds({
+              ...mergedBank,
+              metadata: {
+                ...mergedBank.metadata,
+                id: existingFullBank.metadata.id || matchingSummary.id,
+                grade: canonicalGradeLabel(resolvedGradeKey),
+                gradeKey: resolvedGradeKey,
+                subjectCode: resolvedSubjectCode,
+              },
+            });
+            return {
+              bankToSave: ensured,
+              mergeStats: stats,
+              mergedIntoExisting: true,
+            };
+          }
         }
       }
     } catch (mergeCheckErr) {
       console.warn('Smart merge check skipped (saving directly):', mergeCheckErr);
     }
 
+    const freshId =
+      typeof preparedIncoming.metadata.id === 'string' &&
+      preparedIncoming.metadata.id.trim() &&
+      !preparedIncoming.metadata.id.endsWith('_class6')
+        ? preparedIncoming.metadata.id
+        : `rebuilt_class${resolvedGradeKey}_${resolvedSubjectCode.toLowerCase()}_${Date.now()}`;
+
     return {
-      bankToSave: ensureUniqueQuestionIds(preparedIncoming),
+      bankToSave: ensureUniqueQuestionIds({
+        ...preparedIncoming,
+        metadata: {
+          ...preparedIncoming.metadata,
+          id: freshId,
+        },
+      }),
       mergeStats: null,
       mergedIntoExisting: false,
     };
@@ -2980,6 +3096,41 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
 
     onLoadGeneratedBank(generatedBank, entry, true);
     onBackToApp();
+  };
+
+  // 6b. Open Immediately in Question Bank Explorer / Image Upload Manager
+  const handleOpenInExplorerForImages = () => {
+    if (!generatedBank) return;
+    const resolvedGradeKey = extractGradeKey(
+      generatedBank.metadata.gradeKey
+        ? String(generatedBank.metadata.gradeKey)
+        : generatedBank.metadata.grade
+    );
+    const resolvedSubjectCode = deduceSubjectCode(
+      generatedBank.metadata.subjectCode ? String(generatedBank.metadata.subjectCode) : undefined,
+      generatedBank.metadata.subject
+    );
+    const bankId =
+      (typeof generatedBank.metadata.id === 'string' && generatedBank.metadata.id) ||
+      `rebuilt_class${resolvedGradeKey}_${resolvedSubjectCode.toLowerCase()}_${Date.now()}`;
+    const entry: IndexEntry = {
+      id: bankId,
+      path: `firebase://${bankId}`,
+      grade: canonicalGradeLabel(resolvedGradeKey),
+      gradeKey: resolvedGradeKey,
+      subject: generatedBank.metadata.subject,
+      subjectCode: resolvedSubjectCode,
+      medium: generatedBank.metadata.medium || 'ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)',
+      academicYear: String(generatedBank.metadata.academicYear || '2026-27'),
+      totalChapters: generatedBank.chapters.length,
+      totalQuestions: generatedBank.chapters.reduce((sum, ch) => sum + (ch.questions?.length || 0), 0),
+      isUserGenerated: true,
+    };
+    if (onOpenInImageExplorer) {
+      onOpenInImageExplorer(generatedBank, entry);
+    } else {
+      onLoadGeneratedBank(generatedBank, entry, false);
+    }
   };
 
   // Chapter-wise Diagram Audit & Duplicate Audit for Step 3
@@ -3409,7 +3560,37 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
             </div>
           )}
 
-          {/* Permanently Saved JSON Question Banks — Classwise & Subjectwise Table with Duplicate Delete */}
+          {/* Active Class 6 / Subject Fresh Rebuild Banner */}
+          {activeRebuildTarget && (
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border-2 border-orange-300 shadow-xs flex flex-wrap items-center justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-md bg-orange-600 text-white text-[11px] font-extrabold">
+                    Fresh Rebuild Mode (ಹಳೆಯ ಇನ್‌ಬಿಲ್ಟ್ ಬದಲಾವಣೆ)
+                  </span>
+                  <span className="text-sm font-black text-orange-950">
+                    {activeRebuildTarget.grade} · {activeRebuildTarget.subject}
+                  </span>
+                </div>
+                <p className="text-xs text-orange-900 font-medium leading-relaxed">
+                  ಈಗ ಕೆಳಗಿನ <strong>PDF ಅಪ್‌ಲೋಡ್</strong> ಬಾಕ್ಸ್‌ನಲ್ಲಿ <strong>{activeRebuildTarget.grade} {activeRebuildTarget.subject}</strong> LBA PDF ಫೈಲ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ. AI ಹೊಸದಾಗಿ ಸರಿಯಾದ ಪ್ರಶ್ನೆಗಳನ್ನು ಹೊರತೆಗೆದು ಹಳೆಯ ಇನ್‌ಬಿಲ್ಟ್ ಬದಲಾಯಿಸಿ ಉಳಿಸುತ್ತದೆ — ನಂತರ ನೇರವಾಗಿ ಚಿತ್ರಗಳನ್ನು ಅಪ್‌ಲೋಡ್/ಕ್ರಾಪ್ ಮಾಡಬಹುದು!
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveRebuildTarget(null);
+                  setReplaceExistingMode(false);
+                  onClearRebuildTarget?.();
+                }}
+                className="px-3 py-1.5 rounded-lg bg-white hover:bg-orange-100 border border-orange-300 text-orange-900 text-xs font-bold cursor-pointer whitespace-nowrap"
+              >
+                ಮರುರಚನೆ ರದ್ದು
+              </button>
+            </div>
+          )}
+
+          {/* Permanently Saved JSON Question Banks — Classwise & Subjectwise Table with Duplicate Delete & Class 6 Rebuild */}
           {savedBanks.length > 0 && (
             <SavedJsonBanksTable
               banks={savedBanks}
@@ -3419,6 +3600,7 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
               openButtonLabel="ತೆರೆಯಿರಿ & ಚಿತ್ರ ಅಪ್‌ಲೋಡ್"
               onOpenBank={handleOpenSavedBankInGenerator}
               onDeleteBank={handleDeleteSavedBankInGenerator}
+              onRebuildBank={handleStartRebuildForBank}
             />
           )}
 
@@ -4205,13 +4387,13 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
                                   <MathText text={q.question} />
                                 </p>
 
-                                {(q.imageUrl || q.diagramSvg) && (
+                                {(q.imageUrl || q.imageUrl2 || q.diagramSvg) && (
                                   <div className="space-y-1.5 pt-1">
                                     <div className="flex flex-wrap items-center justify-between gap-2">
                                       <span className="text-3xs font-bold text-slate-500">
-                                        ಪ್ರಶ್ನೆ ಚಿತ್ರ (Firebase URL):
+                                        ಪ್ರಶ್ನೆ ಚಿತ್ರಗಳು ({q.imageUrl && q.imageUrl2 ? '2 Side-by-Side' : 'Firebase URL'}):
                                       </span>
-                                      <div className="flex items-center gap-1.5">
+                                      <div className="flex items-center gap-1.5 flex-wrap">
                                         <button
                                           type="button"
                                           onClick={() =>
@@ -4226,23 +4408,68 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
                                           className="px-2 py-0.5 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                         >
                                           <Replace className="w-3 h-3" />
-                                          <span>ಬದಲಾಯಿಸಿ</span>
+                                          <span>ಚಿತ್ರ 1</span>
                                         </button>
                                         <button
                                           type="button"
                                           onClick={() =>
-                                            handleDeleteAiQuestionImage(cachedCh.chapterId, q, 'question')
+                                            openAiImageModal(
+                                              cachedCh.chapterId,
+                                              q,
+                                              cachedCh.questions,
+                                              'question2',
+                                              `${cachedCh.chapterName} ಪ್ರಶ್ನೆಗಳು`
+                                            )
                                           }
-                                          className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                                          className="px-2 py-0.5 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                         >
-                                          <Trash2 className="w-3 h-3" />
-                                          <span>ಡಿಲೀಟ್</span>
+                                          <Replace className="w-3 h-3" />
+                                          <span>{q.imageUrl2 ? 'ಚಿತ್ರ 2' : '+ 2ನೇ ಚಿತ್ರ'}</span>
                                         </button>
+                                        {q.imageUrl && (
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              handleDeleteAiQuestionImage(cachedCh.chapterId, q, 'question')
+                                            }
+                                            className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                            <span>1 ಡಿಲೀಟ್</span>
+                                          </button>
+                                        )}
+                                        {q.imageUrl2 && (
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              handleDeleteAiQuestionImage(cachedCh.chapterId, q, 'question2')
+                                            }
+                                            className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                            <span>2 ಡಿಲೀಟ್</span>
+                                          </button>
+                                        )}
                                       </div>
                                     </div>
-                                    {q.imageUrl ? (
+                                    {q.imageUrl && q.imageUrl2 ? (
+                                      <div className="grid grid-cols-2 gap-2 max-w-xl items-center">
+                                        <img
+                                          src={q.imageUrl}
+                                          alt={q.diagramDescription || 'ಪ್ರಶ್ನೆ ಚಿತ್ರ 1'}
+                                          referrerPolicy="no-referrer"
+                                          className="max-h-36 w-full rounded-lg border border-slate-200 bg-white p-1 object-contain"
+                                        />
+                                        <img
+                                          src={q.imageUrl2}
+                                          alt="ಪ್ರಶ್ನೆ ಚಿತ್ರ 2"
+                                          referrerPolicy="no-referrer"
+                                          className="max-h-36 w-full rounded-lg border border-slate-200 bg-white p-1 object-contain"
+                                        />
+                                      </div>
+                                    ) : q.imageUrl || q.imageUrl2 ? (
                                       <img
-                                        src={q.imageUrl}
+                                        src={q.imageUrl || q.imageUrl2}
                                         alt={q.diagramDescription || 'ಪ್ರಶ್ನೆ ಚಿತ್ರ'}
                                         referrerPolicy="no-referrer"
                                         className="max-h-36 rounded-lg border border-slate-200 bg-white p-1 object-contain"
@@ -4282,13 +4509,13 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
                                         <MathText text={q.answer} />
                                       </span>
                                     </div>
-                                    {(q.answerImageUrl || q.answerDiagramSvg) && (
+                                    {(q.answerImageUrl || q.answerImageUrl2 || q.answerDiagramSvg) && (
                                       <div className="pt-1 border-t border-emerald-200/70 space-y-1.5">
                                         <div className="flex flex-wrap items-center justify-between gap-2">
                                           <span className="text-3xs font-bold text-emerald-800">
-                                            ಉತ್ತರ ಚಿತ್ರ (Answer Key):
+                                            ಉತ್ತರ ಚಿತ್ರಗಳು ({q.answerImageUrl && q.answerImageUrl2 ? '2 Side-by-Side' : 'Answer Key'}):
                                           </span>
-                                          <div className="flex items-center gap-1.5">
+                                          <div className="flex items-center gap-1.5 flex-wrap">
                                             <button
                                               type="button"
                                               onClick={() =>
@@ -4303,23 +4530,68 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
                                               className="px-2 py-0.5 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-300 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                             >
                                               <Replace className="w-3 h-3" />
-                                              <span>ಬದಲಾಯಿಸಿ</span>
+                                              <span>ಉತ್ತರ 1</span>
                                             </button>
                                             <button
                                               type="button"
                                               onClick={() =>
-                                                handleDeleteAiQuestionImage(cachedCh.chapterId, q, 'answer')
+                                                openAiImageModal(
+                                                  cachedCh.chapterId,
+                                                  q,
+                                                  cachedCh.questions,
+                                                  'answer2',
+                                                  `${cachedCh.chapterName} ಪ್ರಶ್ನೆಗಳು`
+                                                )
                                               }
-                                              className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                                              className="px-2 py-0.5 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-300 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                             >
-                                              <Trash2 className="w-3 h-3" />
-                                              <span>ಡಿಲೀಟ್</span>
+                                              <Replace className="w-3 h-3" />
+                                              <span>{q.answerImageUrl2 ? 'ಉತ್ತರ 2' : '+ 2ನೇ ಚಿತ್ರ'}</span>
                                             </button>
+                                            {q.answerImageUrl && (
+                                              <button
+                                                type="button"
+                                                onClick={() =>
+                                                  handleDeleteAiQuestionImage(cachedCh.chapterId, q, 'answer')
+                                                }
+                                                className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                                              >
+                                                <Trash2 className="w-3 h-3" />
+                                                <span>1 ಡಿಲೀಟ್</span>
+                                              </button>
+                                            )}
+                                            {q.answerImageUrl2 && (
+                                              <button
+                                                type="button"
+                                                onClick={() =>
+                                                  handleDeleteAiQuestionImage(cachedCh.chapterId, q, 'answer2')
+                                                }
+                                                className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                                              >
+                                                <Trash2 className="w-3 h-3" />
+                                                <span>2 ಡಿಲೀಟ್</span>
+                                              </button>
+                                            )}
                                           </div>
                                         </div>
-                                        {q.answerImageUrl ? (
+                                        {q.answerImageUrl && q.answerImageUrl2 ? (
+                                          <div className="grid grid-cols-2 gap-2 max-w-xl items-center">
+                                            <img
+                                              src={q.answerImageUrl}
+                                              alt={q.answerDiagramDescription || 'ಉತ್ತರ ಚಿತ್ರ 1'}
+                                              referrerPolicy="no-referrer"
+                                              className="max-h-36 w-full rounded border border-emerald-300 bg-white p-1 object-contain"
+                                            />
+                                            <img
+                                              src={q.answerImageUrl2}
+                                              alt="ಉತ್ತರ ಚಿತ್ರ 2"
+                                              referrerPolicy="no-referrer"
+                                              className="max-h-36 w-full rounded border border-emerald-300 bg-white p-1 object-contain"
+                                            />
+                                          </div>
+                                        ) : q.answerImageUrl || q.answerImageUrl2 ? (
                                           <img
-                                            src={q.answerImageUrl}
+                                            src={q.answerImageUrl || q.answerImageUrl2}
                                             alt={q.answerDiagramDescription || 'ಉತ್ತರ ಚಿತ್ರ'}
                                             referrerPolicy="no-referrer"
                                             className="max-h-36 rounded border border-emerald-300 bg-white p-1 object-contain"
@@ -4732,6 +5004,16 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
 
               <button
                 type="button"
+                onClick={handleOpenInExplorerForImages}
+                className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                title="ಪ್ರಶ್ನೆ ಭಂಡಾರದಲ್ಲಿ ತೆರೆದು ಚಿತ್ರಗಳನ್ನು ಅಪ್‌ಲೋಡ್ / ಕ್ರಾಪ್ ಮಾಡಿ"
+              >
+                <Crop className="w-4 h-4" />
+                <span>ಚಿತ್ರಗಳನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={handleLoadInQPGenerator}
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                 title="ಈಗಲೇ ಪ್ರಶ್ನೆ ಪತ್ರಿಕೆ ರಚಿಸಲು ಮುಂದುವರಿಯಿರಿ"
@@ -4752,9 +5034,37 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
             </div>
           </div>
 
+          {/* Fresh Replace Mode Toggle (Especially for Rebuilding Built-in Class 6 Subjects Cleanly) */}
+          <div className="px-4 py-3 rounded-xl bg-orange-50/80 border border-orange-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <label className="inline-flex items-start gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={replaceExistingMode}
+                onChange={e => setReplaceExistingMode(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-orange-400 text-orange-600 focus:ring-orange-500"
+              />
+              <div>
+                <span className="font-extrabold text-orange-950 block">
+                  ಹಳೆಯ ಇನ್‌ಬಿಲ್ಟ್ / ದೋಷಯುಕ್ತ JSON ಸಂಪೂರ್ಣ ಬದಲಾಯಿಸಿ ಹೊಸದಾಗಿ ಉಳಿಸಿ (Fresh Replace Mode)
+                </span>
+                <span className="text-2xs text-orange-800">
+                  6ನೇ ತರಗತಿಯ ಇನ್‌ಬಿಲ್ಟ್ ವಿಷಯಗಳನ್ನು LBA PDF ನಿಂದ ಹೊಸದಾಗಿ ಸರಿಪಡಿಸಿ ಉಳಿಸುವಾಗ ಇದನ್ನು ಆನ್ ಇಡಿ (ಹಳೆಯ ತಪ್ಪು ಪ್ರಶ್ನೆಗಳು ಸೇರಿಕೊಳ್ಳುವುದಿಲ್ಲ; ನಂತರ ಕೆಳಗೆ ಅಥವಾ ಚಿತ್ರ ನಿರ್ವಹಣೆಯಲ್ಲಿ ಚಿತ್ರಗಳನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ).
+                </span>
+              </div>
+            </label>
+          </div>
+
           {saveSuccessMessage && (
-            <div className="p-3 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold">
-              {saveSuccessMessage}
+            <div className="p-3 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold flex flex-wrap items-center justify-between gap-2">
+              <span className="whitespace-pre-line">{saveSuccessMessage}</span>
+              <button
+                type="button"
+                onClick={handleOpenInExplorerForImages}
+                className="px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
+              >
+                <Crop className="w-3.5 h-3.5" />
+                <span>ಈಗ ಚಿತ್ರಗಳನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ</span>
+              </button>
             </div>
           )}
 
@@ -5066,14 +5376,14 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
                           </div>
                         </div>
 
-                        {/* Question Diagram Preview with Replace & Delete */}
-                        {(q.imageUrl || q.diagramSvg) && (
+                        {/* Question Diagram Preview (1 or 2 Side-by-Side) with Replace & Delete */}
+                        {(q.imageUrl || q.imageUrl2 || q.diagramSvg) && (
                           <div className="pl-8 pt-1 space-y-1.5">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <span className="text-2xs font-semibold text-slate-500">
-                                ಪ್ರಶ್ನೆ ಚಿತ್ರ (Question Image):
+                                ಪ್ರಶ್ನೆ ಚಿತ್ರಗಳು ({q.imageUrl && q.imageUrl2 ? '2 Side-by-Side' : 'Question Image'}):
                               </span>
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
                                 <button
                                   type="button"
                                   onClick={() =>
@@ -5090,21 +5400,66 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
                                   className="px-2 py-0.5 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                 >
                                   <Replace className="w-3 h-3" />
-                                  <span>ಬದಲಾಯಿಸಿ</span>
+                                  <span>ಚಿತ್ರ 1</span>
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => handleDeleteAiQuestionImage(q.chapterId, q, 'question')}
-                                  className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                                  onClick={() =>
+                                    openAiImageModal(
+                                      q.chapterId,
+                                      q,
+                                      filteredQuestions,
+                                      'question2',
+                                      previewImageFilter === 'pending'
+                                        ? 'ಚಿತ್ರ ಬಾಕಿ ಇರುವ ಪ್ರಶ್ನೆಗಳು'
+                                        : 'ಫಿಲ್ಟರ್ ಮಾಡಿದ ಪ್ರಶ್ನೆಗಳು'
+                                    )
+                                  }
+                                  className="px-2 py-0.5 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                 >
-                                  <Trash2 className="w-3 h-3" />
-                                  <span>ಡಿಲೀಟ್</span>
+                                  <Replace className="w-3 h-3" />
+                                  <span>{q.imageUrl2 ? 'ಚಿತ್ರ 2' : '+ 2ನೇ ಚಿತ್ರ'}</span>
                                 </button>
+                                {q.imageUrl && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteAiQuestionImage(q.chapterId, q, 'question')}
+                                    className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                    <span>1 ಡಿಲೀಟ್</span>
+                                  </button>
+                                )}
+                                {q.imageUrl2 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteAiQuestionImage(q.chapterId, q, 'question2')}
+                                    className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                    <span>2 ಡಿಲೀಟ್</span>
+                                  </button>
+                                )}
                               </div>
                             </div>
-                            {q.imageUrl ? (
+                            {q.imageUrl && q.imageUrl2 ? (
+                              <div className="grid grid-cols-2 gap-2.5 max-w-2xl items-center">
+                                <img
+                                  src={q.imageUrl}
+                                  alt={q.diagramDescription || 'ಪ್ರಶ್ನೆ ಚಿತ್ರ 1'}
+                                  referrerPolicy="no-referrer"
+                                  className="max-h-40 w-full rounded-lg border border-slate-200 bg-white p-1 object-contain"
+                                />
+                                <img
+                                  src={q.imageUrl2}
+                                  alt="ಪ್ರಶ್ನೆ ಚಿತ್ರ 2"
+                                  referrerPolicy="no-referrer"
+                                  className="max-h-40 w-full rounded-lg border border-slate-200 bg-white p-1 object-contain"
+                                />
+                              </div>
+                            ) : q.imageUrl || q.imageUrl2 ? (
                               <img
-                                src={q.imageUrl}
+                                src={q.imageUrl || q.imageUrl2}
                                 alt={q.diagramDescription || 'ಪ್ರಶ್ನೆ ಚಿತ್ರ'}
                                 referrerPolicy="no-referrer"
                                 className="max-h-40 rounded-lg border border-slate-200 bg-white p-1 object-contain"
@@ -5154,13 +5509,13 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
                               </div>
                             </div>
 
-                            {(q.answerImageUrl || q.answerDiagramSvg) && (
+                            {(q.answerImageUrl || q.answerImageUrl2 || q.answerDiagramSvg) && (
                               <div className="pt-1 border-t border-emerald-200/70 space-y-1.5">
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                   <span className="text-2xs font-bold text-emerald-800">
-                                    ಉತ್ತರ ಚಿತ್ರ (Answer Key Image):
+                                    ಉತ್ತರ ಚಿತ್ರಗಳು ({q.answerImageUrl && q.answerImageUrl2 ? '2 Side-by-Side' : 'Answer Key Image'}):
                                   </span>
-                                  <div className="flex items-center gap-1.5">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
                                     <button
                                       type="button"
                                       onClick={() =>
@@ -5177,21 +5532,66 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
                                       className="px-2 py-0.5 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-300 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                     >
                                       <Replace className="w-3 h-3" />
-                                      <span>ಬದಲಾಯಿಸಿ</span>
+                                      <span>ಉತ್ತರ 1</span>
                                     </button>
                                     <button
                                       type="button"
-                                      onClick={() => handleDeleteAiQuestionImage(q.chapterId, q, 'answer')}
-                                      className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                                      onClick={() =>
+                                        openAiImageModal(
+                                          q.chapterId,
+                                          q,
+                                          filteredQuestions,
+                                          'answer2',
+                                          previewImageFilter === 'pending'
+                                            ? 'ಚಿತ್ರ ಬಾಕಿ ಇರುವ ಪ್ರಶ್ನೆಗಳು'
+                                            : 'ಫಿಲ್ಟರ್ ಮಾಡಿದ ಪ್ರಶ್ನೆಗಳು'
+                                        )
+                                      }
+                                      className="px-2 py-0.5 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-300 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                     >
-                                      <Trash2 className="w-3 h-3" />
-                                      <span>ಡಿಲೀಟ್</span>
+                                      <Replace className="w-3 h-3" />
+                                      <span>{q.answerImageUrl2 ? 'ಉತ್ತರ 2' : '+ 2ನೇ ಚಿತ್ರ'}</span>
                                     </button>
+                                    {q.answerImageUrl && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteAiQuestionImage(q.chapterId, q, 'answer')}
+                                        className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                        <span>1 ಡಿಲೀಟ್</span>
+                                      </button>
+                                    )}
+                                    {q.answerImageUrl2 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteAiQuestionImage(q.chapterId, q, 'answer2')}
+                                        className="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded text-3xs font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                        <span>2 ಡಿಲೀಟ್</span>
+                                      </button>
+                                    )}
                                   </div>
                                 </div>
-                                {q.answerImageUrl ? (
+                                {q.answerImageUrl && q.answerImageUrl2 ? (
+                                  <div className="grid grid-cols-2 gap-2.5 max-w-2xl items-center">
+                                    <img
+                                      src={q.answerImageUrl}
+                                      alt={q.answerDiagramDescription || 'ಉತ್ತರ ಚಿತ್ರ 1'}
+                                      referrerPolicy="no-referrer"
+                                      className="max-h-40 w-full rounded border border-emerald-300 bg-white p-1 object-contain"
+                                    />
+                                    <img
+                                      src={q.answerImageUrl2}
+                                      alt="ಉತ್ತರ ಚಿತ್ರ 2"
+                                      referrerPolicy="no-referrer"
+                                      className="max-h-40 w-full rounded border border-emerald-300 bg-white p-1 object-contain"
+                                    />
+                                  </div>
+                                ) : q.answerImageUrl || q.answerImageUrl2 ? (
                                   <img
-                                    src={q.answerImageUrl}
+                                    src={q.answerImageUrl || q.answerImageUrl2}
                                     alt={q.answerDiagramDescription || 'ಉತ್ತರ ಚಿತ್ರ'}
                                     referrerPolicy="no-referrer"
                                     className="max-h-40 rounded border border-emerald-300 bg-white p-1 object-contain"
@@ -5342,6 +5742,20 @@ export const AiJsonGenerator: React.FC<AiJsonGeneratorProps> = ({
             initialAnswerPage={startAPage}
             initialSlot={editingImageTarget.initialSlot || 'question'}
             onSave={handleSaveAiQuestionImage}
+            onMarkImageNotRequired={() =>
+              handleSaveAiQuestionImage({
+                imageUrl: undefined,
+                imageUrl2: undefined,
+                diagramSvg: undefined,
+                answerImageUrl: undefined,
+                answerImageUrl2: undefined,
+                answerDiagramSvg: undefined,
+                hasDiagram: false,
+                needsImage: false,
+                diagramDescription: undefined,
+                answerDiagramDescription: undefined,
+              })
+            }
           />
         );
       })()}

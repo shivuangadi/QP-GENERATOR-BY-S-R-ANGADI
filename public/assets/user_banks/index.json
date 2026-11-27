@@ -12,8 +12,9 @@
       "academicYear": "2026-27",
       "totalChapters": 16,
       "totalQuestions": 782,
+      "uploadedImageCount": 0,
       "isUserGenerated": true,
-      "createdAt": "2026-11-21T15:47:50.660Z"
+      "createdAt": "2026-11-27T12:58:51.392Z"
     },
     {
       "id": "bank_______Mathematics__bank_1793454135872_443ks",
@@ -27,8 +28,9 @@
       "academicYear": "2026-2027",
       "totalChapters": 15,
       "totalQuestions": 834,
+      "uploadedImageCount": 0,
       "isUserGenerated": true,
-      "createdAt": "2026-11-21T15:47:50.646Z"
+      "createdAt": "2026-11-27T12:58:51.362Z"
     },
     {
       "id": "bank_7th_Standard__7__________English_Second_Language_LBA_Question_Bank",
@@ -42,23 +44,26 @@
       "academicYear": "2026-27",
       "totalChapters": 8,
       "totalQuestions": 392,
+      "uploadedImageCount": 0,
       "isUserGenerated": true,
-      "createdAt": "2026-11-21T15:47:50.625Z"
+      "createdAt": "2026-11-27T12:58:51.332Z"
     },
     {
-      "id": "maths_class6",
-      "path": "/assets/user_banks/%E0%B2%97%E0%B2%A3%E0%B2%BF%E0%B2%A4__Mathematics__maths_class6.json",
-      "filename": "ಗಣಿತ__Mathematics__maths_class6.json",
-      "grade": "6ನೇ ತರಗತಿ (6th Standard)",
-      "gradeKey": "6",
-      "subject": "ಗಣಿತ (Mathematics)",
-      "subjectCode": "MATH",
-      "medium": "ಕನ್ನಡ ಮಾಧ್ಯಮ (Kannada Medium)",
-      "academicYear": "2026-2027",
+      "id": "rebuilt_class9_eng_1795780353813",
+      "path": "/assets/user_banks/FIRST_LANGUAGE_ENGLISH_rebuilt_class9_eng_1795780353813.json",
+      "filename": "FIRST_LANGUAGE_ENGLISH_rebuilt_class9_eng_1795780353813.json",
+      "grade": "9 ನೇ ತರಗತಿ (Class 9)",
+      "gradeKey": "9",
+      "subject": "FIRST LANGUAGE ENGLISH",
+      "subjectCode": "ENG",
+      "medium": "English Medium",
+      "academicYear": "2025-26",
       "totalChapters": 10,
-      "totalQuestions": 292,
+      "totalQuestions": 657,
+      "uploadedImageCount": 0,
       "isUserGenerated": true,
-      "createdAt": "2026-11-21T14:37:54.403Z"
+      "createdAt": "2026-11-27T13:10:55.986Z",
+      "updatedAt": "2026-11-27T13:08:44.099Z"
     },
     {
       "id": "local_ai_gen_bank",
@@ -71,9 +76,26 @@
       "medium": "English Medium",
       "academicYear": "2026-27",
       "totalChapters": 12,
-      "totalQuestions": 718,
+      "totalQuestions": 713,
+      "uploadedImageCount": 200,
       "isUserGenerated": true,
-      "createdAt": "2026-11-21T12:40:12.978Z"
+      "createdAt": "2026-11-27T07:38:40.466Z"
+    },
+    {
+      "id": "bank_1793869573666",
+      "path": "/assets/user_banks/%E0%B2%B5%E0%B2%BF%E0%B2%9C%E0%B3%8D%E0%B2%9E%E0%B2%BE%E0%B2%A8__Science__bank_1793869573666.json",
+      "filename": "ವಿಜ್ಞಾನ__Science__bank_1793869573666.json",
+      "grade": "7ನೇ ತರಗತಿ (Class 7)",
+      "gradeKey": "7",
+      "subject": "ವಿಜ್ಞಾನ (Science)",
+      "subjectCode": "SCI",
+      "medium": "ಕನ್ನಡ ಮಾಧ್ಯಮ (State Syllabus)",
+      "academicYear": "2026-27",
+      "totalChapters": 12,
+      "totalQuestions": 912,
+      "uploadedImageCount": 0,
+      "isUserGenerated": true,
+      "createdAt": "2026-11-27T04:24:23.964Z"
     }
   ]
 }

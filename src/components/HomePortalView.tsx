@@ -5,7 +5,7 @@
  * - Verified Admin / Developer Google Sign-In (`shivu.angadi@gmail.com`) for Question Bank, JSON Creator & Diagram Image Management
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Building2,
   User as UserIcon,
@@ -23,7 +23,12 @@ import {
   BookOpen,
   Trees,
   Sparkles,
+  Lock,
+  Eye,
+  EyeOff,
+  KeyRound,
 } from 'lucide-react';
+import { PWAInstallButton } from './PWAInstallButton.tsx';
 import {
   ADMIN_EMAIL,
   isVerifiedAdminUser,
@@ -47,7 +52,8 @@ export interface AppUserSession {
   district?: string;
   diseCode?: string;
   medium: string;
-  authMethod: 'google' | 'registration';
+  authMethod: 'google' | 'registration' | 'admin_credentials';
+  adminToken?: string;
 }
 
 interface HomePortalViewProps {
@@ -81,6 +87,117 @@ export const HomePortalView: React.FC<HomePortalViewProps> = ({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Server-verified Admin Username & Password state
+  const [adminAuthStatus, setAdminAuthStatus] = useState<{
+    loading: boolean;
+    configured: boolean;
+    source: 'env' | 'claimed' | 'unclaimed';
+    needsSetup: boolean;
+  }>({
+    loading: true,
+    configured: false,
+    source: 'unclaimed',
+    needsSetup: true,
+  });
+  const [adminUsername, setAdminUsername] = useState<string>('');
+  const [adminPassword, setAdminPassword] = useState<string>('');
+  const [adminConfirmPassword, setAdminConfirmPassword] = useState<string>('');
+  const [showAdminPassword, setShowAdminPassword] = useState<boolean>(false);
+  const [isAdminSubmitting, setIsAdminSubmitting] = useState<boolean>(false);
+
+  const fetchAdminAuthStatus = useCallback(async () => {
+    try {
+      const resp = await fetch('/api/admin/auth/status', { cache: 'no-store' });
+      if (resp.ok) {
+        const data = await resp.json();
+        setAdminAuthStatus({
+          loading: false,
+          configured: Boolean(data?.configured),
+          source: data?.source || 'unclaimed',
+          needsSetup: Boolean(data?.needsSetup),
+        });
+        return;
+      }
+    } catch {
+      // ignore status check error
+    }
+    setAdminAuthStatus(prev => ({ ...prev, loading: false }));
+  }, []);
+
+  useEffect(() => {
+    if (authTab === 'admin') {
+      fetchAdminAuthStatus();
+    }
+  }, [authTab, fetchAdminAuthStatus]);
+
+  const handleAdminCredentialsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+
+    const cleanUsername = adminUsername.trim();
+    if (cleanUsername.length < 2) {
+      setErrorMessage('ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ ಅಡ್ಮಿನ್ ಯೂಸರ್ ನೇಮ್ ನಮೂದಿಸಿ (ಕನಿಷ್ಠ 2 ಅಕ್ಷರಗಳು).');
+      return;
+    }
+    if (adminPassword.length < 4) {
+      setErrorMessage('ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ ಪಾಸ್‌ವರ್ಡ್ ನಮೂದಿಸಿ (ಕನಿಷ್ಠ 4 ಅಕ್ಷರಗಳು).');
+      return;
+    }
+
+    const isSetupMode = adminAuthStatus.needsSetup;
+    if (isSetupMode && adminPassword !== adminConfirmPassword) {
+      setErrorMessage('ಪಾಸ್‌ವರ್ಡ್ ಮತ್ತು ದೃಢೀಕರಣ ಪಾಸ್‌ವರ್ಡ್ ಒಂದೇ ಆಗಿರಬೇಕು.');
+      return;
+    }
+
+    setIsAdminSubmitting(true);
+    try {
+      const endpoint = isSetupMode ? '/api/admin/auth/setup' : '/api/admin/auth/login';
+      const resp = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: cleanUsername,
+          password: adminPassword,
+        }),
+      });
+      const data = await resp.json().catch(() => ({}));
+
+      if (!resp.ok || !data?.ok || !data?.token) {
+        if (data?.needsSetup) {
+          setAdminAuthStatus({
+            loading: false,
+            configured: false,
+            source: 'unclaimed',
+            needsSetup: true,
+          });
+        }
+        setErrorMessage(
+          data?.error || 'ಅಡ್ಮಿನ್ ಲಾಗಿನ್ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಯೂಸರ್ ನೇಮ್ ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್ ಪರಿಶೀಲಿಸಿ.'
+        );
+        return;
+      }
+
+      const verifiedUsername = String(data.username || cleanUsername);
+      setAdminPassword('');
+      setAdminConfirmPassword('');
+      onAuthenticated({
+        uid: `admin_${verifiedUsername}`,
+        role: 'admin',
+        schoolName: defaultSchoolName,
+        teacherName: `Admin (${verifiedUsername})`,
+        email: ADMIN_EMAIL,
+        medium,
+        authMethod: 'admin_credentials',
+        adminToken: String(data.token),
+      });
+    } catch {
+      setErrorMessage('ಸರ್ವರ್ ಸಂಪರ್ಕಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
+    } finally {
+      setIsAdminSubmitting(false);
+    }
+  };
 
   const handleSchoolRegistrationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -293,6 +410,7 @@ export const HomePortalView: React.FC<HomePortalViewProps> = ({
               <Building2 className="w-4 h-4" />
               <span>ಶಾಲಾ ನೋಂದಣಿ / ಲಾಗಿನ್</span>
             </button>
+            <PWAInstallButton variant="card" />
           </div>
         </div>
       </section>
@@ -612,44 +730,164 @@ export const HomePortalView: React.FC<HomePortalViewProps> = ({
                 </div>
               ) : (
                 /* Admin / Developer Verified Login Panel */
-                <div className="space-y-4 pt-2">
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-50 via-purple-50 to-sky-50 border border-indigo-200 space-y-2">
+                <div className="space-y-4 pt-1">
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-50 via-purple-50 to-sky-50 border border-indigo-200 space-y-1.5">
                     <div className="flex items-center gap-2 text-sm font-extrabold text-indigo-950">
                       <ShieldCheck className="w-4 h-4 text-indigo-700 shrink-0" />
-                      <span>ಅಡ್ಮಿನ್ ಮತ್ತು ಡೆವಲಪರ್ ನಿಯಂತ್ರಣ ಕೇಂದ್ರ</span>
+                      <span>
+                        {adminAuthStatus.needsSetup
+                          ? 'ಮೊದಲ ಬಾರಿಗೆ ಅಡ್ಮಿನ್ ಲಾಗಿನ್ ಸೆಟಪ್'
+                          : 'ಅಡ್ಮಿನ್ ಮತ್ತು ಡೆವಲಪರ್ ಲಾಗಿನ್'}
+                      </span>
                     </div>
                     <p className="text-xs text-indigo-900/85 leading-relaxed">
-                      ಪ್ರಶ್ನೆ ಭಂಡಾರ ನಿರ್ವಹಣೆ, AI JSON ಫೈಲ್ ಕ್ರಿಯೇಟರ್, ಹಾಗೂ 6ನೇ ತರಗತಿ ಸೇರಿದಂತೆ ಎಲ್ಲಾ
-                      ವಿಷಯಗಳ ಪ್ರಶ್ನೆಗಳಿಗೆ ಚಿತ್ರಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ ಸೇರಿಸುವ ಸೌಲಭ್ಯಗಳು ಕೇವಲ ಪರಿಶೀಲಿತ ಅಡ್ಮಿನ್
-                      ಖಾತೆಗೆ ಮಾತ್ರ ಲಭ್ಯವಿರುತ್ತವೆ.
+                      {adminAuthStatus.needsSetup
+                        ? 'ಅಡ್ಮಿನ್ ಖಾತೆಗಾಗಿ ನಿಮ್ಮ ಯೂಸರ್ ನೇಮ್ ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್ ಅನ್ನು ಒಮ್ಮೆ ಸೆಟ್ ಮಾಡಿ. ಇದನ್ನು ಸರ್ವರ್‌ನಲ್ಲಿ ಸುರಕ್ಷಿತವಾಗಿ ಹ್ಯಾಶ್ ಮಾಡಿ ಉಳಿಸಲಾಗುತ್ತದೆ.'
+                        : 'ಪ್ರಶ್ನೆ ಭಂಡಾರ ನಿರ್ವಹಣೆ, AI JSON ಕ್ರಿಯೇಟರ್ ಮತ್ತು ಚಿತ್ರಗಳ ನಿರ್ವಹಣೆಗಾಗಿ ನಿಮ್ಮ ಅಡ್ಮಿನ್ ಯೂಸರ್ ನೇಮ್ ಹಾಗೂ ಪಾಸ್‌ವರ್ಡ್ ನಮೂದಿಸಿ ಲಾಗಿನ್ ಆಗಿ.'}
                     </p>
                   </div>
 
-                  {errorMessage && (
-                    <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                      <span>{errorMessage}</span>
+                  {adminAuthStatus.loading ? (
+                    <div className="py-6 flex items-center justify-center gap-2 text-xs font-semibold text-indigo-700">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>ಅಡ್ಮಿನ್ ಲಾಗಿನ್ ಸ್ಥಿತಿ ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ...</span>
                     </div>
+                  ) : (
+                    <form onSubmit={handleAdminCredentialsSubmit} className="space-y-3.5">
+                      <div>
+                        <label
+                          htmlFor="admin-username"
+                          className="block text-xs font-bold text-indigo-950 mb-1"
+                        >
+                          ಯೂಸರ್ ನೇಮ್ (Username) *
+                        </label>
+                        <div className="relative">
+                          <UserIcon className="w-4 h-4 text-indigo-600 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          <input
+                            id="admin-username"
+                            type="text"
+                            autoComplete="username"
+                            required
+                            maxLength={64}
+                            value={adminUsername}
+                            onChange={e => setAdminUsername(e.target.value)}
+                            placeholder="ಅಡ್ಮಿನ್ ಯೂಸರ್ ನೇಮ್ ನಮೂದಿಸಿ"
+                            className="w-full min-h-[42px] pl-9 pr-3 py-2 rounded-xl border border-indigo-200 bg-indigo-50/30 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-600"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="admin-password"
+                          className="block text-xs font-bold text-indigo-950 mb-1"
+                        >
+                          ಪಾಸ್‌ವರ್ಡ್ (Password) *
+                        </label>
+                        <div className="relative">
+                          <Lock className="w-4 h-4 text-indigo-600 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          <input
+                            id="admin-password"
+                            type={showAdminPassword ? 'text' : 'password'}
+                            autoComplete={adminAuthStatus.needsSetup ? 'new-password' : 'current-password'}
+                            required
+                            maxLength={128}
+                            value={adminPassword}
+                            onChange={e => setAdminPassword(e.target.value)}
+                            placeholder="ಪಾಸ್‌ವರ್ಡ್ ನಮೂದಿಸಿ"
+                            className="w-full min-h-[42px] pl-9 pr-10 py-2 rounded-xl border border-indigo-200 bg-indigo-50/30 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-600"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowAdminPassword(prev => !prev)}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                            aria-label={showAdminPassword ? 'Hide password' : 'Show password'}
+                          >
+                            {showAdminPassword ? (
+                              <EyeOff className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {adminAuthStatus.needsSetup && (
+                        <div>
+                          <label
+                            htmlFor="admin-confirm-password"
+                            className="block text-xs font-bold text-indigo-950 mb-1"
+                          >
+                            ಪಾಸ್‌ವರ್ಡ್ ದೃಢೀಕರಿಸಿ (Confirm Password) *
+                          </label>
+                          <div className="relative">
+                            <KeyRound className="w-4 h-4 text-indigo-600 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            <input
+                              id="admin-confirm-password"
+                              type={showAdminPassword ? 'text' : 'password'}
+                              autoComplete="new-password"
+                              required
+                              maxLength={128}
+                              value={adminConfirmPassword}
+                              onChange={e => setAdminConfirmPassword(e.target.value)}
+                              placeholder="ಪಾಸ್‌ವರ್ಡ್ ಮತ್ತೊಮ್ಮೆ ನಮೂದಿಸಿ"
+                              className="w-full min-h-[42px] pl-9 pr-3 py-2 rounded-xl border border-indigo-200 bg-indigo-50/30 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-600"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {errorMessage && (
+                        <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                          <span>{errorMessage}</span>
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        disabled={isAdminSubmitting}
+                        className="w-full min-h-[46px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-700 to-purple-700 hover:from-indigo-800 hover:to-purple-800 text-white text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+                      >
+                        {isAdminSubmitting ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <ShieldCheck className="w-4 h-4" />
+                        )}
+                        <span>
+                          {adminAuthStatus.needsSetup
+                            ? 'ಅಡ್ಮಿನ್ ಲಾಗಿನ್ ಸೆಟ್ ಮಾಡಿ ಮತ್ತು ಪ್ರವೇಶಿಸಿ'
+                            : 'ಅಡ್ಮಿನ್ ಲಾಗಿನ್ ಆಗಿ (Admin Login)'}
+                        </span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </form>
                   )}
+
+                  <div className="relative flex items-center">
+                    <div className="flex-grow border-t border-indigo-200" />
+                    <span className="px-3 text-xs text-indigo-700 font-semibold">ಅಥವಾ</span>
+                    <div className="flex-grow border-t border-indigo-200" />
+                  </div>
 
                   <button
                     type="button"
                     disabled={isGoogleLoading}
                     onClick={() => handleGoogleLogin(true)}
-                    className="w-full min-h-[48px] px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-700 to-purple-700 hover:from-indigo-800 hover:to-purple-800 text-white text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2.5 disabled:opacity-60 cursor-pointer"
+                    className="w-full min-h-[44px] px-4 py-2.5 rounded-xl border border-indigo-200 bg-indigo-50/60 hover:bg-indigo-100/80 text-indigo-950 text-xs font-bold transition-colors flex items-center justify-center gap-2.5 disabled:opacity-60 cursor-pointer"
                   >
                     {isGoogleLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin text-indigo-700" />
                     ) : (
-                      <ShieldCheck className="w-4 h-4" />
+                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.79-.07-1.54-.19-2.27h-11.3v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z" />
+                        <path fill="#34A853" d="M12.255 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96h-3.98v3.09C3.515 21.3 7.565 24 12.255 24z" />
+                        <path fill="#FBBC05" d="M5.525 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62h-3.98a11.86 11.86 0 0 0 0 10.76l3.98-3.09z" />
+                        <path fill="#EA4335" d="M12.255 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C18.205 1.19 15.495 0 12.255 0c-4.69 0-8.74 2.7-10.71 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z" />
+                      </svg>
                     )}
                     <span>Google ಮೂಲಕ ಅಡ್ಮಿನ್ ಲಾಗಿನ್ ಆಗಿ</span>
-                    <ArrowRight className="w-4 h-4" />
                   </button>
-
-                  <p className="text-[11px] text-slate-500 text-center">
-                    ಅಧಿಕೃತ ಡೆವಲಪರ್ Google ಖಾತೆಯ ಮೂಲಕ ಮಾತ್ರ ಪ್ರವೇಶ ಅನುಮತಿಸಲಾಗಿದೆ.
-                  </p>
                 </div>
               )}
             </div>

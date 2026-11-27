@@ -66,8 +66,10 @@ export interface QuestionItem {
   options?: string[];
   items?: Array<{ left: string; right: string }>;
   imageUrl?: string;
+  imageUrl2?: string;
   diagramSvg?: string;
   answerImageUrl?: string;
+  answerImageUrl2?: string;
   answerDiagramSvg?: string;
   hasDiagram?: boolean;
   needsImage?: boolean;
@@ -80,6 +82,7 @@ export interface QuestionItem {
   printedSerial?: string;
   sourcePage?: number;
   answerPage?: number;
+  notDuplicateIds?: string[];
   [key: string]: unknown;
 }
 
@@ -183,8 +186,10 @@ export interface GeneratedQuestionItem {
   options?: string[];
   items?: Array<{ left: string; right: string }>;
   imageUrl?: string;
+  imageUrl2?: string;
   diagramSvg?: string;
   answerImageUrl?: string;
+  answerImageUrl2?: string;
   answerDiagramSvg?: string;
   hasDiagram?: boolean;
   diagramDescription?: string;

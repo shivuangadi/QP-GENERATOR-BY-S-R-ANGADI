@@ -21,6 +21,7 @@ import {
   setDoc,
   getDoc,
   getDocs,
+  getDocsFromCache,
   collection,
   deleteDoc,
   getDocFromServer,
@@ -29,6 +30,9 @@ import {
   where,
   limit,
   Firestore,
+  Query,
+  QuerySnapshot,
+  DocumentData,
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { QuestionBank, GeneratedPaper } from '../types/questionBank.ts';
@@ -86,6 +90,29 @@ function createResilientFirestore(): Firestore {
 
 export const db: Firestore = createResilientFirestore();
 
+// Track Firestore daily quota exhaustion so we avoid hammering server reads and fall back to local cache
+let firestoreQuotaExceededUntil = 0;
+
+export function isFirestoreQuotaExceededError(err: unknown): boolean {
+  const code = String((err as any)?.code || '').toLowerCase();
+  const msg = String((err as any)?.message || err || '').toLowerCase();
+  return (
+    code === 'resource-exhausted' ||
+    msg.includes('quota limit exceeded') ||
+    msg.includes('quota exceeded') ||
+    msg.includes('free daily read units')
+  );
+}
+
+export function isFirestoreQuotaCoolingDown(): boolean {
+  return Date.now() < firestoreQuotaExceededUntil;
+}
+
+function markFirestoreQuotaExceeded(): void {
+  // Cool down server reads for 15 minutes and serve from Firestore local IndexedDB cache instead
+  firestoreQuotaExceededUntil = Date.now() + 15 * 60 * 1000;
+}
+
 // Test connection on boot
 export async function testFirestoreConnection(): Promise<boolean> {
   try {
@@ -93,7 +120,10 @@ export async function testFirestoreConnection(): Promise<boolean> {
     console.log('Firebase Firestore connection verified successfully.');
     return true;
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
+    if (isFirestoreQuotaExceededError(error)) {
+      markFirestoreQuotaExceeded();
+      console.warn('Firestore daily free-tier read quota reached; using local cached/built-in data.');
+    } else if (error instanceof Error && error.message.includes('the client is offline')) {
       console.warn('Firebase client is offline. Check network or configuration.');
     } else {
       console.log('Firebase connection initialized:', (error as Error).message);
@@ -337,6 +367,7 @@ export async function saveQuestionBankToFirebase(bank: QuestionBank): Promise<st
 
   if (utf8ByteLength(singleDocPayload) <= FIRESTORE_SINGLE_DOC_SAFE_BYTES) {
     await setDoc(docRef, singleDocPayload);
+    invalidateFirebaseQuestionBanksCache();
     return bankId;
   }
 
@@ -420,17 +451,51 @@ export async function saveQuestionBankToFirebase(bank: QuestionBank): Promise<st
     // Non-fatal cleanup
   }
 
+  invalidateFirebaseQuestionBanksCache();
   return bankId;
 }
 
 let inFlightQuestionBanksPromise: Promise<QuestionBank[]> | null = null;
+let cachedFirebaseBanks: QuestionBank[] | null = null;
+let cachedFirebaseBanksAt = 0;
+const FIREBASE_BANKS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes to preserve Firestore free-tier daily read quota
+
+export function invalidateFirebaseQuestionBanksCache(): void {
+  cachedFirebaseBanks = null;
+  cachedFirebaseBanksAt = 0;
+}
+
+async function getDocsPreferringCacheOnQuota(
+  ref: Query<DocumentData>
+): Promise<QuerySnapshot<DocumentData>> {
+  if (isFirestoreQuotaCoolingDown()) {
+    return getDocsFromCache(ref);
+  }
+  try {
+    return await getDocs(ref);
+  } catch (err) {
+    if (isFirestoreQuotaExceededError(err)) {
+      markFirestoreQuotaExceeded();
+      return getDocsFromCache(ref);
+    }
+    throw err;
+  }
+}
 
 /**
  * Fetch all Question Banks saved in Firebase Firestore (supporting both inline and chunked large banks).
- * Deduplicates simultaneous startup calls and bounds subcollection concurrency so Firestore's
- * long-polling channel is never saturated on slow/mobile connections.
+ * Uses a 5-minute in-memory TTL cache, deduplicates simultaneous calls, bounds subcollection concurrency,
+ * and gracefully falls back to Firestore's persistent IndexedDB cache if daily read quota is exceeded.
  */
-export async function getQuestionBanksFromFirebase(): Promise<QuestionBank[]> {
+export async function getQuestionBanksFromFirebase(forceRefresh = false): Promise<QuestionBank[]> {
+  if (
+    !forceRefresh &&
+    cachedFirebaseBanks !== null &&
+    Date.now() - cachedFirebaseBanksAt < FIREBASE_BANKS_CACHE_TTL_MS
+  ) {
+    return cachedFirebaseBanks;
+  }
+
   if (inFlightQuestionBanksPromise) {
     return inFlightQuestionBanksPromise;
   }
@@ -438,7 +503,7 @@ export async function getQuestionBanksFromFirebase(): Promise<QuestionBank[]> {
   const runFetch = async (): Promise<QuestionBank[]> => {
     try {
       const colRef = collection(db, 'question_banks');
-      const snapshot = await getDocs(colRef);
+      const snapshot = await getDocsPreferringCacheOnQuota(colRef);
       const rawDocs = snapshot.docs;
 
       const results: Array<QuestionBank | null> = new Array(rawDocs.length).fill(null);
@@ -455,7 +520,9 @@ export async function getQuestionBanksFromFirebase(): Promise<QuestionBank[]> {
           let chapters = Array.isArray(data.chapters) ? data.chapters : [];
           if (data.isChunked && Number(data.chunkCount) > 0) {
             try {
-              const chunksSnap = await getDocs(collection(db, 'question_banks', d.id, 'chapter_chunks'));
+              const chunksSnap = await getDocsPreferringCacheOnQuota(
+                collection(db, 'question_banks', d.id, 'chapter_chunks')
+              );
               const chunkRecords: Array<{ idx: number; chapters: any[] }> = [];
               chunksSnap.forEach(cd => {
                 const cData = cd.data();
@@ -486,6 +553,9 @@ export async function getQuestionBanksFromFirebase(): Promise<QuestionBank[]> {
               }
               chapters = orderedIds.map(id => mergedMap.get(id));
             } catch (chunkErr) {
+              if (isFirestoreQuotaExceededError(chunkErr)) {
+                markFirestoreQuotaExceeded();
+              }
               console.warn(`Could not load chapter_chunks for ${d.id}:`, chunkErr);
             }
           }
@@ -532,10 +602,18 @@ export async function getQuestionBanksFromFirebase(): Promise<QuestionBank[]> {
         Array.from({ length: Math.min(CONCURRENCY, Math.max(1, rawDocs.length)) }, () => worker())
       );
 
-      return results.filter((b): b is QuestionBank => b !== null);
+      const loaded = results.filter((b): b is QuestionBank => b !== null);
+      cachedFirebaseBanks = loaded;
+      cachedFirebaseBanksAt = Date.now();
+      return loaded;
     } catch (err) {
-      console.error('Error fetching question banks from Firebase:', err);
-      return [];
+      if (isFirestoreQuotaExceededError(err)) {
+        markFirestoreQuotaExceeded();
+        console.warn('Firestore daily read quota reached; using cached/built-in question banks.');
+      } else {
+        console.warn('Could not fetch question banks from Firebase:', err);
+      }
+      return cachedFirebaseBanks || [];
     }
   };
 
@@ -563,6 +641,7 @@ export async function deleteQuestionBankFromFirebase(bankId: string): Promise<vo
       // Ignore if no chunks exist
     }
     await deleteDoc(doc(db, 'question_banks', cleanId));
+    invalidateFirebaseQuestionBanksCache();
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, docPath);
   }
@@ -599,7 +678,7 @@ export async function saveQuestionPaperToFirebase(paper: GeneratedPaper): Promis
 export async function getQuestionPapersFromFirebase(): Promise<GeneratedPaper[]> {
   try {
     const colRef = collection(db, 'question_papers');
-    const snapshot = await getDocs(query(colRef, orderBy('createdAt', 'desc')));
+    const snapshot = await getDocsPreferringCacheOnQuota(query(colRef, orderBy('createdAt', 'desc')));
     const papers: GeneratedPaper[] = [];
 
     snapshot.forEach(d => {
@@ -609,7 +688,10 @@ export async function getQuestionPapersFromFirebase(): Promise<GeneratedPaper[]>
 
     return papers;
   } catch (err) {
-    console.error('Error fetching question papers from Firebase:', err);
+    if (isFirestoreQuotaExceededError(err)) {
+      markFirestoreQuotaExceeded();
+    }
+    console.warn('Could not fetch question papers from Firebase:', err);
     return [];
   }
 }
@@ -668,7 +750,7 @@ export async function saveUploadedPdfToFirebase(record: UploadedPdfRecord): Prom
 export async function getUploadedPdfsFromFirebase(): Promise<UploadedPdfRecord[]> {
   try {
     const colRef = collection(db, 'uploaded_pdfs');
-    const snapshot = await getDocs(query(colRef, orderBy('uploadedAt', 'desc')));
+    const snapshot = await getDocsPreferringCacheOnQuota(query(colRef, orderBy('uploadedAt', 'desc')));
     const list: UploadedPdfRecord[] = [];
     snapshot.forEach(d => {
       const data = d.data() as UploadedPdfRecord;
@@ -678,7 +760,10 @@ export async function getUploadedPdfsFromFirebase(): Promise<UploadedPdfRecord[]
     });
     return list;
   } catch (err) {
-    console.error('Error fetching uploaded PDFs from Firebase:', err);
+    if (isFirestoreQuotaExceededError(err)) {
+      markFirestoreQuotaExceeded();
+    }
+    console.warn('Could not fetch uploaded PDFs from Firebase:', err);
     return [];
   }
 }
@@ -889,7 +974,9 @@ export interface OnlineTestSolvedItem {
   isUnanswered: boolean;
   explanation?: string;
   imageUrl?: string;
+  imageUrl2?: string;
   answerImageUrl?: string;
+  answerImageUrl2?: string;
 }
 
 export interface OnlineTestAttemptRecord {
@@ -945,7 +1032,9 @@ export async function saveOnlineTestAttemptToFirebase(
       isUnanswered: Boolean(item.isUnanswered),
       explanation: item.explanation ? String(item.explanation).slice(0, 1200) : '',
       imageUrl: item.imageUrl ? String(item.imageUrl).slice(0, 300) : '',
+      imageUrl2: item.imageUrl2 ? String(item.imageUrl2).slice(0, 300) : '',
       answerImageUrl: item.answerImageUrl ? String(item.answerImageUrl).slice(0, 300) : '',
+      answerImageUrl2: item.answerImageUrl2 ? String(item.answerImageUrl2).slice(0, 300) : '',
     })
   );
 

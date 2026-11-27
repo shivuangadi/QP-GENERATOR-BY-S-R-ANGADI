@@ -679,18 +679,35 @@ export const PaperPreview: React.FC<PaperPreviewProps> = ({
                                 </div>
                               )}
 
-                              {/* Question Diagram / Image Display */}
-                              {q.imageUrl && (
+                              {/* Question Diagram / Dual Images Side-by-Side Display */}
+                              {q.imageUrl && q.imageUrl2 ? (
+                                <div className="my-2.5 grid grid-cols-2 gap-3 max-w-2xl items-center">
+                                  <div className="flex justify-center">
+                                    <ResilientQuestionImage
+                                      src={q.imageUrl}
+                                      alt={q.diagramDescription || 'ಪ್ರಶ್ನೆ ಚಿತ್ರ 1 / Diagram 1'}
+                                      className="max-h-56 w-full rounded border border-slate-300 object-contain bg-white p-1"
+                                    />
+                                  </div>
+                                  <div className="flex justify-center">
+                                    <ResilientQuestionImage
+                                      src={q.imageUrl2}
+                                      alt="ಪ್ರಶ್ನೆ ಚಿತ್ರ 2 / Diagram 2"
+                                      className="max-h-56 w-full rounded border border-slate-300 object-contain bg-white p-1"
+                                    />
+                                  </div>
+                                </div>
+                              ) : (q.imageUrl || q.imageUrl2) ? (
                                 <div className="my-2.5 inline-block max-w-sm">
                                   <ResilientQuestionImage
-                                    src={q.imageUrl}
+                                    src={(q.imageUrl || q.imageUrl2)!}
                                     alt={q.diagramDescription || 'ಪ್ರಶ್ನೆ ಚಿತ್ರ / Diagram'}
                                     className="max-h-56 max-w-full rounded border border-slate-300 object-contain bg-white p-1"
                                   />
                                 </div>
-                              )}
+                              ) : null}
 
-                              {q.diagramSvg && !q.imageUrl && (
+                              {q.diagramSvg && !q.imageUrl && !q.imageUrl2 && (
                                 <div
                                   className="my-2.5 max-w-sm border border-slate-300 rounded bg-white p-2"
                                   dangerouslySetInnerHTML={{ __html: q.diagramSvg }}

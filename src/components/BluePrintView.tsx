@@ -1352,112 +1352,114 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
           </p>
         </div>
 
-        {/* TOP 3 TABLES: ಹಂತ 1 (ಉದ್ದೇಶಗಳು), ಹಂತ 2 (ಪ್ರಶ್ನೆ ಪ್ರಕಾರಗಳು), ಹಂತ 3 (ಕ್ಲಿಷ್ಟತೆಯ ಮಟ್ಟ) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* TOP 3 TABLES: ಹಂತ 1 (ಉದ್ದೇಶಗಳು), ಹಂತ 2 (ಪ್ರಶ್ನೆ ಪ್ರಕಾರಗಳು), ಹಂತ 3 (ಕ್ಲಿಷ್ಟತೆಯ ಮಟ್ಟ) — Clean full-width stacked layout so zero tables ever overlap */}
+        <div className="space-y-5">
           {/* ಹಂತ 1: ಉದ್ದೇಶವಾರು ಅಂಕ ಹಂಚಿಕೆ */}
-          <div className="space-y-1.5">
-            <div className="flex flex-wrap items-center justify-between gap-1">
-              <h2 className="text-xs sm:text-sm font-bold text-slate-900">
-                ಹಂತ 1: ಉದ್ದೇಶವಾರು ಅಂಕ ಹಂಚಿಕೆ
+          <div className="space-y-1.5 min-w-0">
+            <div className="flex flex-wrap items-center justify-between gap-2 bg-amber-50/70 border border-amber-200/80 rounded-lg px-3 py-1.5 print:bg-transparent print:border-none print:px-0">
+              <h2 className="text-xs sm:text-sm font-extrabold text-slate-900">
+                ಹಂತ 1: ಉದ್ದೇಶವಾರು ಅಂಕ ಹಂಚಿಕೆ (Weightage to Objectives)
               </h2>
               {Math.round(step1PctSum) !== 100 && (
                 <button
                   type="button"
                   onClick={handleBalanceStep1To100}
-                  className="no-print px-1.5 py-0.5 rounded bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 text-[10px] font-bold cursor-pointer"
+                  className="no-print px-2 py-0.5 rounded bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 text-[11px] font-bold cursor-pointer"
                   title="ಶೇಕಡಾವಾರು ಮೊತ್ತವನ್ನು 100% ಗೆ ಸಮತೋಲನಗೊಳಿಸಿ"
                 >
                   100% ಹೊಂದಿಸಿ
                 </button>
               )}
             </div>
-            <table className="w-full border-collapse border border-slate-900 text-xs">
-              <thead>
-                <tr className="bg-slate-100 border-b border-slate-900 text-center font-bold">
-                  <th className="border border-slate-900 py-1.5 px-1 w-8">ಕ್ರ.ಸಂ.</th>
-                  <th className="border border-slate-900 py-1.5 px-2 text-left">ಉದ್ದಿಷ್ಟಗಳು</th>
-                  <th className="border border-slate-900 py-1.5 px-1 w-14">ಶೇಕಡಾ (%)</th>
-                  <th className="border border-slate-900 py-1.5 px-1 w-12">ಅಂಕ</th>
-                  <th className="border border-slate-900 py-1.5 px-1 w-12">ಪ್ರಶ್ನೆ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {step1Items.map((item, idx) => (
-                  <tr
-                    key={item.id}
-                    className="text-center border-b border-slate-900 font-medium hover:bg-amber-50/50 transition-colors group"
-                  >
-                    <td className="border border-slate-900 py-1 px-1">{idx + 1}</td>
-                    <td
-                      onClick={() => handleObjectiveClick(item.id, item.name, item.marks)}
-                      className="border border-slate-900 py-1 px-2 text-left font-semibold truncate max-w-[110px] group-hover:text-indigo-900 cursor-pointer"
-                      title="ಕ್ಲಿಕ್ ಮಾಡಿ: ಈ ಉದ್ದಿಷ್ಟದ ಪ್ರಶ್ನೆಗಳನ್ನು ವೀಕ್ಷಿಸಿ"
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[480px] border-collapse border border-slate-900 text-xs">
+                <thead>
+                  <tr className="bg-slate-100 border-b border-slate-900 text-center font-bold">
+                    <th className="border border-slate-900 py-1.5 px-2 w-12">ಕ್ರ.ಸಂ.</th>
+                    <th className="border border-slate-900 py-1.5 px-3 text-left">ಉದ್ದಿಷ್ಟಗಳು (Objectives)</th>
+                    <th className="border border-slate-900 py-1.5 px-2 w-28 bg-amber-50/60">ಶೇಕಡಾ (%)</th>
+                    <th className="border border-slate-900 py-1.5 px-2 w-24">ಅಂಕಗಳು</th>
+                    <th className="border border-slate-900 py-1.5 px-2 w-24">ಪ್ರಶ್ನೆಗಳು</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {step1Items.map((item, idx) => (
+                    <tr
+                      key={item.id}
+                      className="text-center border-b border-slate-900 font-medium hover:bg-amber-50/50 transition-colors group"
                     >
-                      {item.name}
+                      <td className="border border-slate-900 py-1.5 px-2 tabular-nums">{idx + 1}</td>
+                      <td
+                        onClick={() => handleObjectiveClick(item.id, item.name, item.marks)}
+                        className="border border-slate-900 py-1.5 px-3 text-left font-semibold group-hover:text-indigo-900 cursor-pointer"
+                        title="ಕ್ಲಿಕ್ ಮಾಡಿ: ಈ ಉದ್ದಿಷ್ಟದ ಪ್ರಶ್ನೆಗಳನ್ನು ವೀಕ್ಷಿಸಿ"
+                      >
+                        {item.name}
+                      </td>
+                      <td className="border border-slate-900 py-1 px-2 bg-amber-50/20">
+                        <CleanNumberInput
+                          value={item.percentage}
+                          min={0}
+                          max={100}
+                          onChange={val => handleStep1PercentageChange(idx, val)}
+                          suffix="%"
+                          className="w-16 text-center font-bold bg-white border border-slate-300 rounded px-1.5 py-1 text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </td>
+                      <td className="border border-slate-900 py-1 px-2">
+                        <CleanNumberInput
+                          value={item.marks}
+                          min={0}
+                          onChange={val => handleStep1MarksChange(idx, val)}
+                          className="w-16 text-center font-bold bg-white border border-slate-300 rounded px-1.5 py-1 text-xs text-emerald-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </td>
+                      <td className="border border-slate-900 py-1 px-2">
+                        <CleanNumberInput
+                          value={item.questionsCount}
+                          min={0}
+                          max={item.marks}
+                          onChange={val => handleStep1QuestionsChange(idx, val)}
+                          className="w-16 text-center font-bold bg-white border border-slate-300 rounded px-1.5 py-1 text-xs text-indigo-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="bg-slate-50 border-t-2 border-slate-900 text-center font-bold">
+                    <td className="border border-slate-900 py-1.5 px-2" colSpan={2}>
+                      ಒಟ್ಟು (Total)
                     </td>
-                    <td className="border border-slate-900 py-0.5 px-1">
-                      <CleanNumberInput
-                        value={item.percentage}
-                        min={0}
-                        max={100}
-                        onChange={val => handleStep1PercentageChange(idx, val)}
-                        suffix="%"
-                        className="w-11 text-center font-bold bg-white border border-slate-300 rounded px-1 py-0.5 text-xs text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
-                      />
+                    <td
+                      className={`border border-slate-900 py-1.5 px-2 tabular-nums ${
+                        Math.round(step1PctSum) !== 100 ? 'text-rose-700' : ''
+                      }`}
+                    >
+                      {step1PctSum.toFixed(0)}%
                     </td>
-                    <td className="border border-slate-900 py-0.5 px-1">
-                      <CleanNumberInput
-                        value={item.marks}
-                        min={0}
-                        onChange={val => handleStep1MarksChange(idx, val)}
-                        className="w-10 text-center font-bold bg-white border border-slate-300 rounded px-1 py-0.5 text-xs text-emerald-900 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
-                      />
+                    <td className="border border-slate-900 py-1.5 px-2 font-black text-emerald-900 tabular-nums">
+                      {step1Items.reduce((s, x) => s + x.marks, 0)}
                     </td>
-                    <td className="border border-slate-900 py-0.5 px-1">
-                      <CleanNumberInput
-                        value={item.questionsCount}
-                        min={0}
-                        max={item.marks}
-                        onChange={val => handleStep1QuestionsChange(idx, val)}
-                        className="w-10 text-center font-bold bg-white border border-slate-300 rounded px-1 py-0.5 text-xs text-indigo-900 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
-                      />
+                    <td className="border border-slate-900 py-1.5 px-2 font-black text-indigo-900 tabular-nums">
+                      {step1Items.reduce((s, x) => s + x.questionsCount, 0)}
                     </td>
                   </tr>
-                ))}
-                <tr className="bg-slate-50 border-t-2 border-slate-900 text-center font-bold">
-                  <td className="border border-slate-900 py-1.5 px-1" colSpan={2}>
-                    ಒಟ್ಟು
-                  </td>
-                  <td
-                    className={`border border-slate-900 py-1.5 px-1 ${
-                      Math.round(step1PctSum) !== 100 ? 'text-rose-700' : ''
-                    }`}
-                  >
-                    {step1PctSum.toFixed(0)}%
-                  </td>
-                  <td className="border border-slate-900 py-1.5 px-1 font-black text-emerald-900">
-                    {step1Items.reduce((s, x) => s + x.marks, 0)}
-                  </td>
-                  <td className="border border-slate-900 py-1.5 px-1 font-black text-indigo-900">
-                    {step1Items.reduce((s, x) => s + x.questionsCount, 0)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* ಹಂತ 2: ಪ್ರಶ್ನೆವಾರು ಶೇಕಡಾ ಅಂಕ ಹಂಚಿಕೆ (ಖಾಯಂ 3 ವಿಧಗಳು: 30% / 50% / 20% ಡೀಫಾಲ್ಟ್, ಸಂಪಾದಿಸಬಹುದಾದ) */}
-          <div className="space-y-1.5">
-            <div className="flex flex-wrap items-center justify-between gap-1">
-              <h2 className="text-xs sm:text-sm font-bold text-slate-900">
-                ಹಂತ 2: ಪ್ರಶ್ನೆವಾರು ಶೇಕಡಾ ಅಂಕ ಹಂಚಿಕೆ
+          <div className="space-y-1.5 min-w-0">
+            <div className="flex flex-wrap items-center justify-between gap-2 bg-sky-50/70 border border-sky-200/80 rounded-lg px-3 py-1.5 print:bg-transparent print:border-none print:px-0">
+              <h2 className="text-xs sm:text-sm font-extrabold text-slate-900">
+                ಹಂತ 2: ಪ್ರಶ್ನೆವಾರು ಶೇಕಡಾ ಅಂಕ ಹಂಚಿಕೆ (Weightage to Question Types)
               </h2>
-              <div className="flex items-center gap-1 no-print">
+              <div className="flex items-center gap-1.5 no-print">
                 {Math.round(step2PctSum) !== 100 && (
                   <button
                     type="button"
                     onClick={handleBalanceStep2To100}
-                    className="px-1.5 py-0.5 rounded bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 text-[10px] font-bold cursor-pointer"
+                    className="px-2 py-0.5 rounded bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 text-[11px] font-bold cursor-pointer"
                     title="ಶೇಕಡಾವಾರು ಮೊತ್ತವನ್ನು 100% ಗೆ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಸಮತೋಲನಗೊಳಿಸಿ"
                   >
                     100% ಹೊಂದಿಸಿ
@@ -1466,188 +1468,192 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
                 <button
                   type="button"
                   onClick={handleResetStep2Default}
-                  className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-[10px] font-bold cursor-pointer"
+                  className="px-2 py-0.5 rounded bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-bold cursor-pointer"
                   title="ಡೀಫಾಲ್ಟ್ 30% / 50% / 20% ಗೆ ಮರುಹೊಂದಿಸಿ"
                 >
-                  30-50-20
+                  30-50-20 ಡೀಫಾಲ್ಟ್
                 </button>
               </div>
             </div>
-            <table className="w-full border-collapse border border-slate-900 text-xs">
-              <thead>
-                <tr className="bg-slate-100 border-b border-slate-900 text-center font-bold">
-                  <th className="border border-slate-900 py-1.5 px-1 w-8">ಕ್ರ.ಸಂ.</th>
-                  <th className="border border-slate-900 py-1.5 px-2 text-left">ಪ್ರಶ್ನೆಯ ವಿಧ</th>
-                  <th className="border border-slate-900 py-1.5 px-1 w-14">ಶೇಕಡಾ (%)</th>
-                  <th className="border border-slate-900 py-1.5 px-1 w-12">ಪ್ರಶ್ನೆ</th>
-                  <th className="border border-slate-900 py-1.5 px-1 w-12">ಅಂಕ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {step2Items.map((item, idx) => (
-                  <tr
-                    key={item.id}
-                    className="text-center border-b border-slate-900 font-medium hover:bg-blue-50/50 transition-colors group"
-                  >
-                    <td className="border border-slate-900 py-1 px-1">{idx + 1}</td>
-                    <td
-                      onClick={() =>
-                        handleQuestionTypeClick(item.id, item.name, item.marksPerQuestion)
-                      }
-                      className="border border-slate-900 py-1 px-2 text-left font-semibold leading-snug group-hover:text-indigo-900 cursor-pointer"
-                      title={
-                        item.subtitle
-                          ? `${item.name} (${item.subtitle}) — ಪ್ರಶ್ನೆಗಳನ್ನು ವೀಕ್ಷಿಸಲು ಕ್ಲಿಕ್ ಮಾಡಿ`
-                          : 'ಕ್ಲಿಕ್ ಮಾಡಿ: ಈ ಪ್ರಕಾರದ ಪ್ರಶ್ನೆಗಳನ್ನು ವೀಕ್ಷಿಸಿ'
-                      }
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[480px] border-collapse border border-slate-900 text-xs">
+                <thead>
+                  <tr className="bg-slate-100 border-b border-slate-900 text-center font-bold">
+                    <th className="border border-slate-900 py-1.5 px-2 w-12">ಕ್ರ.ಸಂ.</th>
+                    <th className="border border-slate-900 py-1.5 px-3 text-left">ಪ್ರಶ್ನೆಯ ವಿಧ (Question Type)</th>
+                    <th className="border border-slate-900 py-1.5 px-2 w-28 bg-sky-50/60">ಶೇಕಡಾ (%)</th>
+                    <th className="border border-slate-900 py-1.5 px-2 w-24">ಪ್ರಶ್ನೆಗಳು</th>
+                    <th className="border border-slate-900 py-1.5 px-2 w-24">ಅಂಕಗಳು</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {step2Items.map((item, idx) => (
+                    <tr
+                      key={item.id}
+                      className="text-center border-b border-slate-900 font-medium hover:bg-blue-50/50 transition-colors group"
                     >
-                      <div>{item.name}</div>
-                      {item.subtitle && (
-                        <div className="text-[9px] font-normal text-slate-500 leading-tight no-print">
-                          {item.subtitle}
-                        </div>
-                      )}
+                      <td className="border border-slate-900 py-1.5 px-2 tabular-nums">{idx + 1}</td>
+                      <td
+                        onClick={() =>
+                          handleQuestionTypeClick(item.id, item.name, item.marksPerQuestion)
+                        }
+                        className="border border-slate-900 py-1.5 px-3 text-left font-semibold leading-snug group-hover:text-indigo-900 cursor-pointer"
+                        title={
+                          item.subtitle
+                            ? `${item.name} (${item.subtitle}) — ಪ್ರಶ್ನೆಗಳನ್ನು ವೀಕ್ಷಿಸಲು ಕ್ಲಿಕ್ ಮಾಡಿ`
+                            : 'ಕ್ಲಿಕ್ ಮಾಡಿ: ಈ ಪ್ರಕಾರದ ಪ್ರಶ್ನೆಗಳನ್ನು ವೀಕ್ಷಿಸಿ'
+                        }
+                      >
+                        <div>{item.name}</div>
+                        {item.subtitle && (
+                          <div className="text-[10px] font-normal text-slate-500 leading-tight no-print mt-0.5">
+                            {item.subtitle}
+                          </div>
+                        )}
+                      </td>
+                      <td className="border border-slate-900 py-1 px-2 bg-sky-50/20">
+                        <CleanNumberInput
+                          value={item.percentage}
+                          min={0}
+                          max={100}
+                          onChange={val => handleStep2PercentageChange(idx, val)}
+                          suffix="%"
+                          className="w-16 text-center font-bold bg-white border border-slate-300 rounded px-1.5 py-1 text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </td>
+                      <td className="border border-slate-900 py-1 px-2">
+                        <CleanNumberInput
+                          value={item.questionsCount}
+                          min={0}
+                          onChange={val => handleStep2QuestionsChange(idx, val)}
+                          className="w-16 text-center font-bold bg-white border border-slate-300 rounded px-1.5 py-1 text-xs text-indigo-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </td>
+                      <td className="border border-slate-900 py-1 px-2">
+                        <CleanNumberInput
+                          value={item.marks}
+                          min={0}
+                          onChange={val => handleStep2MarksChange(idx, val)}
+                          className="w-16 text-center font-bold bg-white border border-slate-300 rounded px-1.5 py-1 text-xs text-emerald-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="bg-slate-50 border-t-2 border-slate-900 text-center font-bold">
+                    <td className="border border-slate-900 py-1.5 px-2" colSpan={2}>
+                      ಒಟ್ಟು (Total)
                     </td>
-                    <td className="border border-slate-900 py-0.5 px-1">
-                      <CleanNumberInput
-                        value={item.percentage}
-                        min={0}
-                        max={100}
-                        onChange={val => handleStep2PercentageChange(idx, val)}
-                        suffix="%"
-                        className="w-11 text-center font-bold bg-white border border-slate-300 rounded px-1 py-0.5 text-xs text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
-                      />
+                    <td
+                      className={`border border-slate-900 py-1.5 px-2 tabular-nums ${
+                        Math.round(step2PctSum) !== 100 ? 'text-rose-700' : ''
+                      }`}
+                    >
+                      {step2PctSum.toFixed(0)}%
                     </td>
-                    <td className="border border-slate-900 py-0.5 px-1">
-                      <CleanNumberInput
-                        value={item.questionsCount}
-                        min={0}
-                        onChange={val => handleStep2QuestionsChange(idx, val)}
-                        className="w-10 text-center font-bold bg-white border border-slate-300 rounded px-1 py-0.5 text-xs text-indigo-900 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
-                      />
+                    <td className="border border-slate-900 py-1.5 px-2 font-black text-indigo-900 tabular-nums">
+                      {activeTotalQuestions}
                     </td>
-                    <td className="border border-slate-900 py-0.5 px-1">
-                      <CleanNumberInput
-                        value={item.marks}
-                        min={0}
-                        onChange={val => handleStep2MarksChange(idx, val)}
-                        className="w-10 text-center font-bold bg-white border border-slate-300 rounded px-1 py-0.5 text-xs text-emerald-900 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
-                      />
+                    <td className="border border-slate-900 py-1.5 px-2 font-black text-emerald-900 tabular-nums">
+                      {activeTotalMarks}
                     </td>
                   </tr>
-                ))}
-                <tr className="bg-slate-50 border-t-2 border-slate-900 text-center font-bold">
-                  <td className="border border-slate-900 py-1.5 px-1" colSpan={2}>
-                    ಒಟ್ಟು
-                  </td>
-                  <td
-                    className={`border border-slate-900 py-1.5 px-1 ${
-                      Math.round(step2PctSum) !== 100 ? 'text-rose-700' : ''
-                    }`}
-                  >
-                    {step2PctSum.toFixed(0)}%
-                  </td>
-                  <td className="border border-slate-900 py-1.5 px-1 font-black text-indigo-900">
-                    {activeTotalQuestions}
-                  </td>
-                  <td className="border border-slate-900 py-1.5 px-1 font-black text-emerald-900">
-                    {activeTotalMarks}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* ಹಂತ 3: ಕ್ಲಿಷ್ಟತೆಯ ಮಟ್ಟವಾರು ಹಂಚಿಕೆ (ಕ್ರ.ಸಂ., ಕ್ಲಿಷ್ಟತೆಯ ಮಟ್ಟ, ಶೇಕಡಾ, ಪ್ರಶ್ನೆಗಳ ಸಂಖ್ಯೆ, ಅಂಕ) */}
-          <div className="space-y-1.5">
-            <div className="flex flex-wrap items-center justify-between gap-1">
-              <h2 className="text-xs sm:text-sm font-bold text-slate-900">
-                ಹಂತ 3: ಕ್ಲಿಷ್ಟತೆಯ ಮಟ್ಟವಾರು ಹಂಚಿಕೆ
+          <div className="space-y-1.5 min-w-0">
+            <div className="flex flex-wrap items-center justify-between gap-2 bg-emerald-50/70 border border-emerald-200/80 rounded-lg px-3 py-1.5 print:bg-transparent print:border-none print:px-0">
+              <h2 className="text-xs sm:text-sm font-extrabold text-slate-900">
+                ಹಂತ 3: ಕ್ಲಿಷ್ಟತೆಯ ಮಟ್ಟವಾರು ಹಂಚಿಕೆ (Difficulty Level Weightage)
               </h2>
               {Math.round(step3PctSum) !== 100 && (
                 <button
                   type="button"
                   onClick={handleBalanceStep3To100}
-                  className="no-print px-1.5 py-0.5 rounded bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 text-[10px] font-bold cursor-pointer"
+                  className="no-print px-2 py-0.5 rounded bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 text-[11px] font-bold cursor-pointer"
                   title="ಶೇಕಡಾವಾರು ಮೊತ್ತವನ್ನು 100% ಗೆ ಸಮತೋಲನಗೊಳಿಸಿ"
                 >
                   100% ಹೊಂದಿಸಿ
                 </button>
               )}
             </div>
-            <table className="w-full border-collapse border border-slate-900 text-xs">
-              <thead>
-                <tr className="bg-slate-100 border-b border-slate-900 text-center font-bold">
-                  <th className="border border-slate-900 py-1.5 px-1 w-8">ಕ್ರ.ಸಂ.</th>
-                  <th className="border border-slate-900 py-1.5 px-2 text-left">ಕ್ಲಿಷ್ಟತೆಯ ಮಟ್ಟ</th>
-                  <th className="border border-slate-900 py-1.5 px-1 w-14">ಶೇಕಡಾ (%)</th>
-                  <th className="border border-slate-900 py-1.5 px-1 w-12">ಪ್ರಶ್ನೆ</th>
-                  <th className="border border-slate-900 py-1.5 px-1 w-12">ಅಂಕ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {step3Items.map((item, idx) => (
-                  <tr
-                    key={item.id}
-                    className="text-center border-b border-slate-900 font-medium hover:bg-emerald-50/50 transition-colors group"
-                  >
-                    <td className="border border-slate-900 py-1 px-1">{idx + 1}</td>
-                    <td
-                      onClick={() => handleDifficultyClick(item.id, item.name)}
-                      className="border border-slate-900 py-1 px-2 text-left font-semibold truncate max-w-[110px] group-hover:text-indigo-900 cursor-pointer"
-                      title="ಕ್ಲಿಕ್ ಮಾಡಿ: ಈ ಕ್ಲಿಷ್ಟತೆಯ ಪ್ರಶ್ನೆಗಳನ್ನು ವೀಕ್ಷಿಸಿ"
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[480px] border-collapse border border-slate-900 text-xs">
+                <thead>
+                  <tr className="bg-slate-100 border-b border-slate-900 text-center font-bold">
+                    <th className="border border-slate-900 py-1.5 px-2 w-12">ಕ್ರ.ಸಂ.</th>
+                    <th className="border border-slate-900 py-1.5 px-3 text-left">ಕ್ಲಿಷ್ಟತೆಯ ಮಟ್ಟ (Difficulty Level)</th>
+                    <th className="border border-slate-900 py-1.5 px-2 w-28 bg-emerald-50/60">ಶೇಕಡಾ (%)</th>
+                    <th className="border border-slate-900 py-1.5 px-2 w-24">ಪ್ರಶ್ನೆಗಳು</th>
+                    <th className="border border-slate-900 py-1.5 px-2 w-24">ಅಂಕಗಳು</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {step3Items.map((item, idx) => (
+                    <tr
+                      key={item.id}
+                      className="text-center border-b border-slate-900 font-medium hover:bg-emerald-50/50 transition-colors group"
                     >
-                      {item.name}
+                      <td className="border border-slate-900 py-1.5 px-2 tabular-nums">{idx + 1}</td>
+                      <td
+                        onClick={() => handleDifficultyClick(item.id, item.name)}
+                        className="border border-slate-900 py-1.5 px-3 text-left font-semibold group-hover:text-indigo-900 cursor-pointer"
+                        title="ಕ್ಲಿಕ್ ಮಾಡಿ: ಈ ಕ್ಲಿಷ್ಟತೆಯ ಪ್ರಶ್ನೆಗಳನ್ನು ವೀಕ್ಷಿಸಿ"
+                      >
+                        {item.name}
+                      </td>
+                      <td className="border border-slate-900 py-1 px-2 bg-emerald-50/20">
+                        <CleanNumberInput
+                          value={item.percentage}
+                          min={0}
+                          max={100}
+                          onChange={val => handleStep3PercentageChange(idx, val)}
+                          suffix="%"
+                          className="w-16 text-center font-bold bg-white border border-slate-300 rounded px-1.5 py-1 text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </td>
+                      <td className="border border-slate-900 py-1 px-2">
+                        <CleanNumberInput
+                          value={item.questionsCount}
+                          min={0}
+                          max={item.marks}
+                          onChange={val => handleStep3QuestionsChange(idx, val)}
+                          className="w-16 text-center font-bold bg-white border border-slate-300 rounded px-1.5 py-1 text-xs text-indigo-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </td>
+                      <td className="border border-slate-900 py-1 px-2">
+                        <CleanNumberInput
+                          value={item.marks}
+                          min={0}
+                          onChange={val => handleStep3MarksChange(idx, val)}
+                          className="w-16 text-center font-bold bg-white border border-slate-300 rounded px-1.5 py-1 text-xs text-emerald-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="bg-slate-50 border-t-2 border-slate-900 text-center font-bold">
+                    <td className="border border-slate-900 py-1.5 px-2" colSpan={2}>
+                      ಒಟ್ಟು (Total)
                     </td>
-                    <td className="border border-slate-900 py-0.5 px-1">
-                      <CleanNumberInput
-                        value={item.percentage}
-                        min={0}
-                        max={100}
-                        onChange={val => handleStep3PercentageChange(idx, val)}
-                        suffix="%"
-                        className="w-11 text-center font-bold bg-white border border-slate-300 rounded px-1 py-0.5 text-xs text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
-                      />
+                    <td
+                      className={`border border-slate-900 py-1.5 px-2 tabular-nums ${
+                        Math.round(step3PctSum) !== 100 ? 'text-rose-700' : ''
+                      }`}
+                    >
+                      {step3PctSum.toFixed(0)}%
                     </td>
-                    <td className="border border-slate-900 py-0.5 px-1">
-                      <CleanNumberInput
-                        value={item.questionsCount}
-                        min={0}
-                        max={item.marks}
-                        onChange={val => handleStep3QuestionsChange(idx, val)}
-                        className="w-10 text-center font-bold bg-white border border-slate-300 rounded px-1 py-0.5 text-xs text-indigo-900 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
-                      />
+                    <td className="border border-slate-900 py-1.5 px-2 font-black text-indigo-900 tabular-nums">
+                      {step3Items.reduce((s, x) => s + x.questionsCount, 0)}
                     </td>
-                    <td className="border border-slate-900 py-0.5 px-1">
-                      <CleanNumberInput
-                        value={item.marks}
-                        min={0}
-                        onChange={val => handleStep3MarksChange(idx, val)}
-                        className="w-10 text-center font-bold bg-white border border-slate-300 rounded px-1 py-0.5 text-xs text-emerald-900 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
-                      />
+                    <td className="border border-slate-900 py-1.5 px-2 font-black text-emerald-900 tabular-nums">
+                      {step3Items.reduce((s, x) => s + x.marks, 0)}
                     </td>
                   </tr>
-                ))}
-                <tr className="bg-slate-50 border-t-2 border-slate-900 text-center font-bold">
-                  <td className="border border-slate-900 py-1.5 px-1" colSpan={2}>
-                    ಒಟ್ಟು
-                  </td>
-                  <td
-                    className={`border border-slate-900 py-1.5 px-1 ${
-                      Math.round(step3PctSum) !== 100 ? 'text-rose-700' : ''
-                    }`}
-                  >
-                    {step3PctSum.toFixed(0)}%
-                  </td>
-                  <td className="border border-slate-900 py-1.5 px-1 font-black text-indigo-900">
-                    {step3Items.reduce((s, x) => s + x.questionsCount, 0)}
-                  </td>
-                  <td className="border border-slate-900 py-1.5 px-1 font-black text-emerald-900">
-                    {step3Items.reduce((s, x) => s + x.marks, 0)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -1703,80 +1709,82 @@ export const BluePrintView: React.FC<BluePrintViewProps> = ({
             </div>
           )}
 
-          <table className="w-full border-collapse border border-slate-900 text-xs">
-            <thead>
-              <tr className="bg-slate-100 border-b border-slate-900 text-center font-bold">
-                <th className="border border-slate-900 py-1 px-1.5 w-10">ಕ್ರ.ಸಂ.</th>
-                <th className="border border-slate-900 py-1 px-3 text-left">ಪಾಠದ ಹೆಸರು</th>
-                <th className="border border-slate-900 py-1 px-2 w-28 bg-amber-50/70">
-                  ಶೇಕಡಾವಾರು (%)
-                </th>
-                <th className="border border-slate-900 py-1 px-2 w-24">ಪ್ರಶ್ನೆಗಳ ಸಂಖ್ಯೆ</th>
-                <th className="border border-slate-900 py-1 px-2 w-24">ಒಟ್ಟು ಅಂಕಗಳು</th>
-              </tr>
-            </thead>
-            <tbody>
-              {step4Items.map((item, idx) => {
-                return (
-                  <tr
-                    key={item.chapterId}
-                    className="text-center border-b border-slate-900 font-medium hover:bg-indigo-50/40 transition-colors"
-                  >
-                    <td className="border border-slate-900 py-1 px-1">{idx + 1}</td>
-                    <td
-                      onClick={() => handleChapterClick(item.chapterId, item.chapterName, item.marks)}
-                      className="border border-slate-900 py-1 px-3 text-left font-semibold truncate max-w-[200px] cursor-pointer hover:text-indigo-900"
-                      title="ಕ್ಲಿಕ್ ಮಾಡಿ: ಈ ಪಾಠದ ಪ್ರಶ್ನೆಗಳನ್ನು ವೀಕ್ಷಿಸಿ"
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[480px] border-collapse border border-slate-900 text-xs">
+              <thead>
+                <tr className="bg-slate-100 border-b border-slate-900 text-center font-bold">
+                  <th className="border border-slate-900 py-1.5 px-2 w-12">ಕ್ರ.ಸಂ.</th>
+                  <th className="border border-slate-900 py-1.5 px-3 text-left">ಪಾಠದ ಹೆಸರು</th>
+                  <th className="border border-slate-900 py-1.5 px-2 w-28 bg-amber-50/70">
+                    ಶೇಕಡಾವಾರು (%)
+                  </th>
+                  <th className="border border-slate-900 py-1.5 px-2 w-24">ಪ್ರಶ್ನೆಗಳ ಸಂಖ್ಯೆ</th>
+                  <th className="border border-slate-900 py-1.5 px-2 w-24">ಒಟ್ಟು ಅಂಕಗಳು</th>
+                </tr>
+              </thead>
+              <tbody>
+                {step4Items.map((item, idx) => {
+                  return (
+                    <tr
+                      key={item.chapterId}
+                      className="text-center border-b border-slate-900 font-medium hover:bg-indigo-50/40 transition-colors"
                     >
-                      {item.chapterName}
-                    </td>
-                    {/* Editable Percentage Input */}
-                    <td className="border border-slate-900 py-0.5 px-2 bg-amber-50/30">
-                      <CleanNumberInput
-                        value={item.percentage}
-                        min={0}
-                        max={100}
-                        onChange={val => handleStep4PercentageChange(idx, val)}
-                        suffix="%"
-                        className="w-16 text-center font-bold bg-white border border-slate-300 rounded px-1.5 py-0.5 text-xs text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
-                      />
-                    </td>
-                    <td className="border border-slate-900 py-0.5 px-2">
-                      <CleanNumberInput
-                        value={item.questionsCount}
-                        min={0}
-                        max={item.marks}
-                        onChange={val => handleStep4QuestionsChange(idx, val)}
-                        className="w-14 text-center font-bold bg-white border border-slate-300 rounded px-1.5 py-0.5 text-xs text-indigo-900 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
-                      />
-                    </td>
-                    <td className="border border-slate-900 py-0.5 px-2">
-                      <CleanNumberInput
-                        value={item.marks}
-                        min={0}
-                        onChange={val => handleStep4MarksChange(idx, val)}
-                        className="w-14 text-center font-bold bg-white border border-slate-300 rounded px-1.5 py-0.5 text-xs text-emerald-900 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
-                      />
-                    </td>
-                  </tr>
-                );
-              })}
-              <tr className="bg-slate-50 border-t-2 border-slate-900 text-center font-bold">
-                <td className="border border-slate-900 py-1 px-1" colSpan={2}>
-                  ಒಟ್ಟು
-                </td>
-                <td className="border border-slate-900 py-1 px-2 font-black text-amber-950">
-                  {step4PctSum.toFixed(1)}%
-                </td>
-                <td className="border border-slate-900 py-1 px-2 font-black text-indigo-900">
-                  {step4Items.reduce((s, x) => s + x.questionsCount, 0)}
-                </td>
-                <td className="border border-slate-900 py-1 px-2 font-black text-emerald-900">
-                  {step4Items.reduce((s, x) => s + x.marks, 0)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                      <td className="border border-slate-900 py-1 px-2 tabular-nums">{idx + 1}</td>
+                      <td
+                        onClick={() => handleChapterClick(item.chapterId, item.chapterName, item.marks)}
+                        className="border border-slate-900 py-1 px-3 text-left font-semibold cursor-pointer hover:text-indigo-900"
+                        title="ಕ್ಲಿಕ್ ಮಾಡಿ: ಈ ಪಾಠದ ಪ್ರಶ್ನೆಗಳನ್ನು ವೀಕ್ಷಿಸಿ"
+                      >
+                        {item.chapterName}
+                      </td>
+                      {/* Editable Percentage Input */}
+                      <td className="border border-slate-900 py-1 px-2 bg-amber-50/30">
+                        <CleanNumberInput
+                          value={item.percentage}
+                          min={0}
+                          max={100}
+                          onChange={val => handleStep4PercentageChange(idx, val)}
+                          suffix="%"
+                          className="w-16 text-center font-bold bg-white border border-slate-300 rounded px-1.5 py-1 text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </td>
+                      <td className="border border-slate-900 py-1 px-2">
+                        <CleanNumberInput
+                          value={item.questionsCount}
+                          min={0}
+                          max={item.marks}
+                          onChange={val => handleStep4QuestionsChange(idx, val)}
+                          className="w-16 text-center font-bold bg-white border border-slate-300 rounded px-1.5 py-1 text-xs text-indigo-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </td>
+                      <td className="border border-slate-900 py-1 px-2">
+                        <CleanNumberInput
+                          value={item.marks}
+                          min={0}
+                          onChange={val => handleStep4MarksChange(idx, val)}
+                          className="w-16 text-center font-bold bg-white border border-slate-300 rounded px-1.5 py-1 text-xs text-emerald-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+                <tr className="bg-slate-50 border-t-2 border-slate-900 text-center font-bold">
+                  <td className="border border-slate-900 py-1.5 px-2" colSpan={2}>
+                    ಒಟ್ಟು (Total)
+                  </td>
+                  <td className="border border-slate-900 py-1.5 px-2 font-black text-amber-950 tabular-nums">
+                    {step4PctSum.toFixed(1)}%
+                  </td>
+                  <td className="border border-slate-900 py-1.5 px-2 font-black text-indigo-900 tabular-nums">
+                    {step4Items.reduce((s, x) => s + x.questionsCount, 0)}
+                  </td>
+                  <td className="border border-slate-900 py-1.5 px-2 font-black text-emerald-900 tabular-nums">
+                    {step4Items.reduce((s, x) => s + x.marks, 0)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* SECTION 5: ಅಧಿಕೃತ 3D ನೀಲನಕಾಶೆ ಮಾಸ್ಟರ್ ಕೋಷ್ಟಕ (4 Objectives x 3 Step-2 Question Types: ವ.ನಿ/ಕಿರು, ದೀರ್ಘ, ಪ್ರಬಂಧ) */}

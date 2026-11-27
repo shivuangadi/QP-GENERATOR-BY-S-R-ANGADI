@@ -354,6 +354,30 @@ export const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
     setSavedFeedback(false);
   };
 
+  const wrapSelectionWithTag = (openTag: string, closeTag: string) => {
+    const targetRef = activeField === 'question' ? questionRef.current : answerRef.current;
+    const currentVal = activeField === 'question' ? qText : ansText;
+    const setter = activeField === 'question' ? setQText : setAnsText;
+
+    if (targetRef) {
+      const start = targetRef.selectionStart ?? currentVal.length;
+      const end = targetRef.selectionEnd ?? currentVal.length;
+      const selected = currentVal.slice(start, end);
+      const next =
+        currentVal.slice(0, start) + openTag + selected + closeTag + currentVal.slice(end);
+      setter(next);
+      const nextSelStart = start + openTag.length;
+      const nextSelEnd = nextSelStart + selected.length;
+      requestAnimationFrame(() => {
+        targetRef.focus();
+        targetRef.setSelectionRange(nextSelStart, nextSelEnd);
+      });
+    } else {
+      setter(`${currentVal}${openTag}${closeTag}`);
+    }
+    setSavedFeedback(false);
+  };
+
   const nudgePullPage = (delta: number) => {
     const first = parseFirstPageFromRange(pullPageStr) || 1;
     const next = Math.max(1, totalPdfPages ? Math.min(totalPdfPages, first + delta) : first + delta);
@@ -564,7 +588,10 @@ export const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
   };
 
   const showQuestionPreview =
-    qText.includes('\\frac') || qText.includes('^') || qText.includes('_');
+    qText.includes('\\frac') ||
+    qText.includes('^') ||
+    qText.includes('_') ||
+    /<u>/i.test(qText);
 
   return (
     <div
@@ -960,6 +987,16 @@ export const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
                 title="ಲಂಬ ಭಿನ್ನರಾಶಿ ಸೇರಿಸಿ (Insert Stacked Fraction \frac{a}{b})"
               >
                 <span>a/b ಭಿನ್ನರಾಶಿ</span>
+              </button>
+              <button
+                type="button"
+                onMouseDown={e => e.preventDefault()}
+                onClick={() => wrapSelectionWithTag('<u>', '</u>')}
+                className="h-7 px-2 rounded-md bg-slate-800 hover:bg-slate-900 text-white border border-slate-900 text-2xs font-bold transition-colors cursor-pointer flex items-center gap-1"
+                title="ಆಯ್ಕೆ ಮಾಡಿದ ಪದಕ್ಕೆ ಅಂಡರ್‌ಲೈನ್ ಹಾಕಿ (Wrap selected word in <u>...</u>)"
+              >
+                <span className="underline decoration-2 underline-offset-2">U</span>
+                <span>ಅಂಡರ್‌ಲೈನ್</span>
               </button>
               {MATH_SYMBOLS.map(sym => (
                 <button
